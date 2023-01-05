@@ -1,0 +1,230 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+image: registry.fedoraproject.org/fedora-minimal:37
+
+test:
+  stage: test
+  script:
+    - microdnf install -y git clang fontconfig-devel freetype-devel libvorbis-devel libepoxy-devel libwebp-devel boost-python3-devel python3-devel cmake ninja-build SDL2-devel openal-soft-devel clang-tools-extra python3-PyYAML libcxx-devel libasan mesa-dri-drivers xorg-x11-drivers >/dev/null
+    - Xorg -config ./test/xorg.conf &>/dev/null &
+    # - sleep 1 # wait for Xorg to boot up
+    - rm -rf build
+    - mkdir build
+    - cd build
+    - cmake -GNinja -DPAC_SANITIZE_ADDRESS=0 ..
+    - TERM=xterm script -qfec "ninja" /dev/null
+    - cd test
+    - DISPLAY=:0 ctest -V --output-junit testRes.xml && true
+    - cat Testing/Temporary/LastTest.log
+    - cat testRes.xml
+    - cd ../..
+    - rm -rf build
+    - mkdir build
+    - cd build
+    - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DPAC_SANITIZE_ADDRESS=0 -GNinja ..
+    - TERM=xterm script -qfec "ninja" /dev/null
+    - cd test
+    - DISPLAY=:0 ctest -V --output-junit testRes.xml && true
+    - cat Testing/Temporary/LastTest.log
+    - cat testRes.xml
+  artifacts:
+    paths:
+      - build/test/Testing/Temporary/LastTest.log
+      - build/test/testRes.xml
+    reports:
+      junit: build/test/testRes.xml
+  retry: 2
+
+cppcheck:
+  stage: test
+  allow_failure: true
+  script:
+  - microdnf install -y cppcheck
+  - cppcheck --enable=all --language=c++ --std=c++14 --error-exitcode=1 ./src/ -I
+    ./subprojects/spine-runtimes/spine-c/spine-c/include/ -I subprojects/jngl/src
+    -D SPINEPLUGIN_API -I subprojects/yaml-cpp/include -I subprojects/sol2/include
+
+flawfinder:
+  stage: test
+  allow_failure: true
+  script:
+  - microdnf install -y flawfinder
+  - flawfinder --falsepositive -m 5 ./src/
+
+linux:
+  stage: build
+  script:
+  - microdnf install -y git clang fontconfig-devel freetype-devel libvorbis-devel
+    libepoxy-devel libwebp-devel boost-python3-devel python3-devel cmake ninja-build
+    SDL2-devel openal-soft-devel clang-tools-extra python3-PyYAML libcxx-devel libasan
+    >/dev/null
+  - mkdir build
+  - cd build
+  - cmake -GNinja ..
+  - TERM=xterm script -qfec "ninja pac" /dev/null
+  - cd ..
+  - rm -rf build
+  - mkdir build
+  - cd build
+  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+    -GNinja ..
+  - TERM=xterm script -qfec "ninja pac" /dev/null
+  - TERM=xterm script -qfec "../subprojects/jngl/data/run-clang-tidy.py" | sed s_$PWD/__
+  - '! grep -Fq "error:" typescript'
+
+linux_debug:
+  stage: build
+  script:
+  - microdnf install -y git clang fontconfig-devel freetype-devel libvorbis-devel
+    libepoxy-devel libwebp-devel boost-python3-devel python3-devel cmake ninja-build
+    SDL2-devel openal-soft-devel clang-tools-extra python3-PyYAML libcxx-devel libasan
+    >/dev/null
+  - mkdir build
+  - cd build
+  - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ..
+  - TERM=xterm script -qfec "ninja pac" /dev/null
+  - cd ..
+  - rm -rf build
+  - mkdir build
+  - cd build
+  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+    -GNinja -DCMAKE_BUILD_TYPE=Debug ..
+  - TERM=xterm script -qfec "ninja pac" /dev/null
+  - TERM=xterm script -qfec "../subprojects/jngl/data/run-clang-tidy.py" | sed s_$PWD/__
+  - '! grep -Fq "error:" typescript'
+
+linux_release:
+  stage: build
+  script:
+  - microdnf install -y git clang fontconfig-devel freetype-devel libvorbis-devel
+    libepoxy-devel libwebp-devel boost-python3-devel python3-devel cmake ninja-build
+    SDL2-devel openal-soft-devel clang-tools-extra python3-PyYAML libcxx-devel libasan
+    >/dev/null
+  - mkdir build
+  - cd build
+  - cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+  - TERM=xterm script -qfec "ninja pac" /dev/null
+  - cd ..
+  - rm -rf build
+  - mkdir build
+  - cd build
+  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+    -GNinja -DCMAKE_BUILD_TYPE=Release ..
+  - TERM=xterm script -qfec "ninja pac" /dev/null
+  - TERM=xterm script -qfec "../subprojects/jngl/data/run-clang-tidy.py" | sed s_$PWD/__
+  - '! grep -Fq "error:" typescript'
+
+windows:
+  stage: build
+  script:
+  - microdnf install -y cmake ImageMagick ninja-build mingw32-pkg-config mingw32-libvorbis
+    mingw32-SDL2 mingw32-fontconfig mingw32-libwebp mingw32-boost mingw32-dlfcn mingw32-libepoxy
+    mingw32-openal-soft mingw32-nsis git >/dev/null
+  - mingw32-cmake -Bbuild-windows -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=0
+  - ninja -Cbuild-windows pac.exe
+  - cd windows
+  - sh ./convert.sh
+  - cd ..
+  - makensis windows/installer.nsi
+  artifacts:
+    paths:
+    - ALPACA Setup.exe
+
+web:
+  stage: build
+  image: emscripten/emsdk
+  script:
+    - cmake --version
+    - sudo apt update -y
+    - sudo apt upgrade -y
+    - sudo apt install libvorbis-dev libogg-dev -y
+    - mkdir build
+    - cp -r data build/data
+    - cd build
+    - emcmake cmake -DJNGL_VIDEO=0 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-Wno-enum-constexpr-conversion .. && make -j8 pac
+
+    - rm -rf CMakeFiles CMakeCache.txt Makefile _deps cmake_install.cmake include subprojects
+    - mv pac.html index.html
+  artifacts:
+    paths:
+    - build/
+
+android:
+  stage: build
+  image: registry.gitlab.com/jhasse/android-ndk-docker:r25
+  script:
+  - cd android
+  - chmod +x gradlew
+  - "./gradlew build"
+  - "./gradlew assembleRelease"
+  artifacts:
+    paths:
+    - android/app/build/outputs/apk/release/app-release.apk
+    - android/app/build/outputs/bundle/release/app-release.aab
+  only:
+    refs:
+    - master
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+fastlane:
+  stage: deploy
+  dependencies:
+  - android
+  before_script:
+  - echo $google_play_service_account_api_key_json > ./google_play_api_key.json
+  after_script:
+  - rm ./google_play_api_key.json
+  script:
+    - microdnf install -y ruby-devel libstdc++-static redhat-rpm-config git gcc-c++ tar >/dev/null
+    - export LC_ALL=en_US.UTF-8
+    - export LANG=en_US.UTF-8
+    - ruby --version
+    - gem install bundler
+    - bundle update
+    - bundle install --quiet
+    - cd android
+    - ls -la
+    - fastlane supply --apk app/build/outputs/apk/release/app-release.apk --track internal --release_status draft --skip_upload_changelogs true
+  only:
+    refs:
+    - master
+    changes:
+      - android/app/src/main/AndroidManifest.xml
+
+docs:
+  stage: build
+  script:
+    - microdnf install -y python3-devel
+    - pip install pipenv
+    - pipenv install -d --python 3.11
+    - cd lua-docs
+    - pipenv run mkdocs build
+  artifacts:
+    paths:
+      - lua-docs/site
+
+pages:
+  stage: deploy
+  dependencies:
+    - web
+    - docs
+  script:
+    - cp -r lua-docs/site public
+    - cp -r build public/demo
+  artifacts:
+    paths:
+    - public
+  only:
+    refs:
+    - master
+
+sast:
+  stage: test
+include:
+- template: Security/SAST.gitlab-ci.yml

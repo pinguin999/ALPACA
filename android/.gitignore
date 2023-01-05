@@ -1,0 +1,13 @@
+/Boost-for-Android/
+/.gradle/
+/app/.externalNativeBuild/
+/app/.cxx/
+/app/build/
+/build/
+/local.properties
+/android.iml
+/app/app.iml
+
+# Created by Android Studio:
+/.idea/
+/gradlew.bat

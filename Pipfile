@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+watchdog = "*"
+termcolor = "*"
+
+[dev-packages]
+mypy = "*"
+flake8 = "*"
+autopep8 = "*"
+types-termcolor = "*"
+mkdocs = "*"
+mkdocstrings = "*"
+mkdocstrings-python = "*"
+mkdocstrings-pac = "*"
+
+[requires]
+python_version = "3.10"

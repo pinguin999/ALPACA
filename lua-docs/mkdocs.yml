@@ -1,0 +1,11 @@
+site_name: ALPACA's LUA Docs
+plugins:
+- mkdocstrings:
+    handlers:
+      pac_handler:
+        bla: yes
+
+nav:
+  - "Getting Started": index.md
+  - "Project structur": readme.md
+  - "LUA API": lua.md
