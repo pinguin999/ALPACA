@@ -1,0 +1,85 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+        {
+			"name": "Launch Chrome",
+			"request": "launch",
+			"type": "chrome",
+			"url": "http://localhost:8080/pac.html",
+			"webRoot": "${workspaceFolder}",
+			"preLaunchTask": "buildEMScripten"
+		},
+        {
+			"type": "lldb",
+			"request": "launch",
+			"name": "pac (LLDB extension)",
+			"program": "${workspaceRoot}/build/pac",
+			"args": [],
+			"cwd": "${workspaceRoot}",
+			"preLaunchTask": "build"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "pac Test (LLDB extension)",
+			"program": "${workspaceRoot}/build/test/pac_unit_tests",
+			"args": [],
+			"cwd": "${workspaceRoot}",
+			"preLaunchTask": "buildall"
+		},
+		{
+			"name": "pac (C/C++ extension)",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/build/pac",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"MIMode": "gdb",
+			"windows": {
+				"miDebuggerPath": "C:/tools/msys64/mingw64/bin/gdb.exe"
+			},
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"preLaunchTask": "build"
+		},
+
+		{
+			"name": "pac test (C/C++ extension)",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/build/test/pac_unit_tests",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"MIMode": "gdb",
+			"windows": {
+				"miDebuggerPath": "C:/tools/msys64/mingw64/bin/gdb.exe"
+			},
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"preLaunchTask": "build"
+		},
+		{
+			"type": "gdb",
+			"request": "launch",
+			"name": "pac (GDB extension)",
+			"target": "./build/pac",
+			"cwd": "${workspaceRoot}",
+			"valuesFormatting": "prettyPrinters",
+			"preLaunchTask": "build"
+		},
+	]
+}

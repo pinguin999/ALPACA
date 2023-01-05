@@ -1,0 +1,105 @@
+{
+	"version": "2.0.0",
+	"windows": {
+		"command": "C:\\tools\\msys64\\usr\\bin\\bash.exe",
+		"args": ["-lc", "([ -f build/Makefile ] || (mkdir build && cd build && cmake -G'MSYS Makefiles' -DCMAKE_BUILD_TYPE=Debug .. && cd ..)) && cd build pac && make -j8"]
+	},
+	"linux": {
+		"args": ["-lc", "cd \"\"${workspaceRoot}\"\" && ([ -d build ] || (mkdir build && cd build && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug ..)) && make -C build pac && $@"],
+		"command": "/bin/bash"
+	},
+	"osx": {
+		"args": ["-lc", "cd \"\"${workspaceRoot}\"\" && ([ -d build ] || (mkdir build && cd build && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug ..)) && make -C build pac && $@"],
+		"command": "/bin/bash"
+	},
+	"options": {
+		"env": {
+			"LANG": "C.UTF-8",
+			"PYTHONUNBUFFERD": "1",
+			"MSYSTEM": "MINGW64",
+			"CHERE_INVOKING": "1"
+		}
+	},
+	"tasks": [
+		{
+			"label": "build",
+			"problemMatcher": {
+				"owner": "cpp",
+				"fileLocation": [
+					"autoDetect",
+					"${workspaceRoot}/build"
+				],
+				"pattern": {
+					"regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error|fatal error):\\s+(.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"message": 5
+				}
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "buildall",
+			"problemMatcher": {
+				"owner": "cpp",
+				"fileLocation": [
+					"autoDetect",
+					"${workspaceRoot}/build"
+				],
+				"pattern": {
+					"regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error|fatal error):\\s+(.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"message": 5
+				}
+			},
+			"windows": {
+				"command": "C:\\tools\\msys64\\usr\\bin\\bash.exe",
+				"args": ["-lc", "([ -f build/Makefile ] || (mkdir build && cd build && cmake -G'MSYS Makefiles' -DCMAKE_BUILD_TYPE=Debug .. && cd ..)) && cd build && make -j8"]
+			},
+			"linux": {
+				"args": ["-lc", "cd \"\"${workspaceRoot}\"\" && ([ -d build ] || (mkdir build && cd build && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug ..)) && make -C build && $@"],
+				"command": "/bin/bash"
+			},
+			"osx": {
+				"args": ["-lc", "cd \"\"${workspaceRoot}\"\" && ([ -d build ] || (mkdir build && cd build && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug ..)) && make -C build && $@"],
+				"command": "/bin/bash"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "buildEMScripten",
+			"args": ["-C", "build", "-j8", "pac"],
+			"command": "make",
+		},
+		{
+			"label": "runGitPodTab",
+			"args": ["-lc", "gp preview $(gp url 8000)/pac.html"],
+			"command": "/bin/bash",
+		},
+		{
+			"label": "rebuild_cache",
+			"problemMatcher": [],
+			"command": "/bin/bash",
+			"args": ["-c", "git submodule update && ninja rebuild_cache -Cbuild"]
+		}
+	],
+	"presentation": {
+		"echo": true,
+		"reveal": "always",
+		"focus": false,
+		"panel": "shared",
+		"showReuseMessage": true,
+		"clear": true
+	}
+}
