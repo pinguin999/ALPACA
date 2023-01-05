@@ -1,0 +1,12 @@
+[submodule "subprojects/jngl"]
+	path = subprojects/jngl
+	url = https://github.com/jhasse/jngl.git
+[submodule "subprojects/spine-runtimes"]
+	path = subprojects/spine-runtimes
+	url = https://github.com/EsotericSoftware/spine-runtimes.git
+[submodule "subprojects/schnacker"]
+	path = subprojects/schnacker
+	url = https://gitlab.com/pac4/schnacker.git
+[submodule "subprojects/gifanimcplusplus"]
+	path = subprojects/gifanimcplusplus
+	url = https://github.com/cpfr/gifanimcplusplus.git
