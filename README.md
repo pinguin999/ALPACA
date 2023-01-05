@@ -34,9 +34,9 @@ All these tools are managed by a Python asset pipeline with file watchers for fa
 
 ## Links and examples
 
-[Project setup and Lua interface documentation](https://pac4.gitlab.io/pac/docs/)
+[Project setup and Lua interface documentation](https://alpaca-engine.de/)
 
-[Example on the web](https://pac4.gitlab.io/pac/)
+[Example on the web](https://alpaca-engine.de/demo/)
 
 ## Getting Started
 
@@ -55,7 +55,7 @@ Everything in ALPACA is organized in scenes. And we already provide two demo sce
 
 In this demo scene you have a background and one item. You can change the x and y coordinates of the item or duplicate it.
 
-If you want to **add a new item**, you first have to create a new Spine project and save it in date-src. More details in the [docs](https://pac4.gitlab.io/pac/docs/).
+If you want to **add a new item**, you first have to create a new Spine project and save it in date-src. More details in the [docs](https://alpaca-engine.de/).
 
 If you want to **create a third scene**, you just have to create a new file or duplicate the test_chamber_one.json and change it to your needs.
 
