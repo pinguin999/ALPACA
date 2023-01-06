@@ -50,7 +50,6 @@ ___/
 *.DS_Store
 *.*~
 *.*autosave*
-src/dialog/speech_bubble.hpp
 out/*
 # Created by https://www.toptal.com/developers/gitignore/api/vs
 # Edit at https://www.toptal.com/developers/gitignore?templates=vs

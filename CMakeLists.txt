@@ -123,9 +123,6 @@ target_include_directories(pac PRIVATE ${CMAKE_BINARY_DIR}/include
 										subprojects/schnacker/src)
 if (NOT CMAKE_BUILD_TYPE MATCHES "Release" AND NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	target_include_directories(pac PRIVATE subprojects/gifanimcplusplus)
-	if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
-		target_include_directories(pac_unit_tests PRIVATE subprojects/gifanimcplusplus)
-	endif()
 endif()
 
 if(WIN32)
