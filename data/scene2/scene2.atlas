@@ -1,0 +1,20 @@
+scene2.webp
+size:2116,1700
+filter:Linear,Linear
+pma:true
+02
+bounds:1924,1412,286,190
+rotate:90
+Background
+bounds:2,618,1920,1080
+inventory_lines #1
+bounds:2,2,1917,614
+offsets:0,0,1918,614
+inventory_lines copy
+bounds:1924,1016,394,4
+offsets:0,0,395,4
+rotate:90
+inventory_lines
+bounds:1924,1016,394,4
+offsets:0,0,395,4
+rotate:90

@@ -1,0 +1,8 @@
+{
+    "items": [
+        {"spine": "banana", "x":"330.0", "y":"400.0", "scale": 0.3, "skin": "normal"},
+    ],
+    "backgroundMusic": "audio/ingame-action.ogg",
+    "background": {"spine": "scene1"},
+    "zBufferMap": null
+}

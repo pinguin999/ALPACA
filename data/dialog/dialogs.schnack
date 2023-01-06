@@ -1,0 +1,38 @@
+{
+    "name": "Dialogs",
+    "schnackVersion": "0.1.0",
+    "maxNodeId": 0,
+    "dialogs": [
+        {
+            "name": "demo",
+            "viewport": {
+                "x": 0,
+                "y": 0,
+                "zoom": 1
+            },
+            "entryNode": 0,
+            "nodes": [
+                {
+                    "id": 0,
+                    "type": "text",
+                    "pos": {
+                        "x": 304,
+                        "y": 264.6875
+                    },
+                    "onlyOnce": false,
+                    "next": [],
+                    "text": "Hello World",
+                    "character": "spine_boy"
+                }
+            ]
+        }
+    ],
+    "characters": [
+        {
+            "displayName": "spine_boy",
+            "canonicalName": "spine_boy",
+            "properties": {}
+        }
+    ],
+    "variables": {}
+}

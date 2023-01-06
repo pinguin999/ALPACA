@@ -1,0 +1,1 @@
+{"bones": [{"name": "root"}], "slots": [{"name": "pointer", "bone": "root", "attachment": "pointer"}], "animations": {}, "skins": {"default": {"pointer": {"pointer": {"y": 206.0, "x": 48.0, "rotation": 0, "height": 191, "width": 184}}}}}

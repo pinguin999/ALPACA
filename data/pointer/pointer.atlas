@@ -1,0 +1,16 @@
+pointer.webp
+size:743,261
+filter:Linear,Linear
+pma:true
+pointer1
+bounds:2,2,257,295
+offsets:15,2,300,300
+rotate:90
+pointer2
+bounds:299,22,237,220
+offsets:32,39,300,300
+rotate:90
+pointer2a
+bounds:521,22,237,220
+offsets:32,39,300,300
+rotate:90

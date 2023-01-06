@@ -1,0 +1,1 @@
+{"bones": [{"name": "root"}], "slots": [{"name": "banana", "bone": "root", "attachment": "banana"}], "animations": {}, "skins": {"default": {"banana": {"banana": {"y": 141.0, "x": -18.0, "rotation": 0, "height": 213, "width": 376}}}}}

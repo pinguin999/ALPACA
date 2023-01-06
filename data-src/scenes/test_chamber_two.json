@@ -1,0 +1,7 @@
+{
+    "items": [
+    ],
+    "backgroundMusic": "audio/ingame-action.ogg",
+    "background": {"spine": "scene2"},
+    "zBufferMap": null
+}

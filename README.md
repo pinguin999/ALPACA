@@ -34,6 +34,9 @@ All these tools are managed by a Python asset pipeline with file watchers for fa
 
 ## Links and examples
 
+![Demo project](test_chamber_one.gif)
+Scene one of demo project
+
 [Project setup and Lua interface documentation](https://alpaca-engine.de/)
 
 [Example on the web](https://alpaca-engine.de/demo/)
