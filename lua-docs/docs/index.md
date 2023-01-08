@@ -2,7 +2,7 @@
 
 ## Setup your PC
 
-1. Clone the ALPACA repository with git via `git clone --recurse-submodules REPO-URL` or clone it with the GutHub Desktop client.
+1. Clone the ALPACA repository with git via `git clone --recurse https://github.com/pinguin999/ALPACA.git` or clone it with the GutHub Desktop client.
 2. Setup your Mac or Linux for [JNGL development](https://github.com/jhasse/jngl). Or [Windows development](https://github.com/jhasse/jngl-starter)
 3. Now you should be able to play the demo project.
 4. Check that you have installed [Spine](http://de.esotericsoftware.com/), [Rhubarb](https://github.com/DanielSWolf/rhubarb-lip-sync/releases), [Lua](https://github.com/rjpcomputing/luaforwindows) and [ImageMagick](https://imagemagick.org/index.php) and [Python](https://www.python.org/downloads/). Now you can re-export all assets from data-src to data with the prepare_assets.py script.
@@ -34,7 +34,7 @@ In ALPACA everything we can see on the screen is a Spine project, so for the **s
 
 But an empty scene is boring, so why not start with our first **object** now? Let's create a new spine project and it's a very good habit to rename the skeleton to what we want to call the object. *This name is used by the export and is needed to load an object*. Now save your Spine file for the first time. I always create a new folder for every Spine project and name the folder and the Spine file again with the same name that was used for the skeleton. Now we need images for the Spine project, if you have not made any images yet you can reuse the **banana.png** from **data-src/banana/** and copy it over into your Spine project folder.
 Normally I place the image on top of the Spine 0,0 point, which makes it easy to place the object in the game and results in good results for the z-order. *But there can be situations where we want to do tricks with the z-order and place the image somewhere else in the Spine file*. Now we can try to place the object in our scene, therefore we open our **scene file** and add it with position 0,0 into the **items** section. If we now start our game we see the item in the center of the scene. *If we do not see the item, we may already have a save game file. Quit the game and delete the save game. Now try again.*
-In the development mode we can press the <kbd>Tab</kbd> key to go into the edit mode and every object gets a dot to move it around. The position will be printed to the console window and if we are happy with the position we have to update the position in the **scene file**.
+In the development mode we can press the <kbd>Tab</kbd> key to go into the edit mode and every object gets a green dot to move it around. The position will be printed in red on the dot and to the console window and if we are happy with the position we have to update the position in the **scene file**.
 
 But we want to interact with the item. So jumping back to Spine and adding a collision box around our item and name it something like "click_ITEMNAME". Now save the Spine project and the file watcher in **prepare_assets.py** will re-export the project to data and also create a lua script with the bounding box name in the **data-src/scripts** folder. Per default the new created script prints the collision box name to the console. Press <kbd>R</kbd> ingame and all Spine files are reloaded without closing the game. Now you should be able to click your item and see a text in the console.
 
