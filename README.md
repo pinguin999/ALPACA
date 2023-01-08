@@ -73,13 +73,10 @@ cmake --build build
 
 ### Windows
 
-```powerstell
-mkdir buildvs
-cd buildvs
-cmake -DCMAKE_BUILD_TYPE=Debug -G "Visual Studio 17 2022" ..
-```
+Install [Visual Studio Community](https://visualstudio.microsoft.com/vs/community/) and please make sure to select **Desktop development with C++** while installing.
 
-In the Solution Explorer select alpaca and set it as Startup Project. It's now **Bold**.
+Then you only need to choose **Open a local folder** and open the ALPACA folder.
+Visual Studio will automatically run CMake and you can choose pac.exe as target and press F5 to build and start the game.
 
 ## Contact
 
