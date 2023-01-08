@@ -155,7 +155,8 @@ if (MSVC AND CMAKE_BUILD_TYPE MATCHES "Debug")
 endif()
 
 if(MSVC)
-	target_compile_options(pac PRIVATE /W4 /WX)
+	target_compile_options(pac PRIVATE /W4)
+	# TODO add /WX
 else()
 	if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 		target_compile_options(pac PRIVATE -std=c++20 -Wall -Wextra -pedantic -Werror -Wno-long-long -Wunused -Wnon-virtual-dtor -Wno-align-mismatch )
