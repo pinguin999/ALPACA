@@ -117,6 +117,12 @@ void InteractableObject::draw() const
         if (_game->editMode)
         {
             jngl::drawCircle(jngl::Vec2(0, 0), DEBUG_GRAP_DISTANCE);
+            jngl::Text pposition;
+			pposition.setText("x: " + std::to_string(position.x) + "\ny: " + std::to_string(position.y));
+            jngl::setFontColor(jngl::Color(255, 0, 0));
+			pposition.setAlign(jngl::Alignment::CENTER);
+			pposition.setCenter(0, 0);
+			pposition.draw();
         }
     }
 #endif
