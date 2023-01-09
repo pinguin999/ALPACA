@@ -1,6 +1,14 @@
-# pip install watchdog
+# How to use
+# ==========
+# pip install pipenv
+# pipenv install -d
+# pipenv run python prepare_assets.py
+
 # Quelle https://thepythoncorner.com/posts/2019-01-13-how-to-create-a-watchdog-in-python-to-look-for-filesystem-changes/
 # We need python 3.10 for cross platform newline
+
+# Export to exe on windows via
+# pyinstaller --onefile .\prepare_assets.py
 
 import json
 import os
@@ -8,7 +16,7 @@ import shutil
 import subprocess
 import sys
 import time
-from multiprocessing import Pool
+from multiprocessing import Pool, freeze_support
 from pathlib import Path
 from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
 
@@ -33,9 +41,10 @@ elif sys.platform == "darwin":
     LUA = 'luac'
 elif sys.platform == "win32":
     # Windows
-    RHUBARB = 'C:\\Program Files\\Rhubarb-Lip-Sync\\rhubarb'
+    RHUBARB = 'windows_bin\\rhubarb.exe'
     SPINE = 'C:\\Program Files\\Spine\\Spine.exe'
-    LUA = 'C:\\Program Files (x86)\\Lua\\5.1\\luac.exe'
+    LUA = 'windows_bin\\luac.exe'
+    MAGICK = 'windows_bin\\magick.exe'
     set_read_only = False
 
 
@@ -128,7 +137,7 @@ def applyConvert(dir):
     if sys.platform != "win32":
         fullCommand = 'convert ' + dir + ' ' + dir[:-4] + '.webp'
     else:
-        fullCommand = 'magick.exe ' + dir + ' ' + dir[:-4] + '.webp'
+        fullCommand = f"{MAGICK} {dir} {dir[:-4]}.webp"
 
     print(colored(fullCommand, 'blue'))
     os.system(fullCommand)
@@ -185,7 +194,7 @@ def rhubarb_reexport():
                                 node_id = str(node["id"]).zfill(3)
 
                                 if not os.path.exists(f"data/audio/{node_id}.ogg"):
-                                    print("Can not lead: ", f"data/audio/{node_id}.ogg")
+                                    print("Can not load: ", f"data/audio/{node_id}.ogg")
                                     continue
 
                                 nodes.append(node_id)
@@ -414,13 +423,6 @@ def on_deleted(event):
     print(colored(f"{event.src_path} was deleted!", 'red'))
 
 
-def on_data_modified(event):
-    time.sleep(.5)
-    # print(colored(f"{event.src_path} has been modified", 'green'))
-    # if(event.src_path.endswith(".png")):
-    #     convert_png_to_webp()
-
-
 def on_data_src_modified(event):
     time.sleep(.5)
     print(
@@ -449,6 +451,7 @@ def on_moved(event):
 
 
 if __name__ == "__main__":
+    freeze_support()
     print(colored("Start convert", 'green'))
     spine_reexport(["./data-src"])
     scripts_recopy(["./data-src/scripts/"])
@@ -461,24 +464,12 @@ if __name__ == "__main__":
     rhubarb_reexport()
     convert_png_to_webp()
     print(colored("Convert sucess", 'green'))
-    patterns = ["*.png", ]
     patterns_src = ["*.spine", "*.lua", "*.json", "*.schnack"]
     ignore_patterns = None
     ignore_directories = False
     case_sensitive = True
-    data_event_handler = PatternMatchingEventHandler(
-        patterns, ignore_patterns, ignore_directories, case_sensitive)
-    data_event_handler.on_created = on_created
-    data_event_handler.on_deleted = on_deleted
-    data_event_handler.on_modified = on_data_modified
-    data_event_handler.on_moved = on_moved
 
-    path = "./data/"
     go_recursively = True
-    data_observer = Observer()
-    data_observer.schedule(data_event_handler, path, recursive=go_recursively)
-    data_observer.start()
-
     data_src_event_handler = PatternMatchingEventHandler(
         patterns_src, ignore_patterns, ignore_directories, case_sensitive)
     data_src_event_handler.on_created = on_created
@@ -498,7 +489,5 @@ if __name__ == "__main__":
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        data_observer.stop()
-        data_observer.join()
         data_src_observer.stop()
         data_src_observer.join()

@@ -5,7 +5,7 @@
 1. Clone the ALPACA repository with git via `git clone --recurse https://github.com/pinguin999/ALPACA.git` or clone it with the GutHub Desktop client.
 2. Setup your Mac or Linux for [JNGL development](https://github.com/jhasse/jngl). Or [Windows development](https://github.com/jhasse/jngl-starter)
 3. Now you should be able to play the demo project.
-4. Check that you have installed [Spine](http://de.esotericsoftware.com/), [Rhubarb](https://github.com/DanielSWolf/rhubarb-lip-sync/releases), [Lua](https://github.com/rjpcomputing/luaforwindows) and [ImageMagick](https://imagemagick.org/index.php) and [Python](https://www.python.org/downloads/). Now you can re-export all assets from data-src to data with the prepare_assets.py script.
+4. Check that you have installed [Spine](http://de.esotericsoftware.com/), [Rhubarb](https://github.com/DanielSWolf/rhubarb-lip-sync/releases), [Lua](https://github.com/rjpcomputing/luaforwindows) and [ImageMagick](https://imagemagick.org/index.php) and [Python](https://www.python.org/downloads/). Now you can re-export all assets from data-src to data with the prepare_assets.py script. **On Windows you need [Spine](http://de.esotericsoftware.com/) installed and you can use prepare_assets.exe to export the assets.**
 
 ## What's in the demo game?
 
