@@ -9,7 +9,7 @@
 class InteractableObject : public SpineObject
 {
 public:
-    explicit InteractableObject(std::shared_ptr<Game> game, const std::string &spine_file, std::string id, float scale = 1.0);
+    explicit InteractableObject(std::shared_ptr<Game> game, const std::string &spine_file, const std::string id, float scale = 1.0);
     ~InteractableObject();
 
     bool step(bool force = false) override;
@@ -19,7 +19,7 @@ public:
     void goToPosition(jngl::Vec2 position, sol::function callback);
 
     void registerToDelete();
-    void setLuaIndex(const std::string index){luaIndex = index;};
+    void setLuaIndex(const std::string &index){luaIndex = index;};
 private:
     std::string luaIndex = "";
 #ifndef NDEBUG

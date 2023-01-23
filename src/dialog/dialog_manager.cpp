@@ -228,12 +228,16 @@ void DialogManager::playCharacterVoice(std::string file)
     last_played_audio = file;
 }
 
-void DialogManager::playCharacterAnimation(std::string id)
+void DialogManager::playCharacterAnimation(std::string character, const std::string id)
 {
     if (auto _game = game.lock())
     {
-        auto animation = "say_" + std::string(n_zero - std::min(n_zero, id.length()), '0') + id;
-        _game->player->playAnimation(5, animation, false, (*_game->lua_state)["pass"]);
+        std::shared_ptr<SpineObject> spine_character = _game->getObjectById(character);
+        if (spine_character)
+        {
+            auto animation = "say_" + std::string(n_zero - std::min(n_zero, id.length()), '0') + id;
+            spine_character->playAnimation(5, animation, false, (*_game->lua_state)["pass"]);
+        }
     }
 }
 
@@ -257,9 +261,10 @@ void DialogManager::continueCurrent()
         if(textResult)
         {
             showCharacterText(textResult->text, bubble_pos);
-            std::string fileName = std::to_string(textResult->textID);
+            std::string character = textResult->character->canonicalName;
+            std::string fileName = std::to_string(textResult->textId);
             auto fullFileName = "audio/" + std::string(n_zero - std::min(n_zero, fileName.length()), '0') + fileName  + ".ogg";
-            playCharacterAnimation(fileName);
+            playCharacterAnimation(character, fileName);
             try {
                 playCharacterVoice(fullFileName);
             }catch (const std::runtime_error& e) {

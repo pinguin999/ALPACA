@@ -44,7 +44,6 @@ elif sys.platform == "win32":
     RHUBARB = 'windows_bin\\rhubarb.exe'
     SPINE = 'C:\\Program Files\\Spine\\Spine.exe'
     LUA = 'windows_bin\\luac.exe'
-    MAGICK = 'windows_bin\\magick.exe'
     set_read_only = False
 
 
@@ -95,63 +94,6 @@ class Progress(object):
         self.print()
 
 
-def applyConvertToDirectory(dir):
-    for folder in dir:
-        for root, dirs, files in os.walk(folder):
-            for file in files:
-                if file.endswith(".png") or file.endswith(".jpg"):
-                    applyConvert(root + '/' + file)
-
-
-def deletePngToDirectory(dir):
-    for folder in dir:
-        for root, dirs, files in os.walk(folder):
-            for file in files:
-                if file.endswith(".png") or file.endswith(".jpg"):
-                    os.remove(root + '/' + file)
-
-
-def replacePngTextWithWebP(dir):
-    for folder in dir:
-        for root, dirs, files in os.walk(folder):
-            for file in files:
-                if file.endswith(".atlas") or file.endswith(".json"):
-                    _file = Path(root + "/" + file)
-                    if set_read_only:
-                        # Make file writeable
-                        os.chmod(_file, S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
-                    _file.write_text(_file.read_text(encoding='utf_8').replace(
-                        '.png', '.webp'), encoding='utf_8', newline='\r\n')
-                    if set_read_only:
-                        # Make file read only
-                        os.chmod(_file, S_IREAD | S_IRGRP | S_IROTH)
-
-
-def applyConvert(dir):
-    # Make file writeable
-    if set_read_only:
-        try:
-            os.chmod(dir[:-4] + '.webp', S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
-        except Exception:
-            pass
-    if sys.platform != "win32":
-        fullCommand = 'convert ' + dir + ' ' + dir[:-4] + '.webp'
-    else:
-        fullCommand = f"{MAGICK} {dir} {dir[:-4]}.webp"
-
-    print(colored(fullCommand, 'blue'))
-    os.system(fullCommand)
-    # Make file read only
-    if set_read_only:
-        os.chmod(dir[:-4] + '.webp', S_IREAD | S_IRGRP | S_IROTH)
-
-
-def convert_png_to_webp():
-    applyConvertToDirectory(['./data/'])
-    deletePngToDirectory(['./data/'])
-    replacePngTextWithWebP(['./data/'])
-
-
 def rhubarb_export(node_id):
     errors = []
     warnings = []
@@ -180,7 +122,7 @@ def rhubarb_reexport():
                     for dialog in dialogs["dialogs"]:
                         for node in dialog["nodes"]:
                             character_name = ''
-                            if "character" not in node or node["character"] in ["char_player"]:
+                            if "character" not in node or node["character"] in ["Player"]:
                                 character_name = 'joy'
                             elif "character" not in node or node["character"] in ["char_dog"]:
                                 character_name = 'dog'
@@ -418,8 +360,6 @@ def on_created(event):
 
 
 def on_deleted(event):
-    if event.src_path.endswith(".png"):
-        return
     print(colored(f"{event.src_path} was deleted!", 'red'))
 
 
@@ -431,7 +371,6 @@ def on_data_src_modified(event):
         (errors, warnings) = spine_export(event.src_path)
         if len(errors) > 0 or len(warnings) > 0:
             printErrorsAndWarnings(event.src_path, errors, warnings)
-        convert_png_to_webp()
     if event.src_path.endswith(".lua"):
         copy_script(event.src_path)
     if event.src_path.endswith(".json") and 'scenes' in event.src_path:
@@ -462,7 +401,6 @@ if __name__ == "__main__":
     copy_folder("./data-src/icons", "./data/icons")
     copy_folder("./data-src/dialog", "./data/dialog")
     rhubarb_reexport()
-    convert_png_to_webp()
     print(colored("Convert sucess", 'green'))
     patterns_src = ["*.spine", "*.lua", "*.json", "*.schnack"]
     ignore_patterns = None

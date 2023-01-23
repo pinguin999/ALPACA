@@ -9,6 +9,7 @@ Player::Player(std::shared_ptr<Game> game, const std::string &spine_file) : Spin
                                                                             DOUBLE_CLICK_TIME(game->config["double_click_time"].as<double>()),
                                                                             MAX_CLICK_DISTANCE(game->config["max_click_distance"].as<int>()),
                                                                             NEAR_OBJECT(game->config["near_object"].as<int>()),
+                                                                            X_BORDER(game->config["x_border"].as<int>()),
                                                                             max_speed(std::abs(game->config["player_max_speed"].as<float>())),
                                                                             player_walk_animation(game->config["player_walk_animation"].as<std::string>()),
                                                                             player_side_skin(game->config["player_side_skin"].as<std::string>()),
@@ -115,10 +116,10 @@ void Player::addTargetPositionImmediately(jngl::Vec2 target, sol::function callb
     }
 }
 
-void Player::stop_walking()
-{
-    setTargentPosition(position);
-}
+// void Player::stop_walking()
+// {
+//     setTargentPosition(position);
+// }
 
 bool Player::step(bool)
 {
@@ -248,17 +249,16 @@ bool Player::step(bool)
         }
 
         // Move scean if the player is at the border of the screen.
-        const int X_BORDER = 250;
         auto size = jngl::getScreenSize();
 
         if (position.x + X_BORDER > size.x / 2.0 / _game->getCameraZoom())
         {
-            _game->setCameraPosition(jngl::Vec2((position.x + X_BORDER - size.x / 2.0 / _game->getCameraZoom()) * _game->getCameraZoom(), 0), 0, 0);
+            _game->setCameraPosition(jngl::Vec2((position.x + X_BORDER - size.x / 2.0 / _game->getCameraZoom()), 0), 0, 0);
         }
-        else if (position.x - X_BORDER < -size.x / 2.0)
+        else if (position.x - X_BORDER < -size.x / 2.0 / _game->getCameraZoom())
         {
             // Move scean if the player is at the border of the screen.
-            _game->setCameraPosition(jngl::Vec2((position.x - X_BORDER + size.x / 2.0 / _game->getCameraZoom()) * _game->getCameraZoom(), 0), 0, 0);
+            _game->setCameraPosition(jngl::Vec2((position.x - X_BORDER + size.x / 2.0 / _game->getCameraZoom()), 0), 0, 0);
         }
         else
         {

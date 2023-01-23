@@ -68,6 +68,11 @@ else()
 	endif()
 endif()
 
+if (APPLE)
+	find_library(CoreServices CoreServices)
+	target_link_libraries(pac PRIVATE $<$<CONFIG:Debug>:${CoreServices}>)
+endif()
+
 target_link_libraries(pac PRIVATE
 	jngl spine-c schnacker
 )

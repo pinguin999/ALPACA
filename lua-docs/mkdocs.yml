@@ -7,5 +7,5 @@ plugins:
 
 nav:
   - "Getting Started": index.md
-  - "Project structur": readme.md
+  # - "Project structur": readme.md
   - "LUA API": lua.md

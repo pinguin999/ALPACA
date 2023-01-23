@@ -5,7 +5,7 @@
 
 #include <cmath>
 
-InteractableObject::InteractableObject(std::shared_ptr<Game> game, const std::string &spine_file, std::string id, float scale) :
+InteractableObject::InteractableObject(std::shared_ptr<Game> game, const std::string &spine_file, const std::string id, float scale) :
     SpineObject(game, spine_file, id, scale)
 #ifndef NDEBUG
     ,DEBUG_GRAP_DISTANCE(game->config["debug_grap_distance"].as<float>())
@@ -86,8 +86,8 @@ void InteractableObject::registerToDelete()
 
     if (auto _game = game.lock())
     {
-        std::string scene = _game->cleanLuaString((*_game->lua_state.get())["game"]["scene"]);
-        (*_game->lua_state.get())["scenes"][scene]["items"][luaIndex] = sol::lua_nil;
+        std::string scene = _game->cleanLuaString((*_game->lua_state)["game"]["scene"]);
+        (*_game->lua_state)["scenes"][scene]["items"][luaIndex] = sol::lua_nil;
     }
 }
 

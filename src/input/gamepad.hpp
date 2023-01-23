@@ -7,7 +7,7 @@
 class Gamepad : public Control
 {
 public:
-	Gamepad(std::shared_ptr<jngl::Controller>);
+	explicit Gamepad(std::shared_ptr<jngl::Controller>);
 	jngl::Vec2 getMovement() const override;
 	jngl::Vec2 getMovementStep() const override;
 	jngl::Vec2 getSecondaryMovement() const override;

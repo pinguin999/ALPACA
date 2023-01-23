@@ -56,8 +56,7 @@ namespace spine {
 
 SkeletonDrawable::SkeletonDrawable(spSkeletonData* skeletonData, spAnimationStateData* stateData)
 : timeScale(1),
-  // vertexArray(new VertexArray(Triangles, skeletonData->bonesCount * 4)),
-  vertexEffect(nullptr), worldVertices(nullptr), clipper(nullptr) {
+  worldVertices(nullptr), clipper(nullptr) {
 	spBone_setYDown(true);
 	worldVertices = MALLOC(float, SPINE_MESH_VERTEX_COUNT_MAX);
 	skeleton = spSkeleton_create(skeletonData);
@@ -73,7 +72,6 @@ SkeletonDrawable::SkeletonDrawable(spSkeletonData* skeletonData, spAnimationStat
 }
 
 SkeletonDrawable::~SkeletonDrawable() {
-	// delete vertexArray;
 	FREE(worldVertices);
 	if (ownsAnimationStateData) spAnimationStateData_dispose(state->data);
 	spAnimationState_dispose(state);
@@ -85,7 +83,6 @@ SkeletonDrawable::~SkeletonDrawable() {
 
 void SkeletonDrawable::step() {
 	const float deltaTime = 1.f / float(jngl::getStepsPerSecond());
-	spSkeleton_update(skeleton, deltaTime);
 	spAnimationState_update(state, deltaTime * timeScale);
 	spAnimationState_apply(state, skeleton);
 	spSkeleton_updateWorldTransform(skeleton);
@@ -97,7 +94,6 @@ void SkeletonDrawable::endAnimation(int trackIndex)
 	if(!animation)
 		return;
 	float deltaTime = spTrackEntry_getTrackComplete(animation);
-	spSkeleton_update(skeleton, deltaTime);
 	spAnimationState_update(state, deltaTime);
 	spAnimationState_apply(state, skeleton);
 	spSkeleton_updateWorldTransform(skeleton);
@@ -105,13 +101,8 @@ void SkeletonDrawable::endAnimation(int trackIndex)
 
 
 void SkeletonDrawable::draw() const {
-	// vertexArray->clear();
-	// states.texture = 0;
 	unsigned short quadIndices[6] = { 0, 1, 2, 2, 3, 0 };
 
-	if (vertexEffect != nullptr) {
-		vertexEffect->begin(vertexEffect, skeleton);
-	}
 	static spColor* blancColor = new spColor();
 
 	jngl::Sprite* texture = nullptr;
@@ -121,7 +112,6 @@ void SkeletonDrawable::draw() const {
 		if (!attachment) continue;
 
 		float* vertices = worldVertices;
-		int verticesCount = 0;
 		float* uvs = nullptr;
 		unsigned short* indices = nullptr;
 		int indicesCount = 0;
@@ -129,8 +119,7 @@ void SkeletonDrawable::draw() const {
 
 		if (attachment->type == SP_ATTACHMENT_REGION) {
 			spRegionAttachment* regionAttachment = (spRegionAttachment*)attachment;
-			spRegionAttachment_computeWorldVertices(regionAttachment, slot->bone, vertices, 0, 2);
-			verticesCount = 4;
+			spRegionAttachment_computeWorldVertices(regionAttachment, slot, vertices, 0, 2);
 			uvs = regionAttachment->uvs;
 			indices = quadIndices;
 			indicesCount = 6;
@@ -144,7 +133,6 @@ void SkeletonDrawable::draw() const {
 			texture = (jngl::Sprite*)((spAtlasRegion*)mesh->rendererObject)->page->rendererObject;
 			spVertexAttachment_computeWorldVertices(
 			    SUPER(mesh), slot, 0, mesh->super.worldVerticesLength, worldVertices, 0, 2);
-			verticesCount = mesh->super.worldVerticesLength >> 1;
 			uvs = mesh->uvs;
 			indices = mesh->triangles;
 			indicesCount = mesh->trianglesCount;
@@ -190,107 +178,7 @@ void SkeletonDrawable::draw() const {
 		 const auto a =
 		 	static_cast<uint8_t>(skeleton->color.a * slot->color.a * attachmentColor->a * 255);
 
-		// vertex.color.r = r;
-		// vertex.color.g = g;
-		// vertex.color.b = b;
-		// vertex.color.a = a;
 
-		// spColor light;
-		// light.r = r / 255.0f;
-		// light.g = g / 255.0f;
-		// light.b = b / 255.0f;
-		// light.a = a / 255.0f;
-
-		// TODO wieder rein
-		// sf::BlendMode blend;
-		// if (!usePremultipliedAlpha) {
-		// 	switch (slot->data->blendMode) {
-		// 		case BLEND_MODE_NORMAL:
-		// 			blend = normal;
-		// 			break;
-		// 		case BLEND_MODE_ADDITIVE:
-		// 			blend = additive;
-		// 			break;
-		// 		case BLEND_MODE_MULTIPLY:
-		// 			blend = multiply;
-		// 			break;
-		// 		case BLEND_MODE_SCREEN:
-		// 			blend = screen;
-		// 			break;
-		// 		default:
-		// 			blend = normal;
-		// 	}
-		// } else {
-		// 	switch (slot->data->blendMode) {
-		// 		case BLEND_MODE_NORMAL:
-		// 			blend = normalPma;
-		// 			break;
-		// 		case BLEND_MODE_ADDITIVE:
-		// 			blend = additivePma;
-		// 			break;
-		// 		case BLEND_MODE_MULTIPLY:
-		// 			blend = multiplyPma;
-		// 			break;
-		// 		case BLEND_MODE_SCREEN:
-		// 			blend = screenPma;
-		// 			break;
-		// 		default:
-		// 			blend = normalPma;
-		// 	}
-		// }
-
-		// if (states.texture == 0) states.texture = texture;
-
-		// if (states.blendMode != blend || states.texture != texture) {
-		// target.draw(*vertexArray, states);
-		// vertexArray->clear();
-		// 	states.blendMode = blend;
-		// 	states.texture = texture;
-		// }
-
-		// if (spSkeletonClipping_isClipping(clipper)) {
-		// 	spSkeletonClipping_clipTriangles(clipper, vertices, verticesCount << 1, indices,
-		// indicesCount, uvs, 2); 	vertices = clipper->clippedVertices->items; 	verticesCount =
-		// clipper->clippedVertices->size >> 1; 	uvs = clipper->clippedUVs->items; 	indices =
-		// clipper->clippedTriangles->items; 	indicesCount = clipper->clippedTriangles->size;
-		// }
-
-		// Vector2u size = texture->getSize();
-
-		if (vertexEffect != nullptr) {
-			spFloatArray_clear(tempUvs);
-			spColorArray_clear(tempColors);
-			for (int i = 0; i < verticesCount; i++) {
-				// spColor vertexColor = light;
-				spColor dark;
-				dark.r = dark.g = dark.b = dark.a = 0;
-				int index = i << 1;
-				float x = vertices[index];
-				float y = vertices[index + 1];
-				float u = uvs[index];
-				float v = uvs[index + 1];
-				// vertexEffect->transform(vertexEffect, &x, &y, &u, &v, &vertexColor, &dark);
-				vertices[index] = x;
-				vertices[index + 1] = y;
-				spFloatArray_add(tempUvs, u);
-				spFloatArray_add(tempUvs, v);
-				// spColorArray_add(tempColors, vertexColor);
-			}
-
-			// for (int i = 0; i < indicesCount; ++i) {
-			// 	int index = indices[i] << 1;
-			// 	// vertex.position.x = vertices[index];
-			// 	// vertex.position.y = vertices[index + 1];
-			// 	// vertex.texCoords.x = uvs[index] * size.x;
-			// 	// vertex.texCoords.y = uvs[index + 1] * size.y;
-			// 	spColor vertexColor = tempColors->items[index >> 1];
-			// 	// vertex.color.r = static_cast<Uint8>(vertexColor.r * 255);
-			// 	// vertex.color.g = static_cast<Uint8>(vertexColor.g * 255);
-			// 	// vertex.color.b = static_cast<Uint8>(vertexColor.b * 255);
-			// 	// vertex.color.a = static_cast<Uint8>(vertexColor.a * 255);
-			// 	// vertexArray->append(vertex);
-			// }
-		} else {
 			std::vector<jngl::Vertex> vertexArray;
 			for (int i = 0; i < indicesCount; ++i) {
 				int index = indices[i] << 1;
@@ -309,21 +197,17 @@ void SkeletonDrawable::draw() const {
 				texture->drawMesh(vertexArray);
 				jngl::setSpriteColor(255, 255, 255, 255);
 			}
-		}
 
 		spSkeletonClipping_clipEnd(clipper, slot);
 	}
 	// target.draw(*vertexArray, states);
 	spSkeletonClipping_clipEnd2(clipper);
 
-	if (vertexEffect != nullptr) {
-		vertexEffect->end(vertexEffect);
-	}
 	jngl::setSpriteColor(255, 255, 255, 255);
 }
 
 
-spBoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spSkeletonBounds *self, const std::string name, float x, float y) {
+spBoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spSkeletonBounds *self, const std::string &name, float x, float y) {
 	int i;
 	for (i = 0; i < self->count; ++i)
 	{
@@ -333,7 +217,7 @@ spBoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spSkeletonBo
 	return 0;
 }
 
-spBoundingBoxAttachment *spSkeletonBounds_containsPointNotMatchingName(spSkeletonBounds *self, const std::string name, float x, float y) {
+spBoundingBoxAttachment *spSkeletonBounds_containsPointNotMatchingName(spSkeletonBounds *self, const std::string &name, float x, float y) {
 	int i;
 	for (i = 0; i < self->count; ++i)
 	{

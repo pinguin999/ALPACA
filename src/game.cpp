@@ -12,7 +12,7 @@
 #include "pointer.hpp"
 #include "interactable_object.hpp"
 
-#if (!defined(NDEBUG) && !defined(__APPLE__) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
 #include "FileWatch.hpp"
 #include <filesystem>
 #endif
@@ -27,7 +27,7 @@ Game::Game(YAML::Node config) : config(config)
 	auto screensize = jngl::getScreenSize();
 	auto zoomx = this->config["screenSize"]["x"].as<int>() / screensize.x;
 	auto zoomy = this->config["screenSize"]["y"].as<int>() / screensize.y;
-	cameraZoom = cameraExponent = targetCameraExponent = 1.0 / std::max(zoomx, zoomy);
+	cameraZoom = 1.0 / std::max(zoomx, zoomy);
 
 	language = jngl::getPreferredLanguage();
 
@@ -41,17 +41,16 @@ Game::Game(YAML::Node config) : config(config)
 	lua_state = std::make_shared<sol::state>();
 	lua_state->open_libraries(sol::lib::base, sol::lib::package);
 
-#if (!defined(NDEBUG) && !defined(__APPLE__) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
 #ifdef _WIN32
 #define TYPE std::wstring
-#elif __unix__
-#define TYPE std::string
 #else
+#define TYPE std::string
 #endif
 	static filewatch::FileWatch<TYPE> watch(
 #ifdef _WIN32
 		L"."s,
-#elif __unix__
+#else
 		"."s,
 #endif
 		[this](const TYPE &path, const filewatch::Event change_type)
@@ -59,10 +58,13 @@ Game::Game(YAML::Node config) : config(config)
 			switch (change_type)
 			{
 			case filewatch::Event::modified:
+			case filewatch::Event::added:
 #ifdef _WIN32
 				if (path.find(L"webp") != TYPE::npos)
 #elif __unix__
 				if (path.find("webp") != TYPE::npos)
+#else  // Mac has no file extension here
+				if(true)
 #endif
 				{
 					reload = true;
@@ -401,16 +403,11 @@ void Game::setCameraPosition(Vec2 position, const double deadzoneFactorX,
 void Game::setCameraPositionImmediately(Vec2 position)
 {
 	targetCameraPosition = cameraPosition = position;
-	speedAverage = 0;
 }
 
 void Game::stepCamera()
 {
 	const auto speed = getCameraSpeed();
-	const double NUMBER_OF_FRAMES = 500;
-	speedAverage *= (NUMBER_OF_FRAMES - 1) / NUMBER_OF_FRAMES;
-	speedAverage += // Wir berücksichtigen die y-Kombonente stärker, aufgrund des Breitbildformats
-		boost::qvm::mag_sqr(jngl::Vec2(0.9 * speed.x, 1.6 * speed.y)) / NUMBER_OF_FRAMES;
 	cameraPosition += speed / 36.0;
 }
 
@@ -423,9 +420,7 @@ void Game::remove(std::shared_ptr<SpineObject> object) {
 }
 
 void Game::addObjects() {
-	for (auto& gameObject : needToAdd) {
-		gameObjects.push_back(gameObject);
-	}
+	std::copy(needToAdd.begin(), needToAdd.end(), std::back_inserter(gameObjects));
 	needToAdd.clear();
 }
 
@@ -631,20 +626,20 @@ std::shared_ptr<SpineObject> Game::getObjectById(std::string objectId)
 	}
 
 	std::shared_ptr<SpineObject> obj = nullptr;
-	if ((*this->lua_state.get())[objectId].valid())
+	if ((*this->lua_state)[objectId].valid())
 	{
-		obj = (*this->lua_state.get())[objectId];
+		obj = (*this->lua_state)[objectId];
 	}
-	else if ((*this->lua_state.get())["inventory_items"][objectId].valid())
+	else if ((*this->lua_state)["inventory_items"][objectId].valid())
 	{
-		obj = (*this->lua_state.get())["inventory_items"][objectId]["object"];
+		obj = (*this->lua_state)["inventory_items"][objectId]["object"];
 	}
 	else
 	{
-		std::string scene = (*this->lua_state.get())["game"]["scene"];
-		if ((*this->lua_state.get())["scenes"][scene]["items"][objectId].valid())
+		std::string scene = (*this->lua_state)["game"]["scene"];
+		if ((*this->lua_state)["scenes"][scene]["items"][objectId].valid())
 		{
-			obj = (*this->lua_state.get())["scenes"][scene]["items"][objectId]["object"];
+			obj = (*this->lua_state)["scenes"][scene]["items"][objectId]["object"];
 		}
 	}
 	return obj;
@@ -657,17 +652,17 @@ std::string Game::getLUAPath(std::string objectId)
 		return "player";
 	}
 
-	std::string scene = (*this->lua_state.get())["game"]["scene"];
+	std::string scene = (*this->lua_state)["game"]["scene"];
 	if (objectId == "Background")
 	{
 		return "scenes[\"" + scene + "\"][\"background\"]";
 	}
 
-	if ((*this->lua_state.get())["inventory_items"][objectId].valid())
+	if ((*this->lua_state)["inventory_items"][objectId].valid())
 	{
 		return "inventory_items[\"" + objectId + "\"]";
 	}
-	else if ((*this->lua_state.get())["scenes"][scene]["items"][objectId].valid())
+	else if ((*this->lua_state)["scenes"][scene]["items"][objectId].valid())
 	{
 		return "scenes[\"" + scene + "\"][\"items\"][\"" + objectId + "\"]";
 	}

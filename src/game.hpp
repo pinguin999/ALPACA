@@ -87,9 +87,6 @@ private:
     jngl::Vec2 targetCameraPosition;
     jngl::Vec2 cameraDeadzone;
     double cameraZoom = 1.0;
-    double speedAverage = 0;
-    double cameraExponent = 0.0;
-    double targetCameraExponent = 0.0;
     int inactivLayerBorder = 0;
     std::shared_ptr<DialogManager> dialogManager = nullptr;
     AudioManager audioManager;

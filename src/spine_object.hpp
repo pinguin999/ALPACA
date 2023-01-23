@@ -18,7 +18,7 @@ namespace spine
 class SpineObject : public std::enable_shared_from_this<SpineObject>
 {
 public:
-	SpineObject(std::shared_ptr<Game> game, const std::string &spine_file, const std::string id, float scale = 1);
+	SpineObject(std::shared_ptr<Game> game, const std::string &spine_file, const std::string &id, float scale = 1);
 	virtual ~SpineObject() {
 		spSkeletonBounds_dispose(bounds);
 		spAnimationStateData_dispose(animationStateData);

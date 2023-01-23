@@ -20,7 +20,7 @@ public:
 
     void addTargetPosition(jngl::Vec2 target);
     void addTargetPositionImmediately(jngl::Vec2 target, sol::function callback);
-    void stop_walking();
+    // void stop_walking();
 
     double last_click_time = 0;
 
@@ -33,6 +33,7 @@ private:
     const double DOUBLE_CLICK_TIME;
     const int MAX_CLICK_DISTANCE;
     const int NEAR_OBJECT;
+    const int X_BORDER;
     float max_speed;
     std::deque<jngl::Vec2> path;
     jngl::Vec2 target_position = jngl::Vec2(0, 0);

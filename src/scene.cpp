@@ -205,10 +205,9 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
 
             (*game->lua_state)["inventory_items"][id]["object"] = std::static_pointer_cast<SpineObject>(interactable);
 
-            std::string skin = "";
             if ((*game->lua_state)["inventory_items"][id]["skin"].valid())
             {
-                skin = (*game->lua_state)["inventory_items"][id]["skin"];
+                std::string skin = (*game->lua_state)["inventory_items"][id]["skin"];
 
                 interactable->setSkin(skin);
             }
@@ -295,10 +294,9 @@ void Scene::loadObjects(YAML::Node objects)
                     "layer", layer,
                     "scale", scale);
 
-                std::string skin = "";
                 if ((*object)["skin"])
                 {
-                    skin = (*object)["skin"].as<std::string>();
+                    std::string skin = (*object)["skin"].as<std::string>();
                     (*_game->lua_state)["scenes"][scene]["items"][object_id]["skin"] = skin;
 
                     interactable->setSkin(skin);
@@ -308,7 +306,7 @@ void Scene::loadObjects(YAML::Node objects)
         }
         else
         {
-            float inactivLayerBorder = (*_game->lua_state.get())["inactivLayerBorder"];
+            float inactivLayerBorder = (*_game->lua_state)["inactivLayerBorder"];
             _game->setInactivLayerBorder(static_cast<int>(inactivLayerBorder));
 
             // Load from Lua and not from json
@@ -348,10 +346,9 @@ void Scene::loadObjects(YAML::Node objects)
 
                     (*_game->lua_state)["scenes"][scene]["items"][id]["object"] = std::static_pointer_cast<SpineObject>(interactable);
 
-                    std::string skin = "";
                     if ((*_game->lua_state)["scenes"][scene]["items"][id]["skin"].valid() )
                     {
-                        skin = (*_game->lua_state)["scenes"][scene]["items"][id]["skin"];
+                        std::string skin = (*_game->lua_state)["scenes"][scene]["items"][id]["skin"];
 
                         interactable->setSkin(skin);
                     }

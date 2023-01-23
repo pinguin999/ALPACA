@@ -28,7 +28,6 @@ It's written in C++ and can easily be scripted in Lua.
 - [Schnack](https://gitlab.com/pac4/schnack) is a node based dialog editor.
 - [Rhubarb](https://github.com/DanielSWolf/rhubarb-lip-sync) for creation of lip sync information from audio files.
 - [Lua](https://www.lua.org/) is the scripting language used for game logic.
-- [ImageMagick](https://imagemagick.org/index.php) is a CLI tool for converting images.
 
 All these tools are managed by a Python asset pipeline with file watchers for fast reloading of changes into the game.
 

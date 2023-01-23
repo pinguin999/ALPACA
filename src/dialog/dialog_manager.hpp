@@ -40,7 +40,7 @@ private:
     void showChoices(std::shared_ptr<schnacker::AnswersStepResult> answers);
     void showCharacterText(std::string text, jngl::Vec2 pos);
     void playCharacterVoice(std::string file);
-    void playCharacterAnimation(std::string id);
+    void playCharacterAnimation(std::string character, const std::string id);
     void hideChoices();
     void hideCharacterText();
 
