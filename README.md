@@ -3,6 +3,9 @@
 ALPACA (short for "A Library for Point And Click Adventures") is a game engine for adventure games and interactive comics.
 It's written in C++ and can easily be scripted in Lua.
 
+[📚 Documentation](https://alpaca-engine.de/)
+[🎮 Example Game](https://hobbyspieleentwicklerpodcast.de/2080-Demo/)
+
 ## Features
 
 - Easy to use 🐣
