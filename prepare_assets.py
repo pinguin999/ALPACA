@@ -94,7 +94,8 @@ class Progress(object):
         self.print()
 
 
-def rhubarb_export(node_id):
+def rhubarb_export(node_info):
+    node_id = node_info[0]
     errors = []
     warnings = []
     if not RHUBARB:
@@ -132,18 +133,20 @@ def rhubarb_reexport():
                             if "character" not in node or node["character"] in ["marc"]:
                                 continue  # Wir haben Marc noch nicht erstellt
 
-                            if "text" in node:
+                            if dialogs["localization"].get(str(node["id"])):
                                 node_id = str(node["id"]).zfill(3)
 
-                                if not os.path.exists(f"data/audio/{node_id}.ogg"):
-                                    print("Can not load: ", f"data/audio/{node_id}.ogg")
-                                    continue
+                                for lang_code in dialogs["locales"]:
+                                    if not os.path.exists(f"data/audio/{lang_code}_{node_id}.ogg"):
+                                        print("Can not load: ", f"data/audio/{lang_code}_{node_id}.ogg")
+                                        continue
 
-                                nodes.append(node_id)
+                                    nodes.append((f"{lang_code}_{node_id}", character_name))
 
     progress = Progress(0, len(nodes))
     progress.updateTitle(" Re-Exporting Rhubarb Files")
     results = []
+    Path(RHUBARB_OUT).mkdir(parents=True, exist_ok=True)
     with Pool(SPINE_THREADS) as p:
         for i, (errors, warnings) in enumerate(p.imap_unordered(rhubarb_export, nodes), 0):
             progress.advance()
@@ -156,9 +159,11 @@ def rhubarb_reexport():
                 })
     progress.finish()
 
-    for node_id in nodes:
-        rhubarb_out = f"{RHUBARB_OUT}{node_id}.json"
+    for node_info in nodes:
+        node_id = node_info[0]
+        character_name = node_info[1]
 
+        rhubarb_out = f"{RHUBARB_OUT}{node_id}.json"
         # read rhubarb output
         with open(rhubarb_out) as rhubarb_outfile:
             # Add animation to character
@@ -350,9 +355,12 @@ def copy_file(src, des):
             os.chmod(f'{des}/{name}', S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
         except Exception:
             pass
-    shutil.copyfile(src, f'{des}/{name}')
-    if set_read_only:
-        os.chmod(f'{des}/{name}', S_IREAD | S_IRGRP | S_IROTH)
+    try:
+        shutil.copyfile(src, f'{des}/{name}')
+        if set_read_only:
+            os.chmod(f'{des}/{name}', S_IREAD | S_IRGRP | S_IROTH)
+    except FileNotFoundError:
+        pass
 
 
 def on_created(event):
@@ -402,7 +410,7 @@ if __name__ == "__main__":
     copy_folder("./data-src/dialog", "./data/dialog")
     rhubarb_reexport()
     print(colored("Convert sucess", 'green'))
-    patterns_src = ["*.spine", "*.lua", "*.json", "*.schnack"]
+    patterns_src = ["*.spine", "*.lua", "*.json", "*.schnack", "*.ogg"]
     ignore_patterns = None
     ignore_directories = False
     case_sensitive = True
