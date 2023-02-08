@@ -195,6 +195,7 @@ void Game::setupLuaFunctions()
 								obj->setVisible(false);
 								lua_state->script("inventory_items[\"" + obj->getId() + "\"] = scenes[game.scene].items." + obj->getId());
 								lua_state->script("inventory_items[\"" + obj->getId() + "\"].skin = \"" + config["inventar_default_skin"].as<std::string>() + "\"");
+								lua_state->script("inventory_items[\"" + obj->getId() + "\"].cross_scene = true");
 
 								lua_state->script("scenes[game.scene].items." + obj->getId() + " = nil");
 							});
@@ -205,11 +206,12 @@ void Game::setupLuaFunctions()
 							[this](const std::string &skin)
 							{
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								obj->setSkin(config[skin].as<std::string>());
+								obj->setSkin(skin);
 								obj->cross_scene = true;
 								obj->setVisible(false);
 								lua_state->script("inventory_items[\"" + obj->getId() + "\"] = scenes[game.scene].items." + obj->getId());
 								lua_state->script("inventory_items[\"" + obj->getId() + "\"].skin = \"" + skin + "\"");
+								lua_state->script("inventory_items[\"" + obj->getId() + "\"].cross_scene = true");
 
 								lua_state->script("scenes[game.scene].items." + obj->getId() + " = nil");
 							});
@@ -228,6 +230,7 @@ void Game::setupLuaFunctions()
 									obj->setVisible(false);
 									lua_state->script("inventory_items[\"" + object + "\"] = scenes[game.scene].items." + object);
 									lua_state->script("inventory_items[\"" + object + "\"].skin = \"" + config["inventar_default_skin"].as<std::string>() + "\"");
+									lua_state->script("inventory_items[\"" + object + "\"].cross_scene = true");
 
 									lua_state->script("scenes[game.scene].items." + object + " = nil");
 								}
@@ -247,7 +250,8 @@ void Game::setupLuaFunctions()
 									obj->cross_scene = true;
 									obj->setVisible(false);
 									lua_state->script("inventory_items[\"" + object + "\"] = scenes[game.scene].items." + object);
-									lua_state->script("inventory_items[\"" + obj->getId() + "\"].skin = \"" + skin + "\"");
+									lua_state->script("inventory_items[\"" + object + "\"].skin = \"" + skin + "\"");
+									lua_state->script("inventory_items[\"" + object + "\"].cross_scene = true");
 
 									lua_state->script("scenes[game.scene].items." + object + " = nil");
 								}
@@ -355,6 +359,13 @@ void Game::setupLuaFunctions()
 									std::static_pointer_cast<InteractableObject>(obj)->goToPosition(*position, callback);
 									// TODO Write Players position to LUA
 								}
+							});
+
+	/// Stop player in position
+	lua_state->set_function("StopWalking",
+							[this]()
+							{
+								player->stop_walking();
 							});
 
 	/// Debug function to get the position of a Spine point.
@@ -743,5 +754,22 @@ void Game::setupLuaFunctions()
 									(*lua_state)["speech_bubble_position_x"] = position->x;
 									(*lua_state)["speech_bubble_position_y"] = position->y;
 								}
+							});
+
+	/// Get the objects ID
+	/// returns: the name as string
+	lua_state->set_function("GetID",
+							[this]()
+							{
+								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								return obj->getId();
+							});
+
+	/// Set the players X Scale
+	/// int: Scale
+	lua_state->set_function("SetPlayerScaleX",
+							[this](const int scale)
+							{
+								player->skeleton->skeleton->scaleX = scale;
 							});
 }

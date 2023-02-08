@@ -92,8 +92,8 @@ private:
     AudioManager audioManager;
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
-    GifAnim *gifAnimation;
-    GifWriter *gifWriter;
+    std::shared_ptr<GifAnim> gifAnimation;
+    std::shared_ptr<GifWriter> gifWriter;
     bool recordingGif = false;
     uint8_t* gifBuffer;
     int gifFrame;

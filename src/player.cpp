@@ -116,10 +116,11 @@ void Player::addTargetPositionImmediately(jngl::Vec2 target, sol::function callb
     }
 }
 
-// void Player::stop_walking()
-// {
-//     setTargentPosition(position);
-// }
+void Player::stop_walking()
+{
+    path.clear();
+    setTargentPosition(position);
+}
 
 bool Player::step(bool)
 {

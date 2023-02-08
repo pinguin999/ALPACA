@@ -24,6 +24,7 @@ void DialogManager::loadDialogsFromFile(std::string fileName)
     if (auto _game = game.lock())
     {
         schnackFile = schnacker::SchnackFile::loadFromString(_game->lua_state, jngl::readAsset(fileName).str(), true);
+        schnackFile->setCurrentLocale(_game->language);
     }
 }
 
@@ -187,7 +188,7 @@ void DialogManager::showChoices(std::shared_ptr<schnacker::AnswersStepResult> an
     size_t pos = BOX_HEIGHT * (answers->answers.size() -1);
     for (auto answerResult = answers->answers.begin(); answerResult != answers->answers.end(); ++answerResult)
     {
-        schnacker::nodeId id;
+        schnacker::NodeId id;
         std::string text;
         std::tie(id, text) = (*answerResult);
 
@@ -224,7 +225,15 @@ void DialogManager::playCharacterVoice(std::string file)
         jngl::stop(last_played_audio);
     }
 
-    jngl::play(file);
+    try
+    {
+        jngl::play(file);
+    }
+    catch(const std::exception& e)
+    {
+        jngl::debugLn("Audiofile does not exist: " + file);
+    }
+
     last_played_audio = file;
 }
 
@@ -235,7 +244,7 @@ void DialogManager::playCharacterAnimation(std::string character, const std::str
         std::shared_ptr<SpineObject> spine_character = _game->getObjectById(character);
         if (spine_character)
         {
-            auto animation = "say_" + std::string(n_zero - std::min(n_zero, id.length()), '0') + id;
+            auto animation = "say_" + _game->language + "_" + std::string(n_zero - std::min(n_zero, id.length()), '0') + id;
             spine_character->playAnimation(5, animation, false, (*_game->lua_state)["pass"]);
         }
     }
@@ -262,8 +271,8 @@ void DialogManager::continueCurrent()
         {
             showCharacterText(textResult->text, bubble_pos);
             std::string character = textResult->character->canonicalName;
-            std::string fileName = std::to_string(textResult->textId);
-            auto fullFileName = "audio/" + std::string(n_zero - std::min(n_zero, fileName.length()), '0') + fileName  + ".ogg";
+            std::string fileName = std::to_string(textResult->nodeId);
+            auto fullFileName = "audio/" + _game->language + "_" + std::string(n_zero - std::min(n_zero, fileName.length()), '0') + fileName  + ".ogg";
             playCharacterAnimation(character, fileName);
             try {
                 playCharacterVoice(fullFileName);

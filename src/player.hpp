@@ -20,7 +20,7 @@ public:
 
     void addTargetPosition(jngl::Vec2 target);
     void addTargetPositionImmediately(jngl::Vec2 target, sol::function callback);
-    // void stop_walking();
+    void stop_walking();
 
     double last_click_time = 0;
 

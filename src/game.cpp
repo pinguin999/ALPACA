@@ -29,11 +29,29 @@ Game::Game(YAML::Node config) : config(config)
 	auto zoomy = this->config["screenSize"]["y"].as<int>() / screensize.y;
 	cameraZoom = 1.0 / std::max(zoomx, zoomy);
 
+	bool language_supportet = false;
 	language = jngl::getPreferredLanguage();
 
+	YAML::Node languages = this->config["supportedLanguages"];
+	for(auto supported_language : languages)
+	{
+		jngl::debugLn(supported_language.as<std::string>());
+		if(language == supported_language.as<std::string>())
+		{
+			language_supportet = true;
+			break;
+		}
+	}
+
+	if(!language_supportet)
+	{
+		language = "en";
+	}
+
+
 #if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
-    gifAnimation = new GifAnim();
-    gifWriter = new GifWriter();
+    gifAnimation = std::make_shared<GifAnim>();
+    gifWriter = std::make_shared<GifWriter>();
 	gifBuffer = new uint8_t[(jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR * (jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR)) * 4];
 #endif
 
@@ -122,9 +140,6 @@ Game::~Game()
 	gameObjects.clear();
 	needToAdd.clear();
 	needToRemove.clear();
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
-	free(gifBuffer);
-#endif
 }
 
 void Game::step()
@@ -169,7 +184,7 @@ const std::string currentDateTime() {
     tstruct = *localtime(&now);
     // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
     // for more information about date/time format
-    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+    strftime(buf, sizeof(buf), "%Y-%m-%d-%M-%s", &tstruct);
 
     return buf;
 }
@@ -194,7 +209,7 @@ void Game::debugStep()
 			jngl::debug("start recording ");
 			jngl::debugLn(filename);
 
-			gifAnimation->GifBegin(gifWriter,
+			gifAnimation->GifBegin(gifWriter.get(),
 								   filename.c_str(),
 								   jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR,
 								   jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR,
@@ -207,7 +222,7 @@ void Game::debugStep()
 		{
 			// stop recording
 			recordingGif = false;
-			gifAnimation->GifEnd(gifWriter);
+			gifAnimation->GifEnd(gifWriter.get());
 			jngl::debugLn("stop recording");
 		}
 	}
@@ -216,7 +231,7 @@ void Game::debugStep()
 	// Reload Scene
 	if (jngl::keyPressed("r") || reload)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 		loadLevel(currentScene->getSceneName());
 		reload = false;
 	}
@@ -310,7 +325,7 @@ void Game::debugStep()
 			auto currentTime = jngl::getTime();
 			auto timeDiff = currentTime - gifTime;
 
-			gifAnimation->GifWriteFrame(gifWriter,
+			gifAnimation->GifWriteFrame(gifWriter.get(),
 									gifBuffer,
 									jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR,
 									jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR,
