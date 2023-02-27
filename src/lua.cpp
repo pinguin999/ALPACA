@@ -429,6 +429,10 @@ void Game::setupLuaFunctions()
 								if (frm)
 								{
 									auto position = frm->getPoint(point_name);
+									if(position && frm->abs_position)
+									{
+										position = position.value() + getCameraPosition();
+									}
 
 									if (obj && position)
 									{
@@ -575,7 +579,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("DeattatchAllFromPointer",
 							[this]()
 							{
-								for (auto obj : pointer->attatchedObjects)
+								for (auto &obj : pointer->attatchedObjects)
 								{
 									obj->setParent(nullptr);
 									obj->setVisible(false);
@@ -766,9 +770,9 @@ void Game::setupLuaFunctions()
 							});
 
 	/// Set the players X Scale
-	/// int: Scale
+	/// float: Scale
 	lua_state->set_function("SetPlayerScaleX",
-							[this](const int scale)
+							[this](const float scale)
 							{
 								player->skeleton->skeleton->scaleX = scale;
 							});

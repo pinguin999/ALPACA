@@ -49,6 +49,27 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
         (*game->lua_state)["scenes"][scene] = game->lua_state->create_table();
     }
 
+    if (json["left_border"].IsDefined() && !json["left_border"].IsNull())
+    {
+        left_border = json["left_border"].as<int>();
+        (*game->lua_state)["scenes"][scene]["left_border"] = left_border;
+    }
+    if (json["right_border"].IsDefined() && !json["right_border"].IsNull())
+    {
+        right_border = json["right_border"].as<int>();
+        (*game->lua_state)["scenes"][scene]["right_border"] = right_border;
+    }
+    if (json["top_border"].IsDefined() && !json["top_border"].IsNull())
+    {
+        top_border = json["top_border"].as<int>();
+        (*game->lua_state)["scenes"][scene]["top_border"] = top_border;
+    }
+    if (json["bottom_border"].IsDefined() && !json["bottom_border"].IsNull())
+    {
+        bottom_border = json["bottom_border"].as<int>();
+        (*game->lua_state)["scenes"][scene]["bottom_border"] = bottom_border;
+    }
+
     if ((*game->lua_state)["scenes"][scene]["background"].valid())
     {
         background = std::make_shared<Background>(game, (*game->lua_state)["scenes"][scene]["background"]["spine"]);
@@ -268,6 +289,7 @@ void Scene::loadObjects(YAML::Node objects)
                 int layer = (*object)["layer"].as<int>(1);
                 std::string animation = (*object)["animation"].as<std::string>("");
                 bool cross_scene = (*object)["cross_scene"].as<bool>(false);
+                bool abs_position = (*object)["abs_position"].as<bool>(false);
 
                 auto interactable = std::make_shared<InteractableObject>(_game, spine_file, object_id, scale);
                 interactable->layer = layer;
@@ -281,6 +303,7 @@ void Scene::loadObjects(YAML::Node objects)
                 interactable->setPosition(jngl::Vec2((*object)["x"].as<float>(), (*object)["y"].as<float>()));
                 interactable->setLuaIndex(object_id);
                 interactable->cross_scene = cross_scene;
+                interactable->abs_position = abs_position;
 
                 (*_game->lua_state)["scenes"][scene]["items"][object_id] = _game->lua_state->create_table_with(
                     "spine", spine_file,
@@ -291,6 +314,7 @@ void Scene::loadObjects(YAML::Node objects)
                     "loop_animation", true,
                     "visible", true,
                     "cross_scene", cross_scene,
+                    "abs_position", abs_position,
                     "layer", layer,
                     "scale", scale);
 
@@ -330,12 +354,14 @@ void Scene::loadObjects(YAML::Node objects)
                     float layer = (*_game->lua_state)["scenes"][scene]["items"][id]["layer"];
                     std::string animation = (*_game->lua_state)["scenes"][scene]["items"][id]["animation"];
                     bool cross_scene = (*_game->lua_state)["scenes"][scene]["items"][id]["cross_scene"];
+                    bool abs_position = (*_game->lua_state)["scenes"][scene]["items"][id]["abs_position"];
 
                     interactable->setPosition(jngl::Vec2(std::stof(x), std::stof(y)));
                     interactable->setLuaIndex(id);
                     interactable->setVisible(visible);
                     interactable->layer = (int)layer;
                     interactable->cross_scene = cross_scene;
+                    interactable->abs_position = abs_position;
 
                     if (animation != "")
                     {

@@ -8,20 +8,20 @@ SpeechBubble::SpeechBubble(std::shared_ptr<Game> game, const std::string &spine_
     text(text)
 {
     position = pos;
-}
 
-bool SpeechBubble::step(bool)
-{
     auto middlebone = spSkeleton_findBone(skeleton->skeleton, "middlemiddle");
 
     auto textSize = text.getSize();
 
-    if (auto _game = game.lock())
-    {
-        middlebone->scaleX = textSize.y / _game->config["speechbubbleScaleX"].as<double>();
-        middlebone->scaleY = textSize.x / _game->config["speechbubbleScaleY"].as<double>();
-    }
+    middlebone->scaleX = textSize.y / game->config["speechbubbleScaleX"].as<double>();
+    middlebone->scaleY = textSize.x / game->config["speechbubbleScaleY"].as<double>();
 
+    if (position.x - textSize.x / 2.0 < -1920 / 2)
+        position.x = std::max(position.x, -860.0 + textSize.x / 2.0);
+}
+
+bool SpeechBubble::step(bool)
+{
     skeleton->step();
     return true;
 }

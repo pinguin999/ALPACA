@@ -34,6 +34,7 @@ private:
     const int MAX_CLICK_DISTANCE;
     const int NEAR_OBJECT;
     const int X_BORDER;
+    const int Y_BORDER;
     float max_speed;
     std::deque<jngl::Vec2> path;
     jngl::Vec2 target_position = jngl::Vec2(0, 0);

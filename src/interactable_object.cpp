@@ -50,15 +50,24 @@ bool InteractableObject::step(bool force)
 #endif
 
         if (!force && _game->getDialogManager()->isActive())
+        {
             return false;
+        }
 
         if (!force && _game->getInactivLayerBorder() > layer)
+        {
             return false;
+        }
 
         // TODO Double Click on Objekts
         if (_game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
         {
             jngl::Vec2 click_position = _game->pointer->getPosition();
+            if (abs_position)
+            {
+                click_position -= _game->getCameraPosition();
+            }
+
             auto collision = spSkeletonBounds_containsPoint(bounds, (float)click_position.x - (float)position.x, (float)click_position.y - (float)position.y);
             if (collision)
             {
@@ -99,7 +108,17 @@ void InteractableObject::draw() const
     }
 
     jngl::pushMatrix();
-    jngl::translate(position);
+    if (abs_position)
+    {
+        jngl::reset();
+        if (auto _game = game.lock())
+        {
+            jngl::scale(_game->getCameraZoom());
+        }
+    }else
+    {
+        jngl::translate(position);
+    }
     jngl::rotate(getRotation());
 
 #ifndef NDEBUG

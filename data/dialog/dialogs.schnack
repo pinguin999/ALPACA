@@ -1,32 +1,9 @@
 {
     "name": "Dialogs",
-    "schnackVersion": "0.1.0",
+    "schnackVersion": "0.3.0",
     "maxNodeId": 0,
-    "dialogs": [
-        {
-            "name": "demo",
-            "viewport": {
-                "x": 0,
-                "y": 0,
-                "zoom": 1
-            },
-            "entryNode": 0,
-            "nodes": [
-                {
-                    "id": 0,
-                    "type": "text",
-                    "pos": {
-                        "x": 304,
-                        "y": 264.6875
-                    },
-                    "onlyOnce": false,
-                    "next": [],
-                    "text": "Hello World",
-                    "character": "spine_boy"
-                }
-            ]
-        }
-    ],
+    "dialogs": [],
+    "emptyFolders": [],
     "characters": [
         {
             "displayName": "spine_boy",
@@ -34,5 +11,54 @@
             "properties": {}
         }
     ],
-    "variables": {}
+    "variables": {},
+    "editorData": {
+        "dockLayout": {
+            "orientation": 1,
+            "dockPercentage": -1,
+            "children": [
+                {
+                    "orientation": 2,
+                    "dockPercentage": 0.15,
+                    "children": [
+                        {
+                            "dockPercentage": 0.5,
+                            "identifier": "dialogTreePanel"
+                        },
+                        {
+                            "dockPercentage": 0.5,
+                            "identifier": "variablesPanel"
+                        }
+                    ]
+                },
+                {
+                    "orientation": 2,
+                    "dockPercentage": 0.68,
+                    "children": [
+                        {
+                            "dockPercentage": 0.6,
+                            "identifier": "editorPanel"
+                        },
+                        {
+                            "dockPercentage": 0.1,
+                            "identifier": "logPanel"
+                        },
+                        {
+                            "dockPercentage": 0.4,
+                            "identifier": "localizationPanel"
+                        }
+                    ]
+                },
+                {
+                    "dockPercentage": 0.17,
+                    "identifier": "charactersPanel"
+                }
+            ]
+        },
+        "floatingPanels": []
+    },
+    "locales": [
+        "en"
+    ],
+    "localization": {}
 }

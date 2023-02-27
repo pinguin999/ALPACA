@@ -269,8 +269,15 @@ void DialogManager::continueCurrent()
         auto textResult = std::dynamic_pointer_cast<schnacker::TextStepResult>(result);
         if(textResult)
         {
-            showCharacterText(textResult->text, bubble_pos);
             std::string character = textResult->character->canonicalName;
+            std::shared_ptr<SpineObject> spine_character = _game->getObjectById(character);
+            if (spine_character)
+            {
+                auto optionalpos = spine_character->getPoint("speechbubble");
+                if(optionalpos)
+                    bubble_pos = spine_character->getPosition() + optionalpos.value();
+            }
+            showCharacterText(textResult->text, bubble_pos);
             std::string fileName = std::to_string(textResult->nodeId);
             auto fullFileName = "audio/" + _game->language + "_" + std::string(n_zero - std::min(n_zero, fileName.length()), '0') + fileName  + ".ogg";
             playCharacterAnimation(character, fileName);

@@ -60,6 +60,7 @@ public:
     void setSkin(const std::string &skin);
 	std::vector<std::string> getPointNames();
 	bool cross_scene = false;
+	bool abs_position = false;
 
 	static void animationStateListener(spAnimationState *state, spEventType type, spTrackEntry *entry, spEvent *event);
     std::string collision_script = "";  // TODO protected

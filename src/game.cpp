@@ -35,7 +35,6 @@ Game::Game(YAML::Node config) : config(config)
 	YAML::Node languages = this->config["supportedLanguages"];
 	for(auto supported_language : languages)
 	{
-		jngl::debugLn(supported_language.as<std::string>());
 		if(language == supported_language.as<std::string>())
 		{
 			language_supportet = true;
@@ -140,6 +139,9 @@ Game::~Game()
 	gameObjects.clear();
 	needToAdd.clear();
 	needToRemove.clear();
+#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+	delete[] gifBuffer;
+#endif
 }
 
 void Game::step()
@@ -231,7 +233,7 @@ void Game::debugStep()
 	// Reload Scene
 	if (jngl::keyPressed("r") || reload)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		loadLevel(currentScene->getSceneName());
 		reload = false;
 	}
@@ -397,6 +399,15 @@ int sgn(T val)
 void Game::setCameraPosition(Vec2 position, const double deadzoneFactorX,
 							 const double deadzoneFactorY)
 {
+	if (position.x < currentScene->left_border)
+		position.x = currentScene->left_border;
+	if (position.x > currentScene->right_border)
+		position.x = currentScene->right_border;
+	if (position.y < currentScene->top_border)
+		position.y = currentScene->top_border;
+	if(position.y > currentScene->bottom_border)
+		position.y = currentScene->bottom_border;
+
 	cameraDeadzone = position - targetCameraPosition;
 	const double x = 160 * deadzoneFactorX;
 	const double y = 90 * deadzoneFactorY;

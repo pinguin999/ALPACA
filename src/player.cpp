@@ -9,7 +9,8 @@ Player::Player(std::shared_ptr<Game> game, const std::string &spine_file) : Spin
                                                                             DOUBLE_CLICK_TIME(game->config["double_click_time"].as<double>()),
                                                                             MAX_CLICK_DISTANCE(game->config["max_click_distance"].as<int>()),
                                                                             NEAR_OBJECT(game->config["near_object"].as<int>()),
-                                                                            X_BORDER(game->config["x_border"].as<int>()),
+                                                                            X_BORDER(game->config["border"]["x"].as<int>()),
+                                                                            Y_BORDER(game->config["border"]["y"].as<int>()),
                                                                             max_speed(std::abs(game->config["player_max_speed"].as<float>())),
                                                                             player_walk_animation(game->config["player_walk_animation"].as<std::string>()),
                                                                             player_side_skin(game->config["player_side_skin"].as<std::string>()),
@@ -54,7 +55,8 @@ void Player::setDirection(jngl::Vec2 target_position)
 
                 skeleton->skeleton->scaleX = 1;
                 auto slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
-                slot->color.a = 0;
+                if (slot)
+                    slot->color.a = 0;
 
                 (*_game->lua_state)["player"]["skin"] = player_side_skin;
         }
@@ -70,7 +72,8 @@ void Player::setDirection(jngl::Vec2 target_position)
             setSkin(player_front_skin);
 
             auto slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
-            slot->color.a = 1;
+            if (slot)
+                slot->color.a = 1;
 
             (*_game->lua_state)["player"]["skin"] = player_front_skin;
         }
@@ -85,7 +88,8 @@ void Player::setDirection(jngl::Vec2 target_position)
             }
 
             auto slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
-            slot->color.a = 0;
+            if(slot)
+                slot->color.a = 0;
 
             (*_game->lua_state)["player"]["skin"] = player_side_skin;
         }
@@ -251,20 +255,27 @@ bool Player::step(bool)
 
         // Move scean if the player is at the border of the screen.
         auto size = jngl::getScreenSize();
+        jngl::Vec2 camPos = _game->getCameraOrigin();
 
         if (position.x + X_BORDER > size.x / 2.0 / _game->getCameraZoom())
         {
-            _game->setCameraPosition(jngl::Vec2((position.x + X_BORDER - size.x / 2.0 / _game->getCameraZoom()), 0), 0, 0);
+            camPos.x = position.x + X_BORDER - size.x / 2.0 / _game->getCameraZoom();
         }
-        else if (position.x - X_BORDER < -size.x / 2.0 / _game->getCameraZoom())
+        if (position.x - X_BORDER < -size.x / 2.0 / _game->getCameraZoom())
         {
-            // Move scean if the player is at the border of the screen.
-            _game->setCameraPosition(jngl::Vec2((position.x - X_BORDER + size.x / 2.0 / _game->getCameraZoom()), 0), 0, 0);
+            camPos.x = position.x - X_BORDER + size.x / 2.0 / _game->getCameraZoom();
         }
-        else
+
+        if (position.y + Y_BORDER > size.y / 2.0 / _game->getCameraZoom())
         {
-            _game->setCameraPosition(_game->getCameraOrigin(), 0, 0);
+            camPos.y = position.y + Y_BORDER - size.y / 2.0 / _game->getCameraZoom();
         }
+        if (position.y - Y_BORDER < -size.y / 2.0 / _game->getCameraZoom())
+        {
+            camPos.y = position.y - Y_BORDER + size.y / 2.0 / _game->getCameraZoom();
+        }
+
+        _game->setCameraPosition(camPos, 0, 0);
     }
 
     return false;

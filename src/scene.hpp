@@ -30,6 +30,10 @@ public:
     std::string getSceneName(){return fileName;};
 
     std::shared_ptr<Background> background;
+    int left_border = INT_MIN;
+    int right_border = INT_MAX;
+    int top_border = INT_MIN;
+    int bottom_border = INT_MAX;
 private:
     std::string fileName;
     YAML::Node json;

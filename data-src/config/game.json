@@ -4,6 +4,14 @@
         "x": 1920,
         "y": 1080
     },
+    "minAspectRatio": {
+        "x": 16,
+        "y": 9
+    },
+    "maxAspectRatio": {
+        "x": 16,
+        "y": 9
+    },
     "default_font": "fonts/ABeeZee-Regular.ttf",
     "player": "spineboy-ess",
     "pointer": "pointer",
@@ -39,5 +47,9 @@
         "x": 0,
         "y": 256
     },
-    "x_border": 250,
+    "border": {
+        "x": 250,
+        "y": 100
+    },
+    "supportedLanguages": ["de", "en"],
 }

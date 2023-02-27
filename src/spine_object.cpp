@@ -58,11 +58,17 @@ SpineObject::SpineObject(std::shared_ptr<Game> game, const std::string &spine_fi
     spSkeletonJson *json = spSkeletonJson_create(atlas);
     json->scale = scale;
 
-    skeletonData = spSkeletonJson_readSkeletonDataFile(json, (spine_file + "/" + spine_file + ".json").c_str());
-    if (!skeletonData)
+    while (true)
     {
-        jngl::debugLn("Fatal Error loading " + spine_file + ": " + json->error);
-        assert(skeletonData);
+        skeletonData = spSkeletonJson_readSkeletonDataFile(json, (spine_file + "/" + spine_file + ".json").c_str());
+        if (!skeletonData)
+        {
+            jngl::debugLn("Fatal Error loading " + spine_file + ": " + json->error);
+            // assert(skeletonData);
+    		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+        break;
     }
 
     spSkeletonJson_dispose(json);

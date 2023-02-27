@@ -101,8 +101,11 @@ def rhubarb_export(node_info):
     if not RHUBARB:
         return errors, warnings
     rhubarb_out = f"{RHUBARB_OUT}{node_id}.json"
-    if set_read_only:
-        os.chmod(rhubarb_out, S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
+    try:
+        if set_read_only:
+            os.chmod(rhubarb_out, S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
+    except FileNotFoundError:
+        pass
     command = [RHUBARB, f"data/audio/{node_id}.ogg", "-r", "phonetic", "-f", "json", "-o", rhubarb_out]
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
     output = p.communicate()[0]
@@ -114,11 +117,72 @@ def rhubarb_export(node_info):
 
 
 def rhubarb_reexport():
+    nodes = get_notes()
+
+    progress = Progress(0, len(nodes))
+    progress.updateTitle(" Re-Exporting Rhubarb Files")
+    results = []
+    Path(RHUBARB_OUT).mkdir(parents=True, exist_ok=True)
+    with Pool(SPINE_THREADS) as p:
+        for i, (errors, warnings) in enumerate(p.imap_unordered(rhubarb_export, nodes), 0):
+            progress.advance()
+
+            if len(errors) > 0 or len(warnings) > 0:
+                results.append({
+                    "file": nodes[i],
+                    "errors": errors,
+                    "warnings": warnings,
+                })
+    progress.finish()
+
+
+def apply_rhubarb():
+    nodes = get_notes()
+    for node_info in nodes:
+        node_id = node_info[0]
+        character_name = node_info[1]
+
+        rhubarb_out = f"{RHUBARB_OUT}{node_id}.json"
+        # read rhubarb output
+        with open(rhubarb_out) as rhubarb_outfile:
+            # Add animation to character
+            character_path = f"data/{character_name}/{character_name}.json"
+
+            if not os.path.exists(character_path):
+                print("Can not write into: ", character_path)
+                continue
+            if set_read_only:
+                os.chmod(character_path, S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
+            with open(character_path, 'r+') as character_file:
+                mouthCues = json.load(rhubarb_outfile)
+                character = json.load(character_file)
+
+                character["animations"][f"say_{node_id}"] = {}
+                character["animations"][f"say_{node_id}"]["slots"] = {}
+
+                skins = []
+                for skin in character['skins']:
+                    skins.append(skin['name'])
+                for skin in skins:
+                    animation = [{"time": cues['start'],
+                                  "name": f"{skin}/mouth-{str(cues['value']).lower()}"} for cues in mouthCues['mouthCues']]
+
+                    character["animations"][f"say_{node_id}"]["slots"][f"{skin}-mouth"] = {}
+                    character["animations"][f"say_{node_id}"]["slots"][f"{skin}-mouth"]["attachment"] = animation
+
+                character_file.seek(0)
+                character_file.write(json.dumps(character, indent=4))
+
+            if set_read_only:
+                os.chmod(character_path, S_IREAD | S_IRGRP | S_IROTH)
+
+
+def get_notes():
     nodes = []
     for _root, _dirs, files in os.walk(SCHNACKER_FOLDER):
         for file in files:
             if file.endswith(".schnack"):
-                with open(_root + file) as dialog_file:
+                with open(_root + file, encoding='utf-8') as dialog_file:
                     dialogs = json.load(dialog_file)
                     for dialog in dialogs["dialogs"]:
                         for node in dialog["nodes"]:
@@ -142,55 +206,7 @@ def rhubarb_reexport():
                                         continue
 
                                     nodes.append((f"{lang_code}_{node_id}", character_name))
-
-    progress = Progress(0, len(nodes))
-    progress.updateTitle(" Re-Exporting Rhubarb Files")
-    results = []
-    Path(RHUBARB_OUT).mkdir(parents=True, exist_ok=True)
-    with Pool(SPINE_THREADS) as p:
-        for i, (errors, warnings) in enumerate(p.imap_unordered(rhubarb_export, nodes), 0):
-            progress.advance()
-
-            if len(errors) > 0 or len(warnings) > 0:
-                results.append({
-                    "file": nodes[i],
-                    "errors": errors,
-                    "warnings": warnings,
-                })
-    progress.finish()
-
-    for node_info in nodes:
-        node_id = node_info[0]
-        character_name = node_info[1]
-
-        rhubarb_out = f"{RHUBARB_OUT}{node_id}.json"
-        # read rhubarb output
-        with open(rhubarb_out) as rhubarb_outfile:
-            # Add animation to character
-            character_path = f"data/{character_name}/{character_name}.json"
-
-            if not os.path.exists(character_path):
-                print("Can not write into: ", character_path)
-                continue
-            if set_read_only:
-                os.chmod(character_path, S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
-            with open(character_path, 'r+') as character_file:
-                mouthCues = json.load(rhubarb_outfile)
-                character = json.load(character_file)
-                animation = [{"time": cues['start'],
-                              "name": f"front-mouth-{str(cues['value']).lower()}"} for cues in mouthCues['mouthCues']]
-
-                character["animations"][f"say_{node_id}"] = {}
-                character["animations"][f"say_{node_id}"]["slots"] = {}
-                character["animations"][f"say_{node_id}"]["slots"]["mouth"] = {}
-                character["animations"][f"say_{node_id}"]["slots"]["mouth"]["attachment"] = animation
-
-                character_file.seek(0)
-                character_file.write(json.dumps(character))
-                pass
-
-            if set_read_only:
-                os.chmod(character_path, S_IREAD | S_IRGRP | S_IROTH)
+    return nodes
 
 
 def spine_reexport(dir):
@@ -379,6 +395,11 @@ def on_data_src_modified(event):
         (errors, warnings) = spine_export(event.src_path)
         if len(errors) > 0 or len(warnings) > 0:
             printErrorsAndWarnings(event.src_path, errors, warnings)
+        apply_rhubarb()
+    if event.src_path.endswith(".ogg"):
+        (errors, warnings) = rhubarb_export(event.src_path)
+        if len(errors) > 0 or len(warnings) > 0:
+            printErrorsAndWarnings(event.src_path, errors, warnings)
     if event.src_path.endswith(".lua"):
         copy_script(event.src_path)
     if event.src_path.endswith(".json") and 'scenes' in event.src_path:
@@ -409,6 +430,7 @@ if __name__ == "__main__":
     copy_folder("./data-src/icons", "./data/icons")
     copy_folder("./data-src/dialog", "./data/dialog")
     rhubarb_reexport()
+    apply_rhubarb()
     print(colored("Convert sucess", 'green'))
     patterns_src = ["*.spine", "*.lua", "*.json", "*.schnack", "*.ogg"]
     ignore_patterns = None
