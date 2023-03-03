@@ -41,9 +41,10 @@ elif sys.platform == "darwin":
     LUA = 'luac'
 elif sys.platform == "win32":
     # Windows
-    RHUBARB = 'windows_bin\\rhubarb.exe'
+    mod_path = Path(__file__).parent
+    RHUBARB = (mod_path / 'windows_bin\\rhubarb.exe').resolve()
     SPINE = 'C:\\Program Files\\Spine\\Spine.exe'
-    LUA = 'windows_bin\\luac.exe'
+    LUA = (mod_path / 'windows_bin\\luac.exe').resolve()
     set_read_only = False
 
 
