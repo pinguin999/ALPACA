@@ -9,4 +9,7 @@ nav:
   - "Getting Started": index.md
   # - "Project structur": readme.md
   - "LUA API": lua.md
+  - "Assets": asset_pipeline.md
   - "Scenes": scene.md
+  - "Dialogs": dialogs.md
+  - "Spine": spine.md

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <map>
 #include <jngl/Vec2.hpp>
 #include <spine/spine.h>
 #include "skeleton_drawable.hpp"
@@ -56,7 +57,7 @@ public:
 	std::optional<jngl::Vec2> getPoint(const std::string &point_name);
 	void playAnimation(int trackIndex, const std::string& currentAnimation, bool loop, sol::function callback);
 	void addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, sol::function callback);
-	void onAnimationComplete();
+	void onAnimationComplete(std::string key);
     void setSkin(const std::string &skin);
 	std::vector<std::string> getPointNames();
 	bool cross_scene = false;
@@ -72,7 +73,7 @@ public:
 protected:
 	std::string currentAnimation = "idle";
 	std::string nextAnimation;
-	sol::function animation_callback;
+	std::map<std::string, sol::function> animation_callback;
 	sol::function walk_callback;
 
 	bool deleted = false;

@@ -43,7 +43,8 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
     case SP_ANIMATION_COMPLETE:
         if (!entry->loop)
         {
-            reinterpret_cast<SpineObject *>(state->userData)->onAnimationComplete();
+
+            reinterpret_cast<SpineObject *>(state->userData)->onAnimationComplete(std::to_string(entry->trackIndex) + std::string(entry->animation->name));
         }
         break;
     default:
@@ -51,7 +52,7 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
     }
 }
 
-SpineObject::SpineObject(std::shared_ptr<Game> game, const std::string &spine_file, const std::string &id, float scale) : animation_callback((*game->lua_state)["pass"]), walk_callback((*game->lua_state)["pass"]), spine_name(spine_file), id(id), game(game)
+SpineObject::SpineObject(std::shared_ptr<Game> game, const std::string &spine_file, const std::string &id, float scale) : walk_callback((*game->lua_state)["pass"]), spine_name(spine_file), id(id), game(game)
 {
     atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
     assert(atlas);
@@ -121,7 +122,7 @@ std::vector<std::string> SpineObject::getPointNames()
 
 void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimation, bool loop, sol::function callback)
 {
-    this->animation_callback = callback;
+    this->animation_callback[std::to_string(trackIndex) + currentAnimation] = callback;
     this->currentAnimation = currentAnimation;
     spAnimation* animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData, currentAnimation.c_str());
     if (animation)
@@ -136,7 +137,7 @@ void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimat
 
 void SpineObject::addAnimation(int trackIndex, const std::string& currentAnimation, bool loop, float delay, sol::function callback)
 {
-    this->animation_callback = callback;
+    this->animation_callback[std::to_string(trackIndex) + currentAnimation] = callback;
     this->currentAnimation = currentAnimation;
     spAnimation* animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData, currentAnimation.c_str());
     if (animation)
@@ -149,12 +150,12 @@ void SpineObject::addAnimation(int trackIndex, const std::string& currentAnimati
     }
 }
 
-void SpineObject::onAnimationComplete()
+void SpineObject::onAnimationComplete(std::string key)
 {
     if (auto _game = game.lock())
     {
-        animation_callback();
-        animation_callback = (*_game->lua_state)["pass"];
+        animation_callback[key]();
+        animation_callback[key] = (*_game->lua_state)["pass"];
 
         if (nextAnimation.empty())
         {
