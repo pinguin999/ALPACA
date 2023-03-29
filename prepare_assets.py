@@ -385,7 +385,7 @@ def on_created(event):
 
 
 def on_deleted(event):
-    print(colored(f"{event.src_path} was deleted!", 'red'))
+    print(colored(f"{event.src_path} was deleted! Please delete it manually from data.", 'red'))
 
 
 def on_data_src_modified(event):
