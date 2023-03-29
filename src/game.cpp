@@ -540,6 +540,7 @@ void Game::loadLuaState(std::string savefile)
 	}
 
 	std::string dialogFilePath = config["dialog"].as<std::string>();
+	getDialogManager()->loadDialogsFromFile(dialogFilePath);
 
 	if ((*lua_state)["game"].valid() && (*lua_state)["game"]["scene"].valid())
 	{
@@ -551,7 +552,6 @@ void Game::loadLuaState(std::string savefile)
 		std::string startscene = config["start_scene"].as<std::string>();
 		loadLevel(startscene);
 	}
-	getDialogManager()->loadDialogsFromFile(dialogFilePath);
 	// TODO Error handling
 	jngl::debugLn("Loaded all globals");
 }
