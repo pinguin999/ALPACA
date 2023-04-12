@@ -17,7 +17,7 @@ class DialogManager
 {
 public:
     explicit DialogManager(std::shared_ptr<Game> game);
-    void loadDialogsFromFile(std::string fileName);
+    void loadDialogsFromFile(std::string fileName, bool initializeVariables);
 
     void step();
     void draw() const;

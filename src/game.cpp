@@ -540,15 +540,15 @@ void Game::loadLuaState(std::string savefile)
 	}
 
 	std::string dialogFilePath = config["dialog"].as<std::string>();
-	getDialogManager()->loadDialogsFromFile(dialogFilePath);
-
 	if ((*lua_state)["game"].valid() && (*lua_state)["game"]["scene"].valid())
 	{
+		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
 		std::string scene = (*lua_state)["game"]["scene"];
 		loadLevel(scene);
 	}
 	else
 	{
+		getDialogManager()->loadDialogsFromFile(dialogFilePath, true);
 		std::string startscene = config["start_scene"].as<std::string>();
 		loadLevel(startscene);
 	}

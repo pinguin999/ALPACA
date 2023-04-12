@@ -19,11 +19,11 @@ DialogManager::DialogManager(std::shared_ptr<Game> game)
     selected_index = -1;
 }
 
-void DialogManager::loadDialogsFromFile(std::string fileName)
+void DialogManager::loadDialogsFromFile(std::string fileName, bool initializeVariables)
 {
     if (auto _game = game.lock())
     {
-        schnackFile = schnacker::SchnackFile::loadFromString(_game->lua_state, jngl::readAsset(fileName).str(), true);
+        schnackFile = schnacker::SchnackFile::loadFromString(_game->lua_state, jngl::readAsset(fileName).str(), initializeVariables);
         schnackFile->setCurrentLocale(_game->language);
     }
 }
