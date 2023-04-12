@@ -234,6 +234,8 @@ void Game::debugStep()
 	if (jngl::keyPressed("r") || reload)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		std::string dialogFilePath = config["dialog"].as<std::string>();
+		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
 		loadLevel(currentScene->getSceneName());
 		reload = false;
 	}
