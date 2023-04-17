@@ -164,6 +164,11 @@ void SpineObject::onAnimationComplete(std::string key)
         animation_callback[key]();
         animation_callback[key] = (*_game->lua_state)["pass"];
 
+        // Set animation back to default animation in LUA state
+        std::string lua_object = _game->getLUAPath(getId());
+        (*_game->lua_state).script(lua_object + ".animation = \"" + _game->config["spine_default_animation"].as<std::string>() + "\"");
+        (*_game->lua_state).script(lua_object + ".loop_animation = false");
+
         if (nextAnimation.empty())
         {
             return;
