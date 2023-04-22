@@ -3,7 +3,7 @@
 #define BOOST_TEST_MODULE PacTests
 #endif
 
-#include <boost/test/unit_test.hpp>
+#include <boost/ut.hpp>
 #include <ctime>
 #include <jngl/message.hpp>
 #include <jngl/input.hpp>
@@ -22,9 +22,10 @@ namespace fs = std::filesystem;
 #endif
 #endif
 
-BOOST_AUTO_TEST_SUITE(alpaca_test_suite)
+using namespace boost::ut;
+suite alpaca_test_suite = [] {
 
-BOOST_AUTO_TEST_CASE(mushroom_constructor_test)
+"mushroom_constructor_test"_test = []
 {
 #ifdef EMSCRIPTEN
     chdir("data");
@@ -49,9 +50,9 @@ BOOST_AUTO_TEST_CASE(mushroom_constructor_test)
 
     jngl::hideWindow();
 
-}
+};
 
-BOOST_AUTO_TEST_CASE(player_constructor_test)
+"player_constructor_test"_test = []
 {
 #ifdef EMSCRIPTEN
     chdir("data");
@@ -82,9 +83,9 @@ BOOST_AUTO_TEST_CASE(player_constructor_test)
 
     jngl::hideWindow();
 
-}
+};
 
-BOOST_AUTO_TEST_CASE(game_play_test)
+"game_play_test"_test = []
 {
     std::srand(std::time(nullptr));
 #ifdef EMSCRIPTEN
@@ -115,7 +116,7 @@ BOOST_AUTO_TEST_CASE(game_play_test)
 
     game->step();
     game->step();
-    BOOST_CHECK_EQUAL(game->getInactivLayerBorder(), 20);
+    expect(eq(game->getInactivLayerBorder(), 20));
 
     (*game->lua_state)["game_finished"] = false;
 
@@ -171,20 +172,21 @@ BOOST_AUTO_TEST_CASE(game_play_test)
             }
         }
     }
-    // BOOST_CHECK_EQUAL(game->getInactivLayerBorder(), 2);
+    // expect(eq(game->getInactivLayerBorder(), 2));
     jngl::debug("Took: ");
     jngl::debug(i);
     jngl::debugLn(" steps");
 
     jngl::hideWindow();
 
-    BOOST_CHECK_NE(i, 3000);
-}
+    expect(neq(i, 3000));
+};
 
 
 
-BOOST_AUTO_TEST_CASE(game_save_load_test, *boost::unit_test::disabled())
+"game_save_load_test"_test = []
 {
+    return; // DISABLED
     std::srand(std::time(nullptr));
 #ifdef EMSCRIPTEN
     chdir("data");
@@ -250,7 +252,7 @@ BOOST_AUTO_TEST_CASE(game_save_load_test, *boost::unit_test::disabled())
 
         jngl::debugLn("");
 
-        BOOST_CHECK_LE(2, actions.size());
+        expect(le(2, actions.size()));
 
         int min = 0;
         int max = actions.size() - 1;
@@ -274,14 +276,14 @@ BOOST_AUTO_TEST_CASE(game_save_load_test, *boost::unit_test::disabled())
     } while (!(*game->lua_state)["game_finished"] && i < 3000);
 
 
-    // BOOST_CHECK_EQUAL(game->getInactivLayerBorder(), 2);
+    // expect(eq(game->getInactivLayerBorder(), 2));
     jngl::debug("Took: ");
     jngl::debug(i);
     jngl::debugLn(" steps");
 
     jngl::hideWindow();
 
-    BOOST_CHECK_NE(i, 3000);
-}
+    expect(neq(i, 3000));
+};
 
-BOOST_AUTO_TEST_SUITE_END()
+};

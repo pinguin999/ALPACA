@@ -1,5 +1,5 @@
-#define BOOST_TEST_MODULE PacTests
-// #include <boost/test/unit_test.hpp>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/ut.hpp>
 
-#include "../src/game.hpp"
+int main() {
+	return boost::ut::cfg<>.run(); // explicitly run registered test suites
+}
