@@ -33,6 +33,11 @@ Pointer::~Pointer()
 
 bool Pointer::step(bool)
 {
+    const auto controllers = jngl::getConnectedControllers();
+    if (controllers.size() > 0)
+    {
+        control = std::make_unique<Gamepad>(controllers[pointerNr]);
+    }
     if (auto _game = game.lock())
     {
         jngl::Vec2 screensize = jngl::getScreenSize();
@@ -80,7 +85,7 @@ bool Pointer::step(bool)
         auto dlgMan = _game->getDialogManager();
         if (dlgMan->isSelectTextActive())
         {
-            over = dlgMan->isOverText(mouse_pose);
+            over = dlgMan->isOverText(position);
         }
         // Region and Object Collision Test nur, wenn kein Dialog läuft.
         else
@@ -90,9 +95,10 @@ bool Pointer::step(bool)
                 if (obj->getVisible() &&
                     !(_game->getInactivLayerBorder() > obj->layer) &&
                     obj->bounds &&
-                    bool(spine::spSkeletonBounds_containsPointNotMatchingName(obj->bounds, "walkable_area", (float)mouse_pose.x - (float)obj->getPosition().x, (float)mouse_pose.y - (float)obj->getPosition().y)))
+                    bool(spine::spSkeletonBounds_containsPointNotMatchingName(obj->bounds, "walkable_area", (float)position.x - (float)obj->getPosition().x, (float)position.y - (float)obj->getPosition().y)))
                 {
                     over = true;
+                    vibrate();
                     break;
                 }
             }
