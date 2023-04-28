@@ -43,7 +43,6 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
     case SP_ANIMATION_COMPLETE:
         if (!entry->loop)
         {
-
             reinterpret_cast<SpineObject *>(state->userData)->onAnimationComplete(std::to_string(entry->trackIndex) + std::string(entry->animation->name));
         }
         break;
@@ -161,13 +160,16 @@ void SpineObject::onAnimationComplete(std::string key)
 {
     if (auto _game = game.lock())
     {
+        if (nextAnimation.empty())
+        {
+            // Set animation back to default animation in LUA state
+            std::string lua_object = _game->getLUAPath(getId());
+            (*_game->lua_state).script(lua_object + ".animation = \"" + _game->config["spine_default_animation"].as<std::string>() + "\"");
+            (*_game->lua_state).script(lua_object + ".loop_animation = true");
+        }
+
         animation_callback[key]();
         animation_callback[key] = (*_game->lua_state)["pass"];
-
-        // Set animation back to default animation in LUA state
-        std::string lua_object = _game->getLUAPath(getId());
-        (*_game->lua_state).script(lua_object + ".animation = \"" + _game->config["spine_default_animation"].as<std::string>() + "\"");
-        (*_game->lua_state).script(lua_object + ".loop_animation = false");
 
         if (nextAnimation.empty())
         {

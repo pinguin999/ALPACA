@@ -229,7 +229,6 @@ bool Player::step(bool)
             if (path.size() > 0)
             {
                 setTargentPosition(path.front());
-                setDirection(target_position);
             }
 
             // Handle double click
@@ -242,7 +241,6 @@ bool Player::step(bool)
                 path.push_back(click_position);
                 position = click_position;
                 setTargentPosition(click_position);
-                setDirection(target_position);
                 currentAnimation = player_beam_animation;
                 (*_game->lua_state)["player"]["animation"] = currentAnimation;
                 (*_game->lua_state)["player"]["loop_animation"] = false;

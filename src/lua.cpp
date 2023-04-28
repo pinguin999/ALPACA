@@ -776,4 +776,22 @@ void Game::setupLuaFunctions()
 							{
 								player->skeleton->skeleton->scaleX = scale;
 							});
+
+	/// Set language
+	/// string: example 'de' or 'en'
+	lua_state->set_function("SetLanguage",
+							[this](const std::string language)
+							{
+								YAML::Node languages = this->config["supportedLanguages"];
+								for (auto supported_language : languages)
+								{
+									if (language == supported_language.as<std::string>())
+									{
+										this->language = language;
+										std::string dialogFilePath = config["dialog"].as<std::string>();
+										getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
+										return;
+									}
+								}
+							});
 }

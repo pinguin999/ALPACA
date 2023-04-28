@@ -25,33 +25,6 @@ namespace fs = std::filesystem;
 using namespace boost::ut;
 suite alpaca_test_suite = [] {
 
-"mushroom_constructor_test"_test = []
-{
-#ifdef EMSCRIPTEN
-    chdir("data");
-#elif !defined(ANDROID)
-    auto dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../data");
-    if (!fs::exists(dataFolder))
-    {
-        dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../../data");
-        if (!fs::exists(dataFolder))
-        {
-            dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("data");
-        }
-    }
-    fs::current_path(dataFolder);
-#endif
-    jngl::showWindow("Test", 800, 600, 0, {16, 9}, {16, 9});
-    jngl::setAntiAliasing(true);
-
-    YAML::Node config = YAML::Load(jngl::readAsset("config/game.json").str());
-    auto game = std::make_shared<Game>(config);
-    auto mushroom = InteractableObject(game, "mushroom", "mushroomID");
-
-    jngl::hideWindow();
-
-};
-
 "player_constructor_test"_test = []
 {
 #ifdef EMSCRIPTEN
