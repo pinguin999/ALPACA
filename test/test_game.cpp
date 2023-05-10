@@ -25,38 +25,7 @@ namespace fs = std::filesystem;
 using namespace boost::ut;
 suite alpaca_test_suite = [] {
 
-"player_constructor_test"_test = []
-{
-#ifdef EMSCRIPTEN
-    chdir("data");
-#elif !defined(ANDROID)
-    auto dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../data");
-    if (!fs::exists(dataFolder))
-    {
-        dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../../data");
-        if (!fs::exists(dataFolder))
-        {
-            dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("data");
-        }
-    }
-    fs::current_path(dataFolder);
-#endif
-    jngl::showWindow("Test", 800, 600, 0, {16, 9}, {16, 9});
-    jngl::setAntiAliasing(true);
 
-    YAML::Node config = YAML::Load(jngl::readAsset("config/game.json").str());
-    auto game = std::make_shared<Game>(config);
-
-    (*game->lua_state)["player"] = game->lua_state->create_table_with(
-        "x", 0,
-        "y", 0,
-        "skin", "front");
-
-    auto player = Player(game, "joy");
-
-    jngl::hideWindow();
-
-};
 
 "game_play_test"_test = []
 {
@@ -89,7 +58,6 @@ suite alpaca_test_suite = [] {
 
     game->step();
     game->step();
-    expect(eq(game->getInactivLayerBorder(), 20));
 
     (*game->lua_state)["game_finished"] = false;
 

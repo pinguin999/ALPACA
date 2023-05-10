@@ -11,14 +11,13 @@ if(NOT MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color")
 endif()
 
-
 if( ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	set(USE_FLAGS "-s USE_SDL=2 -s USE_FREETYPE=1 -s USE_VORBIS=1 -s USE_LIBPNG=1 -s DISABLE_EXCEPTION_CATCHING=0 ")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${USE_FLAGS}")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${USE_FLAGS}")
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${USE_FLAGS} -s ASSERTIONS=1 -s FULL_ES3=1 -s INITIAL_MEMORY=1024MB --preload-file data ") #-s ALLOW_MEMORY_GROWTH=1 --source-map-base https://pac4.gitlab.io/pac/ -g
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${USE_FLAGS} -s ASSERTIONS=1 -s FULL_ES3=1 --pre-js pre.js -lidbfs.js -s FORCE_FILESYSTEM -s INITIAL_MEMORY=1024MB --preload-file data ") #-s ALLOW_MEMORY_GROWTH=1 --source-map-base https://pac4.gitlab.io/pac/ -g
 	if (CMAKE_BUILD_TYPE MATCHES "Debug")
-		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O0 -g --source-map-base http://[::]:8000/")  # https://developer.chrome.com/blog/wasm-debugging-2020/ and https://groups.google.com/g/emscripten-discuss/c/DEmpyGoq6kE --source-map-base https://pac4.gitlab.io/pac/
+		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O0 -g --source-map-base http://0.0.0.0:8000/")  # https://developer.chrome.com/blog/wasm-debugging-2020/ and https://groups.google.com/g/emscripten-discuss/c/DEmpyGoq6kE --source-map-base https://pac4.gitlab.io/pac/
 	endif()
 	SET(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif()
