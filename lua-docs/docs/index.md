@@ -1,6 +1,7 @@
 # Getting started with your first ALPACA game
 
 [ALPACA on GitHub](https://github.com/pinguin999/ALPACA)
+[ALPACA Discord](https://discord.gg/zWdnq6UJ79)
 
 ## Setup your PC
 

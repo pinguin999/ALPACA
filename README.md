@@ -86,7 +86,7 @@ Visual Studio will automatically run CMake and you can choose pac.exe as target 
 
 If you need help setting up your first project or want to talk about your game.
 Book a time slot with the developers of ALPACA at [calendly](https://calendly.com/pinguin999/pac-indie-game-development) 🇩🇪🇬🇧
-or mail me at [kolja@portaldogs.com](kolja@portaldogs.com) 🇩🇪🇬🇧
+or mail me at [kolja@portaldogs.com](mailto:kolja@portaldogs.com) 🇩🇪🇬🇧
 
 ## Contributing
 
