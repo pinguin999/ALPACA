@@ -1,7 +1,8 @@
 # Getting started with your first ALPACA game
 
 [ALPACA on GitHub](https://github.com/pinguin999/ALPACA)
-[ALPACA Discord](https://discord.gg/zWdnq6UJ79)
+
+[ALPACA on Discord](https://discord.gg/zWdnq6UJ79)
 
 ## Setup your PC
 
@@ -11,7 +12,7 @@
 4. Check that you have installed [Spine](http://de.esotericsoftware.com/), [Rhubarb](https://github.com/DanielSWolf/rhubarb-lip-sync/releases), [Lua](https://github.com/rjpcomputing/luaforwindows) and [Python](https://www.python.org/downloads/). Now you can re-export all assets from data-src to data with the prepare_assets.py script. **On Windows you need [Spine](http://de.esotericsoftware.com/) installed and you can use prepare_assets.exe to export the assets.**
 5. If you need help setting up your first project or want to talk about your game.
 Book a time slot with the developers of ALPACA at [calendly](https://calendly.com/pinguin999/pac-indie-game-development) 🇩🇪🇬🇧
-or mail me at [kolja@portaldogs.com](mailto:kolja@portaldogs.com) 🇩🇪🇬🇧
+or mail me at [kolja@portaldogs.com](mailto:kolja@portaldogs.com) 🇩🇪🇬🇧 or join [ALPACA on Discord](https://discord.gg/zWdnq6UJ79)
 
 ## What's in the demo game?
 

@@ -95,8 +95,8 @@ void InteractableObject::registerToDelete()
 
     if (auto _game = game.lock())
     {
-        std::string scene = _game->cleanLuaString((*_game->lua_state)["game"]["scene"]);
-        (*_game->lua_state)["scenes"][scene]["items"][luaIndex] = sol::lua_nil;
+        auto lua_object = _game->getLUAPath(luaIndex);
+        _game->lua_state->script(lua_object + " = nil");
     }
 }
 
