@@ -242,8 +242,10 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
 void Scene::writeToFile()
 {
     YAML::Emitter emitter1;
-    emitter1 << YAML::DoubleQuoted << YAML::Flow << json;
-    std::ofstream fout(fileName);
+    emitter1 << YAML::DoubleQuoted << YAML::LowerNull << json;
+    emitter1.SetIndent(4);
+    emitter1.SetMapFormat(YAML::Block);
+    std::ofstream fout("./../data-src/scenes/" + fileName + ".json");
     fout << emitter1.c_str();
 }
 

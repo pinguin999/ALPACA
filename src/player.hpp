@@ -26,6 +26,7 @@ public:
 
     float getMaxSpeed(){return max_speed;};
     void setMaxSpeed(float speed){max_speed = speed;};
+    jngl::Vec2 calcCamPos();
 
     bool interruptible = true;
 

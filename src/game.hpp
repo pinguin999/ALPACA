@@ -41,7 +41,6 @@ public:
     /// Je kleiner, desto weiter ist die Kamera herausgezoomt. 1 = default, immer größer 0
     double getCameraZoom() const;
 
-    jngl::Vec2 getCameraOrigin() const;
     jngl::Vec2 getCameraPosition() const;
     jngl::Vec2 getCameraSpeed() const;
     void setCameraPosition(jngl::Vec2, double deadzoneFactorX, double deadzoneFactorY);

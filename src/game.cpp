@@ -20,10 +20,8 @@
 using jngl::Vec2;
 using namespace std::string_literals;
 
-Game::Game(YAML::Node config) : config(config)
+Game::Game(YAML::Node config) : config(config), cameraPosition(jngl::Vec2(0,0)), targetCameraPosition(jngl::Vec2(0,0))
 {
-	setCameraPositionImmediately(getCameraOrigin());
-
 	auto screensize = jngl::getScreenSize();
 	auto zoomx = this->config["screenSize"]["x"].as<int>() / screensize.x;
 	auto zoomy = this->config["screenSize"]["y"].as<int>() / screensize.y;
@@ -44,7 +42,14 @@ Game::Game(YAML::Node config) : config(config)
 
 	if(!language_supportet)
 	{
-		language = "en";
+		if (languages.size() >= 1)
+		{
+			language = languages[0].as<std::string>();
+		}
+		else
+		{
+			language = "en";
+		}
 	}
 
 
@@ -104,6 +109,11 @@ void Game::init()
 // TODO in LoadScene umbenennen
 void Game::loadLevel(const std::string &level)
 {
+	std::string old_scene = "";
+	if(currentScene)
+	{
+		old_scene = currentScene->getSceneName();
+	}
 	dialogManager->cancelDialog();
 
 	// Clear the level if there is already a level loaded
@@ -119,8 +129,14 @@ void Game::loadLevel(const std::string &level)
 			++it;
 		}
 	}
+	auto newScene = std::make_shared<Scene>(level, shared_from_this());
+	if(!newScene->background)
+	{
+		jngl::debugLn("There is no scene with the name: " + level);
+		newScene = std::make_shared<Scene>(old_scene, shared_from_this());;
+	}
 
-	currentScene = std::make_shared<Scene>(level, shared_from_this());
+	currentScene = newScene;
 	currentScene->playMusic();
 
 	// Pointer should be last in gameObjects so it's on top
@@ -131,6 +147,14 @@ void Game::loadLevel(const std::string &level)
 		pointer->setPosition(Vec2(0, 0));
 		add(pointer);
 	}
+
+	auto position = currentScene->background->getPoint(old_scene);
+	if (position)
+	{
+		player->setPosition(position.value());
+	}
+	player->stop_walking();
+	setCameraPositionImmediately(player->calcCamPos());
 }
 
 Game::~Game()
@@ -206,7 +230,7 @@ void Game::debugStep()
 			gifGameFrame = 0;
 			gifTime = jngl::getTime();
 
-			std::string filename = "";
+			std::string filename = "./../";
 			filename += currentDateTime() + ".gif";
 			jngl::debug("start recording ");
 			jngl::debugLn(filename);
@@ -248,7 +272,7 @@ void Game::debugStep()
 	{
 		editMode = !editMode;
 	}
-	if (editMode && jngl::keyPressed("S"))
+	if (editMode && jngl::keyPressed("s"))
 	{
 		currentScene->writeToFile();
 	}
@@ -382,11 +406,6 @@ Vec2 Game::getCameraSpeed() const
 	return targetCameraPosition - cameraPosition;
 }
 
-Vec2 Game::getCameraOrigin() const
-{
-	return Vec2(0, 0);
-}
-
 Vec2 Game::getCameraPosition() const
 {
 	return cameraPosition;
@@ -430,6 +449,14 @@ void Game::setCameraPosition(Vec2 position, const double deadzoneFactorX,
 
 void Game::setCameraPositionImmediately(Vec2 position)
 {
+	if (position.x < currentScene->left_border)
+		position.x = currentScene->left_border;
+	if (position.x > currentScene->right_border)
+		position.x = currentScene->right_border;
+	if (position.y < currentScene->top_border)
+		position.y = currentScene->top_border;
+	if(position.y > currentScene->bottom_border)
+		position.y = currentScene->bottom_border;
 	targetCameraPosition = cameraPosition = position;
 }
 

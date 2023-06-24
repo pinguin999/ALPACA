@@ -105,6 +105,10 @@ void Player::addTargetPositionImmediately(jngl::Vec2 target, sol::function callb
 {
     if (auto _game = game.lock())
     {
+        if(target_position == target)
+        {
+            position = target;
+        }
         path.clear();
         if (target != position)
         {
@@ -251,27 +255,7 @@ bool Player::step(bool)
             last_click_position = click_position;
         }
 
-        // Move scean if the player is at the border of the screen.
-        auto size = jngl::getScreenSize();
-        jngl::Vec2 camPos = _game->getCameraOrigin();
-
-        if (position.x + X_BORDER > size.x / 2.0 / _game->getCameraZoom())
-        {
-            camPos.x = position.x + X_BORDER - size.x / 2.0 / _game->getCameraZoom();
-        }
-        if (position.x - X_BORDER < -size.x / 2.0 / _game->getCameraZoom())
-        {
-            camPos.x = position.x - X_BORDER + size.x / 2.0 / _game->getCameraZoom();
-        }
-
-        if (position.y + Y_BORDER > size.y / 2.0 / _game->getCameraZoom())
-        {
-            camPos.y = position.y + Y_BORDER - size.y / 2.0 / _game->getCameraZoom();
-        }
-        if (position.y - Y_BORDER < -size.y / 2.0 / _game->getCameraZoom())
-        {
-            camPos.y = position.y - Y_BORDER + size.y / 2.0 / _game->getCameraZoom();
-        }
+        jngl::Vec2 camPos = calcCamPos();
 
         _game->setCameraPosition(camPos, 0, 0);
     }
@@ -304,4 +288,34 @@ void Player::setTargentPosition(jngl::Vec2 position)
         (*_game->lua_state)["player"]["x"] = position.x;
         (*_game->lua_state)["player"]["y"] = position.y;
     }
+}
+
+jngl::Vec2 Player::calcCamPos()
+{
+    if (auto _game = game.lock())
+    {
+        // Move scean if the player is at the border of the screen.
+        auto size = jngl::getScreenSize();
+        jngl::Vec2 camPos = jngl::Vec2(0,0);
+
+        if (position.x + X_BORDER > size.x / 2.0 / _game->getCameraZoom())
+        {
+            camPos.x = position.x + X_BORDER - size.x / 2.0 / _game->getCameraZoom();
+        }
+        if (position.x - X_BORDER < -size.x / 2.0 / _game->getCameraZoom())
+        {
+            camPos.x = position.x - X_BORDER + size.x / 2.0 / _game->getCameraZoom();
+        }
+
+        if (position.y + Y_BORDER > size.y / 2.0 / _game->getCameraZoom())
+        {
+            camPos.y = position.y + Y_BORDER - size.y / 2.0 / _game->getCameraZoom();
+        }
+        if (position.y - Y_BORDER < -size.y / 2.0 / _game->getCameraZoom())
+        {
+            camPos.y = position.y - Y_BORDER + size.y / 2.0 / _game->getCameraZoom();
+        }
+        return camPos;
+    }
+    return jngl::Vec2(0,0);
 }

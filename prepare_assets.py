@@ -388,6 +388,9 @@ def on_deleted(event):
     print(colored(f"{event.src_path} was deleted! Please delete it manually from data.", 'red'))
 
 
+scene_files = []
+
+
 def on_data_src_modified(event):
     time.sleep(.5)
     print(
@@ -405,7 +408,17 @@ def on_data_src_modified(event):
         copy_script(event.src_path)
     if event.src_path.endswith(".json") and 'scenes' in event.src_path:
         file = Path(event.src_path).name
-        copy_file(f"./data-src/scenes/{file}", "./data/scenes")
+        if event.src_path in scene_files:
+            scene_files.remove(event.src_path)
+            copy_file(f"./data-src/scenes/{file}", "./data/scenes")
+            return
+        parsed = None
+        with open(event.src_path, 'r') as f:
+            data = f.read()
+            parsed = json.loads(data)
+        with open(event.src_path, 'w') as f:
+            scene_files.append(event.src_path)
+            f.write(json.dumps(parsed, indent=4))
     if event.src_path.endswith(".json") and 'config' in event.src_path:
         file = Path(event.src_path).name
         copy_file(f"./data-src/config/{file}", "./data/config")

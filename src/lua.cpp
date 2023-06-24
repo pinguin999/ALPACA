@@ -31,6 +31,13 @@ void Game::setupLuaFunctions()
 							});
 
 	/// Loads a new Scene/Room
+	///
+	/// Door Example expects a Spine point object near the door:
+	///
+	///function door()
+	///	LoadScene("cockpit")
+	///end
+	///GoToPoint("cockpit", door)
 	lua_state->set_function("LoadScene",
 							[this](const std::string &scene)
 							{
@@ -264,7 +271,6 @@ void Game::setupLuaFunctions()
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								lua_state->script("inventory_items[\"" + obj->getId() + "\"] = nil");
 								obj->cross_scene = false;
-								obj->setVisible(false);
 							});
 
 	/// DEPRECATED use SetDeleted
@@ -276,7 +282,6 @@ void Game::setupLuaFunctions()
 								{
 									lua_state->script("inventory_items[\"" + object + "\"] = nil");
 									obj->cross_scene = false;
-									obj->setVisible(false);
 								}
 							});
 

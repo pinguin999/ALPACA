@@ -7,11 +7,23 @@ All information is defined in a .json file. Here is our example `test_chamber_on
 ```json
 {
     "items": [
-        {"spine": "banana", "x":"330.0", "y":"400.0", "scale": 0.3, "skin": "normal"},
+        {
+            "spine": "banana",
+            "x": "330.0",
+            "y": "400.0",
+            "scale": 0.3,
+            "skin": "normal"
+        }
     ],
     "backgroundMusic": "audio/ingame-action.ogg",
-    "background": {"spine": "scene1"},
-    "zBufferMap": null
+    "background": {
+        "spine": "scene1"
+    },
+    "zBufferMap": null,
+    "left_border": -1500,
+    "right_border": 1530,
+    "top_border": -200,
+    "bottom_border": 50
 }
 ```
 
@@ -84,3 +96,21 @@ Example:
 The background of a scene is also a Spine file. It has the parameters like an item.
 
 To define the area where the player can walk, add a bounding box with the name `walkable_area` to the Spine file.
+
+## Borders
+
+With the 4 border vales we can limit the camera. This prevents that the black background is visible.
+
+## Doors
+
+To connect two scenes we have the concept of doors. Normally we want the player to walk towards the door and than switch scenes.
+In the new scene the player should be where the door is.
+Therefor ALPACA expects a Spine point near each door with next scenes name.
+After changing the scene, the player will be placed at the Spine point with last scenes name.
+
+```lua
+function door()
+    LoadScene("scene_corridor_right")
+end
+GoToPoint("scene_corridor_right", door)
+```
