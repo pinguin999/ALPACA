@@ -100,8 +100,9 @@ std::optional<jngl::Vec2> SpineObject::getPoint(const std::string &point_name)
     // Possible Problem: Slot and Point have to have the same name
     auto att = spSkeleton_getAttachmentForSlotName(skeleton->skeleton, point_name.c_str(), point_name.c_str());
     spPointAttachment *point = SUB_CAST(spPointAttachment, att);
-    float x, y;
-    spPointAttachment_computeWorldPosition(point, slot->bone, &x, &y);
+    float x = 0, y = 0;
+    if(point)
+        spPointAttachment_computeWorldPosition(point, slot->bone, &x, &y);
     return jngl::Vec2(x, y);
 }
 

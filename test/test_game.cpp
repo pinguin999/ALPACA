@@ -39,7 +39,11 @@ suite alpaca_test_suite = [] {
         dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../../data");
         if (!fs::exists(dataFolder))
         {
-            dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("data");
+            dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../../../../data");
+            if (!fs::exists(dataFolder))
+            {
+                dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("data");
+            }
         }
     }
     fs::current_path(dataFolder);
