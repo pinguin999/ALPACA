@@ -155,6 +155,8 @@ void Game::loadLevel(const std::string &level)
 	}
 	player->stop_walking();
 	setCameraPositionImmediately(player->calcCamPos());
+
+    runAction(level, std::static_pointer_cast<SpineObject>(newScene->background));
 }
 
 Game::~Game()

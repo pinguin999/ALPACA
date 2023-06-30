@@ -550,7 +550,7 @@ void Game::setupLuaFunctions()
 								}
 							});
 
-	/// Set all objects with a lower layer this value not interactable. Usefull for a menu, inventory or an intro playing onto of a scene.
+	/// Set all objects with a lower layer this value not interactable. Usefull for a menu, inventory or an intro playing ontop of a scene.
 	/// int layer: Layer [default: 0]
 	lua_state->set_function("SetInactivLayerBorder",
 							[this](int layer)

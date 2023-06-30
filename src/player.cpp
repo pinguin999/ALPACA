@@ -162,8 +162,12 @@ bool Player::step(bool)
         {
             currentAnimation = player_idle_animation;
             // Callback to Lua
+            auto old_callback = walk_callback;
             walk_callback();
+            if (old_callback == walk_callback) {
+                // only adjust the walk_callback if the Lua script itself hasn't changed it since
             walk_callback = (*_game->lua_state)["pass"];
+            }
 
             if(currentAnimation == player_idle_animation)
             {

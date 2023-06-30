@@ -235,8 +235,6 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
             game->add(interactable);
         }
     }
-
-    game->runAction(fileName, std::static_pointer_cast<SpineObject>(background));
 }
 
 void Scene::writeToFile()
