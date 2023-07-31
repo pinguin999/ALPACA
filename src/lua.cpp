@@ -774,12 +774,13 @@ void Game::setupLuaFunctions()
 								return obj->getId();
 							});
 
-	/// Set the players X Scale
+	/// Set the players scale
 	/// float: Scale
-	lua_state->set_function("SetPlayerScaleX",
+	lua_state->set_function("SetPlayerScale",
 							[this](const float scale)
 							{
 								player->skeleton->skeleton->scaleX = scale;
+								player->skeleton->skeleton->scaleY = scale;
 							});
 
 	/// Set language

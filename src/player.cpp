@@ -53,7 +53,8 @@ void Player::setDirection(jngl::Vec2 target_position)
                 // jngl::debugLn("right");
                 setSkin(player_side_skin);
 
-                skeleton->skeleton->scaleX = 1;
+                if (skeleton->skeleton->scaleX < 0)
+                    skeleton->skeleton->scaleX *= -1.0;
                 auto slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
                 if (slot)
                     slot->color.a = 0;
@@ -82,9 +83,9 @@ void Player::setDirection(jngl::Vec2 target_position)
             // jngl::debugLn("left");
             setSkin(player_side_skin);
 
-            if (target_position.y != position.y)
+            if (target_position.y != position.y && skeleton->skeleton->scaleX > 0)
             {
-                skeleton->skeleton->scaleX = -1;
+                skeleton->skeleton->scaleX *= -1.0;
             }
 
             auto slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");

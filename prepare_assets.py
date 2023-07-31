@@ -420,7 +420,7 @@ def on_data_src_modified(event):
             with open(event.src_path, 'w') as f:
                 scene_files.append(event.src_path)
                 f.write(json.dumps(parsed, indent=4))
-        except Exception():
+        except Exception:
             print(colored(f"data-src file '{event.src_path}' has errors", 'red'))
     if event.src_path.endswith(".json") and 'config' in event.src_path:
         file = Path(event.src_path).name

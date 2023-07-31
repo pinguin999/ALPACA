@@ -278,7 +278,7 @@ void DialogManager::continueCurrent()
                     bubble_pos = spine_character->getPosition() + optionalpos.value();
             }
             showCharacterText(textResult->text, bubble_pos);
-            std::string fileName = std::to_string(textResult->nodeId);
+            std::string fileName = textResult->nodeId;
             auto fullFileName = "audio/" + _game->language + "_" + std::string(n_zero - std::min(n_zero, fileName.length()), '0') + fileName  + ".ogg";
             playCharacterAnimation(character, fileName);
             try {
