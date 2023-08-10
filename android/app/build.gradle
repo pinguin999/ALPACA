@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     sourceSets {
         main {
-            assets.srcDirs = ["../../data"]
+            assets.srcDirs = ["../../../../data"]
         }
     }
     signingConfigs {
@@ -11,7 +11,7 @@ android {
             storePassword 'password'
             keyPassword 'password'
             keyAlias = 'key0'
-            storeFile file('../../certs/android/android.jks')
+            storeFile file('../../../../certs/android/android.jks')
         }
     }
     defaultConfig {

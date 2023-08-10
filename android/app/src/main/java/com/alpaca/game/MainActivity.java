@@ -1,5 +1,6 @@
 package com.alpaca.game;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.NativeActivity;
@@ -7,12 +8,14 @@ import android.content.DialogInterface;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -22,10 +25,30 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainActivity extends NativeActivity {
     private HideHandler hideHandler;
+    private boolean nativeCodeReady = false;
 
+    @TargetApi(Build.VERSION_CODES.P)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // https://developer.android.com/develop/ui/views/launch/splash-screen#java
+        final View content = findViewById(android.R.id.content);
+        content.getViewTreeObserver().addOnPreDrawListener(
+                new ViewTreeObserver.OnPreDrawListener() {
+                    @Override
+                    public boolean onPreDraw() {
+                        if (nativeCodeReady) {
+                            content.getViewTreeObserver().removeOnPreDrawListener(this);
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+
+        if (Build.VERSION.SDK_INT > 27) { // added in Android 9 (API level 28)
+            getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
 
         // create a handler to set immersive mode on a delay
         hideHandler = new HideHandler(this);
@@ -111,9 +134,10 @@ public class MainActivity extends NativeActivity {
         final Semaphore semaphore = model ? new Semaphore(0, true) : null;
         // The button that was clicked (ex. BUTTON_POSITIVE) or the position of the item clicked
         final AtomicInteger buttonId = new AtomicInteger();
+        markNativeCodeReady();
         this.runOnUiThread(new Runnable() {
             public void run() {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, android.R.style.Theme_Material_Light_Dialog_Alert);
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_HOLO_DARK);
                 builder.setTitle(appName);
                 builder.setMessage(message);
                 DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
@@ -156,5 +180,10 @@ public class MainActivity extends NativeActivity {
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         dialog.show();
+    }
+
+    protected void markNativeCodeReady() {
+        assert(!nativeCodeReady);
+        nativeCodeReady = true;
     }
 }

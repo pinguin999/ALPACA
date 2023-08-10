@@ -31,14 +31,3 @@ set(CMAKE_SHARED_LINKER_FLAGS
     "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/../../../../.. ${CMAKE_CURRENT_BINARY_DIR}/sharedlib)
-
-add_library(bootstrap SHARED bootstrap.cpp)
-
-target_include_directories(bootstrap PRIVATE
-    ${ANDROID_NDK}/sources/android/native_app_glue)
-
-# add lib dependencies
-target_link_libraries(bootstrap
-    android
-    native_app_glue
-    log)
