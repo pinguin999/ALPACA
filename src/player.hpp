@@ -48,7 +48,7 @@ private:
     std::string player_beam_animation;
     std::string player_idle_animation;
 
-    void setDirection(jngl::Vec2 target_position);
+    void setDirection();
 
     std::deque<jngl::Vec2> newPath;
 };

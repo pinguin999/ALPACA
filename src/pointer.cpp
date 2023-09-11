@@ -222,6 +222,20 @@ bool Pointer::primaryPressed()
     return jngl::mousePressed() || control->primary() || control->rTrigger();
 }
 
+bool Pointer::primaryDown()
+{
+#ifndef NDEBUG
+    if (auto _game = game.lock())
+    {
+        if (_game->editMode)
+        {
+            return false;
+        }
+    }
+#endif
+    return jngl::mouseDown() || control->primary() || control->rTrigger();
+}
+
 bool Pointer::secondaryPressed()
 {
 #ifndef NDEBUG

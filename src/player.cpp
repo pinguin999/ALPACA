@@ -32,7 +32,7 @@ Player::~Player()
 {
 }
 
-void Player::setDirection(jngl::Vec2 target_position)
+void Player::setDirection()
 {
     if (max_speed == 0.0)
     {
@@ -41,25 +41,28 @@ void Player::setDirection(jngl::Vec2 target_position)
 
     if (auto _game = game.lock())
     {
-        currentAnimation = player_walk_animation;
-        (*_game->lua_state)["player"]["animation"] = currentAnimation;
-        (*_game->lua_state)["player"]["loop_animation"] = true;
-        playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
-
-        double angle = std::atan2(target_position.y - position.y, target_position.x - position.x)*180/M_PI;
-
-        if( angle < 45 && angle > -45)
+        if (currentAnimation != player_walk_animation)
         {
-                // jngl::debugLn("right");
-                setSkin(player_side_skin);
+            currentAnimation = player_walk_animation;
+            (*_game->lua_state)["player"]["animation"] = currentAnimation;
+            (*_game->lua_state)["player"]["loop_animation"] = true;
+            playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
+        }
 
-                if (skeleton->skeleton->scaleX < 0)
-                    skeleton->skeleton->scaleX *= -1.0;
-                auto slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
-                if (slot)
-                    slot->color.a = 0;
+        double angle = std::atan2(target_position.y - position.y, target_position.x - position.x) * 180 / M_PI;
 
-                (*_game->lua_state)["player"]["skin"] = player_side_skin;
+        if (angle < 45 && angle > -45)
+        {
+            // jngl::debugLn("right");
+            setSkin(player_side_skin);
+
+            if (skeleton->skeleton->scaleX < 0)
+                skeleton->skeleton->scaleX *= -1.0;
+            auto slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
+            if (slot)
+                slot->color.a = 0;
+
+            (*_game->lua_state)["player"]["skin"] = player_side_skin;
         }
         else if (angle < -45 && angle > -135)
         {
@@ -89,7 +92,7 @@ void Player::setDirection(jngl::Vec2 target_position)
             }
 
             auto slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
-            if(slot)
+            if (slot)
                 slot->color.a = 0;
 
             (*_game->lua_state)["player"]["skin"] = player_side_skin;
@@ -106,7 +109,7 @@ void Player::addTargetPositionImmediately(jngl::Vec2 target, sol::function callb
 {
     if (auto _game = game.lock())
     {
-        if(target_position == target)
+        if (target_position == target)
         {
             position = target;
         }
@@ -117,7 +120,9 @@ void Player::addTargetPositionImmediately(jngl::Vec2 target, sol::function callb
 
             path.insert(path.end(), newPath.begin(), newPath.end());
             this->walk_callback = callback;
-        }else{
+        }
+        else
+        {
             this->walk_callback = callback;
             walk_callback();
             walk_callback = (*_game->lua_state)["pass"];
@@ -155,7 +160,7 @@ bool Player::step(bool)
         {
             path.pop_front();
             setTargentPosition(path.front());
-            setDirection(target_position);
+            setDirection();
         }
 
         jngl::Vec2 tmp_target_position = target_position - position;
@@ -165,12 +170,13 @@ bool Player::step(bool)
             // Callback to Lua
             auto old_callback = walk_callback;
             walk_callback();
-            if (old_callback == walk_callback) {
+            if (old_callback == walk_callback)
+            {
                 // only adjust the walk_callback if the Lua script itself hasn't changed it since
-            walk_callback = (*_game->lua_state)["pass"];
+                walk_callback = (*_game->lua_state)["pass"];
             }
 
-            if(currentAnimation == player_idle_animation)
+            if (currentAnimation == player_idle_animation)
             {
                 (*_game->lua_state)["player"]["animation"] = currentAnimation;
                 (*_game->lua_state)["player"]["loop_animation"] = true;
@@ -187,12 +193,12 @@ bool Player::step(bool)
         position += tmp_target_position;
 
         // TODO it's still possible to walk outside of the nav mesh. We have to fix that soon.
-        //#ifndef NDEBUG
+        // #ifndef NDEBUG
         //   if (!_game->currentScene->background->is_walkable(position))
         //   {
         //       throw std::runtime_error("Player is in a not Walkable area!");
         //   }
-        //#endif
+        // #endif
 
         if (_game->pointer->secondaryPressed())
         {
@@ -205,15 +211,18 @@ bool Player::step(bool)
             _game->pointer->attatchedObjects.clear();
         }
 
-        if (_game->pointer->secondaryPressed())
+        if (_game->pointer->primaryDown() && interruptible && !_game->pointer->isPrimaryAlreadyHandled())
         {
-            // Maybe LUA's DeattatchAllFromPointer here?
-            for (auto obj : _game->pointer->attatchedObjects)
+            jngl::Vec2 click_position = _game->pointer->getPosition();
+
+            path.clear();
+            newPath = _game->currentScene->background->getPathToTarget(position, click_position);
+
+            path.insert(path.end(), newPath.begin(), newPath.end());
+            if (path.size() > 0)
             {
-                obj->setParent(nullptr);
-                obj->setVisible(false);
+                setTargentPosition(path.front());
             }
-            _game->pointer->attatchedObjects.clear();
         }
 
         if (_game->pointer->primaryPressed() && interruptible && !_game->pointer->isPrimaryAlreadyHandled())
@@ -227,7 +236,6 @@ bool Player::step(bool)
                 jngl::debugLn("clicked player");
                 _game->pointer->setPrimaryHandled();
                 _game->runAction(collision_script, getptr());
-
             }
 
             path.clear();
@@ -277,7 +285,7 @@ void Player::draw() const
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
-    skeleton->debugdraw = _game->enableDebugDraw;
+        skeleton->debugdraw = _game->enableDebugDraw;
     }
 #endif
 
@@ -301,7 +309,7 @@ jngl::Vec2 Player::calcCamPos()
     {
         // Move scean if the player is at the border of the screen.
         auto size = jngl::getScreenSize();
-        jngl::Vec2 camPos = jngl::Vec2(0,0);
+        jngl::Vec2 camPos = jngl::Vec2(0, 0);
 
         if (position.x + X_BORDER > size.x / 2.0 / _game->getCameraZoom())
         {
@@ -322,5 +330,5 @@ jngl::Vec2 Player::calcCamPos()
         }
         return camPos;
     }
-    return jngl::Vec2(0,0);
+    return jngl::Vec2(0, 0);
 }

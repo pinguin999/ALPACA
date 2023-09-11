@@ -43,7 +43,14 @@ public:
 	void setParent(std::shared_ptr<SpineObject> parent) { this->parent = parent; }
 
 	float getRotation() const { return rotation; }
-	void setRotation(float rotation) { this->rotation = rotation; }
+	void setRotation(const float rotation) { this->rotation = rotation; }
+
+	float getScale() const { return scale; }
+	void setScale(const float scale) {
+		this->scale = scale;
+		skeleton->skeleton->scaleX = scale;
+		skeleton->skeleton->scaleY = scale;
+	}
 
 	void activate();
 	void setVisible(bool visible){this->visible = visible;}
@@ -79,7 +86,8 @@ protected:
 	bool deleted = false;
 	bool visible = true;
 	jngl::Vec2 position;
-	float rotation = 0;
+	float scale = 1.0;
+	float rotation = 0.0;
 	std::string spine_name;
 	std::string id;
 	const std::weak_ptr<Game> game;

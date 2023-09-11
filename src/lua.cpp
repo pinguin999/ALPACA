@@ -672,7 +672,7 @@ void Game::setupLuaFunctions()
 	/// Rote a Spine object
 	/// float rotation: A number between 0.0 and 365.0
 	lua_state->set_function("SetRotation",
-							[this](float rotation)
+							[this](const float rotation)
 							{
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->setRotation(rotation);
@@ -681,12 +681,33 @@ void Game::setupLuaFunctions()
 	/// See SetRotation
 	/// string object: Objects ID that should be effected
 	lua_state->set_function("SetRotationOn",
-							[this](const std::string &object, float rotation)
+							[this](const std::string &object, const float rotation)
 							{
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									obj->setRotation(rotation);
+								}
+							});
+
+	/// Scale a Spine object
+	/// float: Scale
+	lua_state->set_function("SetScale",
+							[this](const float scale)
+							{
+								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								obj->setScale(scale);
+							});
+
+	/// See SetScale
+	/// string object: Objects ID that should be effected
+	lua_state->set_function("SetScaleOn",
+							[this](const std::string &object, const float scale)
+							{
+								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								if (obj)
+								{
+									obj->setScale(scale);
 								}
 							});
 
@@ -776,11 +797,10 @@ void Game::setupLuaFunctions()
 
 	/// Set the players scale
 	/// float: Scale
-	lua_state->set_function("SetPlayerScale",
+	lua_state->set_function("SetPlayerScaleX",
 							[this](const float scale)
 							{
 								player->skeleton->skeleton->scaleX = scale;
-								player->skeleton->skeleton->scaleY = scale;
 							});
 
 	/// Set language

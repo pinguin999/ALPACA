@@ -22,6 +22,7 @@ public:
     jngl::Vec2 target_position = jngl::Vec2(0, 1080);
     jngl::Vec2 last_target_position = jngl::Vec2(0, 0);
     bool primaryPressed();
+    bool primaryDown();
     void setPrimaryHandled();
     bool isPrimaryAlreadyHandled();
 
