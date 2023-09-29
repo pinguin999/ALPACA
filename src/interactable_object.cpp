@@ -5,7 +5,7 @@
 
 #include <cmath>
 
-InteractableObject::InteractableObject(std::shared_ptr<Game> game, const std::string &spine_file, const std::string id, float scale) :
+InteractableObject::InteractableObject(std::shared_ptr<Game> game, const std::string &spine_file, const std::string &id, float scale) :
     SpineObject(game, spine_file, id, scale)
 #ifndef NDEBUG
     ,DEBUG_GRAP_DISTANCE(game->config["debug_grap_distance"].as<float>())

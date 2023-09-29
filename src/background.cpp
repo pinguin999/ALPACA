@@ -37,16 +37,19 @@ bool Background::stepClickableRegions(bool force)
         if (!force && _game->getInactivLayerBorder() > layer)
             return false;
 
-        jngl::Vec2 mousePos = _game->pointer->getPosition();
-        auto collision = spine::spSkeletonBounds_containsPointNotMatchingName(bounds, "walkable_area", (float)mousePos.x - (float)position.x, (float)mousePos.y - (float)position.y);
-        // TODO Double Click on Regions
-        if (_game->pointer->primaryPressed() && !_game->pointer->isPrimaryAlreadyHandled() && bool(collision))
+        if (_game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
         {
-            collision_script = collision->super.super.name;
-            jngl::debug("clicked interactable region ");
-            jngl::debugLn(collision_script);
-            _game->pointer->setPrimaryHandled();
-            _game->runAction(collision_script, getptr());
+            jngl::Vec2 mousePos = _game->pointer->getPosition();
+            auto collision = spine::spSkeletonBounds_containsPointNotMatchingName(bounds, "walkable_area", (float)mousePos.x - (float)position.x, (float)mousePos.y - (float)position.y);
+            // TODO Double Click on Regions
+            if (collision)
+            {
+                collision_script = collision->super.super.name;
+                jngl::debug("clicked interactable region ");
+                jngl::debugLn(collision_script);
+                _game->pointer->setPrimaryHandled();
+                _game->runAction(collision_script, getptr());
+            }
         }
     }
 
@@ -82,14 +85,21 @@ void Background::draw() const
 
             jngl::setColor(255, 255, 0);
             auto debugPath = getPathToTarget(_game->player->getPosition(), _game->pointer->getPosition());
-            for (size_t i = 0; i < debugPath.size(); i++)
+            for (size_t i = 1; i < debugPath.size(); i++)
             {
-                if (i == 0)
-                {
-                    // jngl::drawLine(_game->player->getPosition(), debugPath[i]);
-                    continue;
-                }
                 jngl::drawLine(debugPath[i - 1], debugPath[i]);
+            }
+
+			auto point_names = getPointNames();
+            for ( auto point_name : point_names)
+            {
+                auto pos = getPoint(point_name);
+                jngl::drawPoint(pos->x, pos->y);
+    			jngl::Text bbname;
+                bbname.setText(point_name);
+                bbname.setAlign(jngl::Alignment::CENTER);
+                bbname.setCenter(pos->x, pos->y);
+                bbname.draw();
             }
         }
     }

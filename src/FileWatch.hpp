@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <tchar.h>
-#include <Pathcch.h>
+#include <pathcch.h>
 #include <shlwapi.h>
 #endif // WIN32
 
@@ -182,7 +182,7 @@ namespace filewatch {
 
 	public:
 
-		FileWatch(StringType path, UnderpinningRegex pattern, std::function<void(const StringType& file, const Event event_type)> callback) :
+		FileWatch(const StringType &path, UnderpinningRegex pattern, std::function<void(const StringType& file, const Event event_type)> callback) :
 			_path(absolute_path_of(path)),
 			_pattern(pattern),
 			_callback(callback),
@@ -191,7 +191,7 @@ namespace filewatch {
 			init();
 		}
 
-		FileWatch(StringType path, std::function<void(const StringType& file, const Event event_type)> callback) :
+		FileWatch(const StringType &path, std::function<void(const StringType& file, const Event event_type)> callback) :
 			FileWatch<StringType>(path, UnderpinningRegex(_regex_all), callback) {}
 
 		~FileWatch() {
@@ -212,8 +212,8 @@ namespace filewatch {
 			return *this;
 		}
 
-		// Const member variables don't let me implement moves nicely, if moves are really wanted std::unique_ptr should be used and move that.
-		FileWatch(FileWatch<StringType>&&) = delete;
+		// Const memeber varibles don't let me implent moves nicely, if moves are really wanted std::unique_ptr should be used and move that.
+		FileWatch<StringType>(FileWatch<StringType>&&) = delete;
 		FileWatch<StringType>& operator=(FileWatch<StringType>&&) & = delete;
 
 	private:
@@ -222,7 +222,7 @@ namespace filewatch {
 
 		struct PathParts
 		{
-			PathParts(StringType directory, StringType filename) : directory(directory), filename(filename) {}
+			PathParts(const StringType &directory, const StringType &filename) : directory(directory), filename(filename) {}
 			StringType directory;
 			StringType filename;
 		};
@@ -319,7 +319,7 @@ namespace filewatch {
             };
             std::unordered_map<StringType, FileState> _directory_snapshot{};
             bool _previous_event_is_rename = false;
-            dispatch_queue_t _run_loop;
+            dispatch_queue_t _run_loop = nullptr;
             int _file_fd = -1;
             struct timespec _last_modification_time = {};
             FSEventStreamRef _directory;
@@ -705,13 +705,11 @@ namespace filewatch {
                   if (stat.st_mode & S_IFREG || stat.st_mode & S_IFLNK) {
                         size_t len = strlen(buf);
 
-                        for (size_t i = len - 1; ; i--) {
+                        for (size_t i = len - 1; i >= 0; i--) {
                               if (buf[i] == '/') {
                                     buf[i] = '\0';
                                     break;
                               }
-                              if(i == 0)
-                                    break;
                         }
                   }
 
@@ -875,7 +873,7 @@ namespace filewatch {
                   PathParts split = split_directory_and_file(path);
 
                   if (split.directory.size() > 0 && split.directory[split.directory.size() - 1] == '/') {
-                        split.directory.erase(split.directory.size() - 1);
+                              split.directory.erase(split.directory.size() - 1);
                   }
                   return split;
             }
@@ -886,7 +884,7 @@ namespace filewatch {
 
             int openFile(const StringType& file) {
                   int fd = open(fullPathOf(file).c_str(), O_RDONLY);
-                  // assert(fd != -1);
+                  assert(fd != -1);
                   return fd;
             }
 

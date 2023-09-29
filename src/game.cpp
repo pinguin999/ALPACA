@@ -22,6 +22,12 @@ using namespace std::string_literals;
 
 Game::Game(YAML::Node config) : config(config), cameraPosition(jngl::Vec2(0,0)), targetCameraPosition(jngl::Vec2(0,0))
 {
+#ifndef NDEBUG
+	gifFrame = 0;
+	gifGameFrame = 0;
+	gifTime = 0.0;
+#endif
+
 	auto screensize = jngl::getScreenSize();
 	auto zoomx = this->config["screenSize"]["x"].as<int>() / screensize.x;
 	auto zoomy = this->config["screenSize"]["y"].as<int>() / screensize.y;
@@ -519,6 +525,11 @@ void Game::runAction(std::string actionName, std::shared_ptr<SpineObject> thisOb
 		std::string dialogName = actionName.substr(4);
 		script = "PlayDialog(\"" + dialogName + "\", pass)";
 		errorMessage = "Failed to play dialog " + dialogName + "!\n";
+	}else if (actionName.substr(0, 5) == "anim:")
+	{
+		std::string animName = actionName.substr(5);
+		script = "PlayAnimationOn(\"" + thisObject->getName() + "\", 0, \"" + animName + "\", false, pass)";
+		errorMessage = "Failed to play animation " + animName + "!\n";
 	}
 	// if there is no specific prefix, just load the according Lua file
 	else

@@ -169,7 +169,7 @@ bool Player::step(bool)
             currentAnimation = player_idle_animation;
             // Callback to Lua
             auto old_callback = walk_callback;
-            walk_callback();
+            walk_callback();  // walk_callback can be changed in here.
             if (old_callback == walk_callback)
             {
                 // only adjust the walk_callback if the Lua script itself hasn't changed it since

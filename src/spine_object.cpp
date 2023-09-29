@@ -90,7 +90,7 @@ SpineObject::SpineObject(std::shared_ptr<Game> game, const std::string &spine_fi
     skeleton->step();
 }
 
-std::optional<jngl::Vec2> SpineObject::getPoint(const std::string &point_name)
+std::optional<jngl::Vec2> SpineObject::getPoint(const std::string &point_name) const
 {
     auto slot = spSkeleton_findSlot(skeleton->skeleton, point_name.c_str());
     if (!slot)
@@ -106,7 +106,7 @@ std::optional<jngl::Vec2> SpineObject::getPoint(const std::string &point_name)
     return jngl::Vec2(x, y);
 }
 
-std::vector<std::string> SpineObject::getPointNames()
+std::vector<std::string> SpineObject::getPointNames() const
 {
     std::vector<std::string> result;
 

@@ -290,6 +290,7 @@ void Scene::loadObjects(YAML::Node objects)
                 std::string animation = (*object)["animation"].as<std::string>("");
                 bool cross_scene = (*object)["cross_scene"].as<bool>(false);
                 bool abs_position = (*object)["abs_position"].as<bool>(false);
+                bool visible = (*object)["visible"].as<bool>(true);
 
                 auto interactable = std::make_shared<InteractableObject>(_game, spine_file, object_id, scale);
                 interactable->layer = layer;
@@ -312,7 +313,7 @@ void Scene::loadObjects(YAML::Node objects)
                     "y", std::to_string((*object)["y"].as<float>()),
                     "animation", animation,
                     "loop_animation", true,
-                    "visible", true,
+                    "visible", visible,
                     "cross_scene", cross_scene,
                     "abs_position", abs_position,
                     "layer", layer,
@@ -363,12 +364,11 @@ void Scene::loadObjects(YAML::Node objects)
                     interactable->cross_scene = cross_scene;
                     interactable->abs_position = abs_position;
 
-                    if (animation != "")
+                    if (animation == "")
                     {
-                        interactable->playAnimation(0, animation, true, (*_game->lua_state)["pass"]);
-                    }else{
                         animation = _game->config["spine_default_animation"].as<std::string>();
                     }
+                    interactable->playAnimation(0, animation, true, (*_game->lua_state)["pass"]);
 
                     (*_game->lua_state)["scenes"][scene]["items"][id]["object"] = std::static_pointer_cast<SpineObject>(interactable);
 

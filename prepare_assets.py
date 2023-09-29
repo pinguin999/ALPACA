@@ -10,6 +10,7 @@
 # Export to exe on windows via
 # pyinstaller --onefile .\prepare_assets.py
 
+from dataclasses import dataclass, field
 import json
 import os
 import shutil
@@ -19,6 +20,7 @@ import time
 from multiprocessing import Pool, freeze_support
 from pathlib import Path
 from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
+from typing import List
 
 from termcolor import colored
 from watchdog.events import PatternMatchingEventHandler
@@ -307,7 +309,8 @@ def spine_export(file: str):
                                 and spine_object["skins"][i]["attachments"][attachment][subattachment]["type"] == "boundingbox":
                             if bbname == "walkable_area":  # No scripts for navmeshes
                                 continue
-                            if not bbname.startswith("dlg:") and not os.path.exists(f"./data-src/scripts/{bbname}.lua"):
+                            if not bbname.startswith("dlg:") and not bbname.startswith("anim:") and not os.path.exists(
+                                 f"./data-src/scripts/{bbname}.lua"):
                                 if not os.path.exists("./data-src/scripts/"):
                                     Path("./data-src/scripts/").mkdir(parents=True, exist_ok=True)
                                 with open(f"./data-src/scripts/{bbname}.lua", 'w') as f:
@@ -333,6 +336,8 @@ def scripts_recopy(dir):
 
 
 def copy_script(file):
+    if file.endswith("ALPACA.lua"):
+        return
     if file.endswith(".lua"):
         command = [LUA, '-p', file]
         p = subprocess.Popen(command, stdout=subprocess.PIPE,
@@ -435,8 +440,127 @@ def on_moved(event):
         f"ok ok ok, someone moved {event.src_path} to {event.dest_path}", 'green'))
 
 
+@dataclass
+class DocFunction:
+    """Class for keeping track of an item in inventory."""
+    name: str = ""
+    docs: list[str] = field(default_factory=list)
+    parameters: str = ""
+    copy_parameters: str = ""
+    returns: str = ""
+
+
+class LUADocsGen():
+    """
+        The PAC's LUA handler class.
+    """
+
+    def collect(self, identifier: str, config: dict) -> str:
+        return identifier
+
+    def get_name(self, name: str) -> str:
+        result = name.replace('lua_state->set_function("', '')
+        result = result.replace('"', '')
+        result = result.replace(',', '')
+        return result.strip()
+
+    def get_parameters(self, parameters: str) -> str:
+        result = parameters.replace('[](', '').replace(')', '')
+        result = result.replace('[this](', '').replace(')', '')
+        result = result.replace("const ", "")
+        result = result.replace("std::string ", "String ")
+        result = result.replace("&", "")
+        result = result.replace("int ", "Number ")
+        result = result.replace("float ", "Number ")
+        result = result.replace("sol::function ", "Function ")
+
+        return result.strip()
+
+    def get_copy_parameters(self, parameters: str) -> str:
+        result = self.get_parameters(parameters)
+        result = result.replace("String ", "")
+        result = result.replace("Number ", "")
+        result = result.replace("Function ", "")
+        result = result.replace("bool ", "")
+        return result.strip()
+
+    def get_docs(self, code: List[str], index: int) -> List[str]:
+        result = []
+        index -= 1
+
+        while "///" in code[index]:
+            if 'returns:' in code[index]:
+                index -= 1
+                continue
+
+            result.append(code[index].replace("///", "").strip())
+            index -= 1
+
+        if result == []:
+            return ["Cool Documentation"]
+
+        result.reverse()
+        return result
+
+    def get_returns(self, code: List[str], index: int) -> str:
+        result = ""
+        index -= 1
+
+        while "///" in code[index]:
+            if "return" in code[index]:
+                result += code[index].replace("///", "").strip()
+            index -= 1
+
+        if result == "":
+            return "void"
+
+        return result.strip()
+
+    def render(self, data: str) -> str:
+
+        template = ""
+
+        code_file = Path("subprojects/ALPACA/src/" + data).absolute()
+        result = []
+        with code_file.open() as f:
+            code = f.readlines()
+
+            for i, line in enumerate(code):
+                if "set_function" in line:
+                    doc_obj = DocFunction()
+                    doc_obj.name = self.get_name(code[i])
+                    doc_obj.docs = self.get_docs(code, i)
+                    doc_obj.parameters = self.get_parameters(code[i + 1])
+                    doc_obj.copy_parameters = self.get_copy_parameters(code[i + 1])
+                    doc_obj.returns = self.get_returns(code, i)
+                    result.append(doc_obj)
+
+        with Path("data-src/scripts/ALPACA.lua").open('w') as output:
+
+            for func in result:
+                docs = f"--- {func.docs[0]}"
+                for doc in func.docs[1:]:
+                    docs += f"\n-- {doc}"
+
+                parameters = func.parameters.split(",")
+                for parameter in parameters:
+                    parameter = parameter.strip()
+                    if parameter == "":
+                        continue
+                    parameter = parameter.split(" ")
+                    docs += f"\n---@param {parameter[1]} {parameter[0].lower()}"
+                output.write(f"""
+{docs}
+function {func.name}({func.copy_parameters})
+end
+"""
+                             )
+        return template
+
+
 if __name__ == "__main__":
     freeze_support()
+    LUADocsGen().render("lua.cpp")
     print(colored("Start convert", 'green'))
     spine_reexport(["./data-src"])
     scripts_recopy(["./data-src/scripts/"])

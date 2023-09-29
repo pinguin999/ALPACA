@@ -61,12 +61,12 @@ public:
 	spSkeletonData *skeletonData = nullptr;
 	spAnimationStateData *animationStateData = nullptr;
 	spAtlas *atlas = nullptr;
-	std::optional<jngl::Vec2> getPoint(const std::string &point_name);
+	std::optional<jngl::Vec2> getPoint(const std::string &point_name) const;
 	void playAnimation(int trackIndex, const std::string& currentAnimation, bool loop, sol::function callback);
 	void addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, sol::function callback);
 	void onAnimationComplete(std::string key);
     void setSkin(const std::string &skin);
-	std::vector<std::string> getPointNames();
+	std::vector<std::string> getPointNames() const;
 	bool cross_scene = false;
 	bool abs_position = false;
 

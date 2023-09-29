@@ -237,7 +237,7 @@ void DialogManager::playCharacterVoice(std::string file)
     last_played_audio = file;
 }
 
-void DialogManager::playCharacterAnimation(std::string character, const std::string id)
+void DialogManager::playCharacterAnimation(std::string character, const std::string &id)
 {
     if (auto _game = game.lock())
     {

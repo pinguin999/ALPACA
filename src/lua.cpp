@@ -427,7 +427,7 @@ void Game::setupLuaFunctions()
 	/// string object: Objects ID that should be effected
 	/// string from: Objects ID that provides the point
 	lua_state->set_function("SetOnToPointFrom",
-							[this](const std::string &object, std::string from, const std::string &point_name)
+							[this](const std::string &object, const std::string &from, const std::string &point_name)
 							{
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
 								std::shared_ptr<SpineObject> frm = getObjectById(from);
@@ -806,7 +806,7 @@ void Game::setupLuaFunctions()
 	/// Set language
 	/// string: example 'de' or 'en'
 	lua_state->set_function("SetLanguage",
-							[this](const std::string language)
+							[this](const std::string &language)
 							{
 								YAML::Node languages = this->config["supportedLanguages"];
 								for (auto supported_language : languages)
