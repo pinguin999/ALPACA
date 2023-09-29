@@ -43,10 +43,15 @@ elif sys.platform == "darwin":
     LUA = 'luac'
 elif sys.platform == "win32":
     # Windows
-    mod_path = Path(__file__).parent
-    RHUBARB = (mod_path / 'windows_bin\\rhubarb.exe').resolve()
     SPINE = 'C:\\Program Files\\Spine\\Spine.exe'
-    LUA = (mod_path / 'windows_bin\\luac.exe').resolve()
+    if getattr(sys, 'frozen', False):
+        mod_path = os.path.dirname(os.path.realpath(sys.executable))
+        RHUBARB = (mod_path + '\\windows_bin\\rhubarb.exe')
+        LUA = (mod_path + '\\windows_bin\\luac.exe')
+    elif __file__:
+        mod_path = Path(__file__).parent
+        RHUBARB = (mod_path / 'windows_bin\\rhubarb.exe').resolve()
+        LUA = (mod_path / 'windows_bin\\luac.exe').resolve()
     set_read_only = False
 
 
@@ -521,6 +526,8 @@ class LUADocsGen():
         template = ""
 
         code_file = Path("subprojects/ALPACA/src/" + data).absolute()
+        if not os.path.exists(code_file):
+            return template
         result = []
         with code_file.open() as f:
             code = f.readlines()
