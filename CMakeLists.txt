@@ -76,13 +76,6 @@ target_link_libraries(pac PRIVATE
 	jngl spine-c schnacker
 )
 
-if(MSVC)
-  add_custom_command(TARGET pac COMMAND ${CMAKE_COMMAND} -E copy
-    ${PROJECT_SOURCE_DIR}/subprojects/jngl/lib/msvc/x86_64/epoxy-0.dll
-    "$<TARGET_FILE_DIR:pac>")
-endif()
-
-
 # Add Tests
 if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT IOS AND  NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	add_subdirectory(test)
