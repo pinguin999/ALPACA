@@ -130,7 +130,7 @@ if (NOT CMAKE_BUILD_TYPE MATCHES "Release" AND NOT ANDROID AND NOT ${CMAKE_SYSTE
 endif()
 
 if(WIN32)
-	target_compile_definitions(pac PRIVATE _USE_MATH_DEFINES)
+	target_compile_definitions(pac PRIVATE _USE_MATH_DEFINES UNICODE)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
