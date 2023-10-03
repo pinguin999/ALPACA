@@ -41,6 +41,9 @@ bool InteractableObject::step(bool force)
                 position += (jngl::getMousePos() - dragposition) / _game->getCameraZoom();
                 jngl::debugLn(position);
                 dragposition = jngl::getMousePos();
+#ifndef NDEBUG
+                _game->currentScene->updateObjectPosition(id, dragposition);
+#endif
             }
         }
         if (_game->editMode && jngl::mousePressed())

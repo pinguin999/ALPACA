@@ -15,6 +15,7 @@ LoadException::LoadException(const char *details)
 Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAML::Load(jngl::readAsset("scenes/" + fileName + ".json").str())), game(game)
 {
     this->fileName = fileName;
+    std::string scene = fileName;
 
     if (json.IsNull())
     {
@@ -43,11 +44,23 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
         (*game->lua_state)["scenes"] = game->lua_state->create_table();
     }
 
-    std::string scene = fileName;
     if (!(*game->lua_state)["scenes"][scene].valid())
     {
         (*game->lua_state)["scenes"][scene] = game->lua_state->create_table();
     }
+
+#ifndef NDEBUG
+    std::string old_hash = "";
+    if ((*game->lua_state)["scenes"][scene]["hash"].valid())
+        old_hash = (*game->lua_state)["scenes"][scene]["hash"];
+    if(json["hash"].IsDefined() && !json["hash"].IsNull())
+    {
+        const std::string new_hash = json["hash"].as<std::string>();
+        if (old_hash != new_hash)
+            (*game->lua_state)["scenes"][scene] = game->lua_state->create_table();
+        (*game->lua_state)["scenes"][scene]["hash"] = new_hash;
+    }
+#endif
 
     if (json["left_border"].IsDefined() && !json["left_border"].IsNull())
     {
@@ -237,15 +250,6 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
     }
 }
 
-void Scene::writeToFile()
-{
-    YAML::Emitter emitter1;
-    emitter1 << YAML::DoubleQuoted << YAML::LowerNull << json;
-    emitter1.SetIndent(4);
-    emitter1.SetMapFormat(YAML::Block);
-    std::ofstream fout("./../data-src/scenes/" + fileName + ".json");
-    fout << emitter1.c_str();
-}
 
 void Scene::playMusic()
 {
@@ -393,3 +397,31 @@ std::shared_ptr<InteractableObject> Scene::createObject(const std::string &spine
     }
     return nullptr;
 }
+
+
+#ifndef NDEBUG
+void Scene::writeToFile()
+{
+    YAML::Emitter emitter1;
+    emitter1 << YAML::DoubleQuoted << YAML::LowerNull << json;
+    emitter1.SetIndent(4);
+    emitter1.SetMapFormat(YAML::Block);
+    std::ofstream fout("./../data-src/scenes/" + fileName + ".json");
+    jngl::debugLn("Rewrite ./../data-src/scenes/" + fileName + ".json");
+    fout << emitter1.c_str();
+}
+
+
+void Scene::updateObjectPosition(const std::string &id, jngl::Vec2 position)
+{
+    auto objects = json["items"].size();
+    for (std::size_t i = 0; i < objects; i++)
+    {
+        if (json["items"][i]["spine"].as<std::string>() == id)
+        {
+            json["items"][i]["x"] = std::to_string(position.x);
+            json["items"][i]["y"] = std::to_string(position.y);
+        }
+    }
+}
+#endif

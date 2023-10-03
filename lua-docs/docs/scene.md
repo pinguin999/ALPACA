@@ -2,7 +2,7 @@
 
 An ALPACA game exists off at least one scene. A scene (Other engines may name this room or view) is the container for everything you have on screen.
 
-All information is defined in a .json file. Here is our example `test_chamber_one.json`.
+All informations are defined in a .json file. All scene files have to be in `data-src/scenes`. Here is our example `data-src/scenes/test_chamber_one.json`.
 
 ```json
 {

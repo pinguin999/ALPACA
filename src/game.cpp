@@ -22,7 +22,7 @@ using namespace std::string_literals;
 
 Game::Game(YAML::Node config) : config(config), cameraPosition(jngl::Vec2(0,0)), targetCameraPosition(jngl::Vec2(0,0))
 {
-#ifndef NDEBUG
+#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
 	gifFrame = 0;
 	gifGameFrame = 0;
 	gifTime = 0.0;

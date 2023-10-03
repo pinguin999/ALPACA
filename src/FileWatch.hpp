@@ -884,7 +884,8 @@ namespace filewatch {
 
             int openFile(const StringType& file) {
                   int fd = open(fullPathOf(file).c_str(), O_RDONLY);
-                  assert(fd != -1);
+                  // assert(fd != -1);
+
                   return fd;
             }
 
@@ -1073,9 +1074,9 @@ namespace filewatch {
                   if (_watching_single_file && pathPair.filename != _filename) {
                         return;
                   }
-                  if (pathPair.directory != _path || !std::regex_match(pathPair.filename, _pattern)) {
-                        return;
-                  }
+                  // if (pathPair.directory != _path || !std::regex_match(pathPair.filename, _pattern)) {
+                  //       return;
+                  // }
 
                   Event event = Event::modified;
                   if (_previous_event_is_rename) {

@@ -22,7 +22,6 @@ class Scene
 public:
     explicit Scene(const std::string &fileName, std::shared_ptr<Game> game);
 
-    void writeToFile();
     void playMusic();
     std::shared_ptr<InteractableObject> createObject(const std::string &spine_file, std::string id, float scale);
     void loadObjects(YAML::Node objects);
@@ -34,6 +33,11 @@ public:
     int right_border = INT_MAX;
     int top_border = INT_MIN;
     int bottom_border = INT_MAX;
+
+#ifndef NDEBUG
+    void writeToFile();
+    void updateObjectPosition(const std::string &id, jngl::Vec2 position);
+#endif
 private:
     std::string fileName;
     YAML::Node json;

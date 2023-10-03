@@ -12,11 +12,13 @@
 
 from dataclasses import dataclass, field
 import json
+import hashlib
 import os
 import shutil
 import subprocess
 import sys
 import time
+import requests
 from multiprocessing import Pool, freeze_support
 from pathlib import Path
 from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
@@ -287,7 +289,7 @@ def spine_export(file: str):
     output = p.communicate()[0]
     if p.returncode != 0:
         print(colored(output.decode(), 'red'))
-        exit(p.returncode)
+        sys.exit(p.returncode)
 
     if not os.path.exists(f"./data/{name}/{name}.json"):
         errors.append(
@@ -350,7 +352,7 @@ def copy_script(file):
         output = p.communicate()[0]
         if p.returncode != 0:
             print(colored(output.decode(), 'red'))
-            # exit(p.returncode)  # Do not exit on lua errors
+            # sys.exit(p.returncode)  # Do not exit on lua errors
 
         name = Path(file).name
         Path("./data/scripts").mkdir(parents=True, exist_ok=True)
@@ -427,6 +429,7 @@ def on_data_src_modified(event):
             with open(event.src_path, 'r') as f:
                 data = f.read()
                 parsed = json.loads(data)
+                parsed['hash'] = hashlib.sha1(data.encode()).hexdigest()
             with open(event.src_path, 'w') as f:
                 scene_files.append(event.src_path)
                 f.write(json.dumps(parsed, indent=4))
@@ -524,23 +527,28 @@ class LUADocsGen():
     def render(self, data: str) -> str:
 
         template = ""
+        result = []
+        code = None
 
         code_file = Path("subprojects/ALPACA/src/" + data).absolute()
-        if not os.path.exists(code_file):
-            return template
-        result = []
-        with code_file.open() as f:
-            code = f.readlines()
+        if os.path.exists(code_file):
+            with code_file.open() as f:
+                code = f.readlines()
 
-            for i, line in enumerate(code):
-                if "set_function" in line:
-                    doc_obj = DocFunction()
-                    doc_obj.name = self.get_name(code[i])
-                    doc_obj.docs = self.get_docs(code, i)
-                    doc_obj.parameters = self.get_parameters(code[i + 1])
-                    doc_obj.copy_parameters = self.get_copy_parameters(code[i + 1])
-                    doc_obj.returns = self.get_returns(code, i)
-                    result.append(doc_obj)
+        code = None
+        if code is None:
+            code = requests.get('https://raw.githubusercontent.com/pinguin999/ALPACA/main/src/lua.cpp').text
+            code = code.split('\n')
+
+        for i, line in enumerate(code):
+            if "set_function" in line:
+                doc_obj = DocFunction()
+                doc_obj.name = self.get_name(code[i])
+                doc_obj.docs = self.get_docs(code, i)
+                doc_obj.parameters = self.get_parameters(code[i + 1])
+                doc_obj.copy_parameters = self.get_copy_parameters(code[i + 1])
+                doc_obj.returns = self.get_returns(code, i)
+                result.append(doc_obj)
 
         with Path("data-src/scripts/ALPACA.lua").open('w') as output:
 

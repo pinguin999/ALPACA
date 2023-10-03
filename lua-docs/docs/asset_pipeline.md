@@ -1,6 +1,6 @@
 # Asset Pipeline
 
-ALPACA has a complete automated asset pipeline. Every project has a data folder with for runtime optimised files and a data-src folder with the source asset files like .spine files. The content of the data folder is generated automatically via the prepare_assets.py script.
+ALPACA has a complete automated asset pipeline. Every project has a data folder for runtime optimised files and a data-src folder with the source asset files like ".spine" files. The content of the data folder is generated automatically via the prepare_assets.py script.
 
 **All changes should be made in the data-src folder. Otherwise changes will be overwritten**
 
