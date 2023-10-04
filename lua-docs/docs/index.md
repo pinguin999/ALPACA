@@ -4,7 +4,17 @@
 
 [ALPACA on Discord](https://discord.gg/zWdnq6UJ79)
 
-## Setup your PC
+## Setup your PC for game development
+
+1. Get the ALPACA development [build](https://alpaca-engine.de/alpaca_engine.zip).
+2. Install Spine in default folder.
+3. Start `prepare_assets.exe` so your changes in the data-src folder will be synced into the data folder.
+4. With `pac.exe` you can start the game.
+5. In the Schnack folder you can find the dialog editor.
+6. For LUA Scripting we recommand [VS Code](https://code.visualstudio.com/) with a LUA extension like [LuaHelper](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper).
+7.
+
+## Setup your PC for engine development
 
 1. Clone the ALPACA repository with git via `git clone --recurse https://github.com/pinguin999/ALPACA.git` or clone it with the GutHub Desktop client.
 2. Setup your Mac or Linux for [JNGL development](https://github.com/jhasse/jngl). Or [Windows development](https://github.com/jhasse/jngl-starter)
@@ -29,7 +39,7 @@ We can play and learn in/from the project. Here are some easy tasks you can try 
 
 ### Let's start our own game
 
-**All game content is in the data-src folder and the prepare_assets.py converts it and puts it into the data folder. So never change any files in the data folder. It should always be safe to delete the data folder and re-export everything from data-src.**
+**All game content is in the data-src folder and the prepare_assets converts it and puts it into the data folder. So never change any files in the data folder. It should always be safe to delete the data folder and prepare_assets will recreate everything from data-src.**
 
 The demo project is a good starting point. You can also start with an empty data-src folder, but for a smooth start we start from the demo game here.
 

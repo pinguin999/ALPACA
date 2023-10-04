@@ -1,7 +1,16 @@
 {
     "items": [
+        {
+            "spine": "alpaca",
+            "x": "431.422505",
+            "y": "392.016985",
+            "scale": "0.3"
+        }
     ],
     "backgroundMusic": "audio/ingame-action.ogg",
-    "background": {"spine": "scene2"},
-    "zBufferMap": null
+    "background": {
+        "spine": "scene2"
+    },
+    "zBufferMap": null,
+    "hash": "3eca794a8526fcc4941e5326dc1149f879f2284e"
 }

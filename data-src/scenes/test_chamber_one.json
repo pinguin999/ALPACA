@@ -1,8 +1,17 @@
 {
     "items": [
-        {"spine": "banana", "x":"330.0", "y":"400.0", "scale": 0.3, "skin": "normal"},
+        {
+            "spine": "banana",
+            "x": "330.0",
+            "y": "400.0",
+            "scale": "0.3",
+            "skin": "normal"
+        }
     ],
     "backgroundMusic": "audio/ingame-action.ogg",
-    "background": {"spine": "scene1"},
-    "zBufferMap": null
+    "background": {
+        "spine": "scene1"
+    },
+    "zBufferMap": null,
+    "hash": "2718bacddfd8a1ed4f91da8291a419c0e33858d1"
 }

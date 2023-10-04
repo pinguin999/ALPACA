@@ -342,6 +342,23 @@ def scripts_recopy(dir):
                     copy_script(file=root + '/' + file)
 
 
+def rehash_scenes(dir) -> None:
+    for root, dirs, files in os.walk(dir):
+        for file in files:
+            if file.endswith(".json"):
+                src_path = root + '/' + file
+                try:
+                    with open(src_path, 'r') as f:
+                        data = f.read()
+                        parsed = json.loads(data)
+                        parsed['hash'] = hashlib.sha1(data.encode()).hexdigest()
+                    with open(src_path, 'w') as f:
+                        scene_files.append(src_path)
+                        f.write(json.dumps(parsed, indent=4))
+                except Exception:
+                    print(colored(f"data-src file '{src_path}' has errors", 'red'))
+
+
 def copy_script(file):
     if file.endswith("ALPACA.lua"):
         return
@@ -579,6 +596,7 @@ if __name__ == "__main__":
     print(colored("Start convert", 'green'))
     spine_reexport(["./data-src"])
     scripts_recopy(["./data-src/scripts/"])
+    rehash_scenes("./data-src/scenes")
     copy_folder("./data-src/config", "./data/config")
     copy_folder("./data-src/fonts", "./data/fonts")
     copy_folder("./data-src/scenes", "./data/scenes")

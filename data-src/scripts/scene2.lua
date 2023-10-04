@@ -1,3 +1,7 @@
 print("scene2")
 
-LoadScene("test_chamber_two")
+function door()
+    LoadScene("test_chamber_two")
+end
+
+GoToPoint("test_chamber_two", door)
