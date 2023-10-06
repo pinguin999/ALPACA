@@ -23,7 +23,6 @@ using namespace std::string_literals;
 Game::Game(YAML::Node config) : config(config), cameraPosition(jngl::Vec2(0,0)), targetCameraPosition(jngl::Vec2(0,0))
 {
 #if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
-	gifFrame = 0;
 	gifGameFrame = 0;
 	gifTime = 0.0;
 #endif
@@ -32,6 +31,19 @@ Game::Game(YAML::Node config) : config(config), cameraPosition(jngl::Vec2(0,0)),
 	auto zoomx = this->config["screenSize"]["x"].as<int>() / screensize.x;
 	auto zoomy = this->config["screenSize"]["y"].as<int>() / screensize.y;
 	cameraZoom = 1.0 / std::max(zoomx, zoomy);
+
+#ifndef NDEBUG
+	debug_info.setText(
+		"Press Tab to enter editmode. \n"
+		"Press F10 to show debug draw. \n"
+		"Press F12 to start/end gif recording. \n"
+		"Press R to reload the scene. \n"
+		"Press L start the game from the beginning. \n"
+		"Press C to save the game. \n"
+		"Press V to load the game. \n"
+		"Press X to hide this text.");
+	debug_info.setPos(jngl::Vec2(-screensize.x / 2, -screensize.y / 2));
+#endif
 
 	bool language_supportet = false;
 	language = jngl::getPreferredLanguage();
@@ -211,7 +223,7 @@ void Game::step()
 }
 
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
-const std::string currentDateTime() {
+std::string currentDateTime() {
     time_t     now = time(0);
     struct tm  tstruct;
     char       buf[80];
@@ -226,47 +238,11 @@ const std::string currentDateTime() {
 #ifndef NDEBUG
 void Game::debugStep()
 {
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
-	if (jngl::keyPressed(jngl::key::F12))
-	{
-		if(!recordingGif)
-		{
-			// start recording
-			recordingGif = true;
-
-			gifFrame = 0;
-			gifGameFrame = 0;
-			gifTime = jngl::getTime();
-
-			std::string filename = "./../";
-			filename += currentDateTime() + ".gif";
-			jngl::debug("start recording ");
-			jngl::debugLn(filename);
-
-			gifAnimation->GifBegin(gifWriter.get(),
-								   filename.c_str(),
-								   jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR,
-								   jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR,
-								   100, // providing 0 ruins the loop count argument ¯\_(ツ)_/¯
-								   0,
-								   8,
-								   false);
-		}
-		else
-		{
-			// stop recording
-			recordingGif = false;
-			gifAnimation->GifEnd(gifWriter.get());
-			jngl::debugLn("stop recording");
-		}
-	}
-#endif
-
 	// Reload Scene
 	if (jngl::keyPressed("r") || reload)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		std::string dialogFilePath = config["dialog"].as<std::string>();
+		auto dialogFilePath = config["dialog"].as<std::string>();
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
 		loadLevel(currentScene->getSceneName());
 		reload = false;
@@ -285,6 +261,11 @@ void Game::debugStep()
 		currentScene->writeToFile();
 	}
 
+	if (jngl::keyPressed("x"))
+	{
+		show_debug_info = !show_debug_info;
+	}
+
 	// Quick Save
 	if (jngl::keyPressed("c"))
 	{
@@ -294,16 +275,28 @@ void Game::debugStep()
 	// Quick Load
 	if (jngl::keyPressed("v"))
 	{
-		loadLuaState();
+		gameObjects.clear();
+		lua_state = {};
+		currentScene = nullptr;
+		player = nullptr;
+		pointer = nullptr;
+		lua_state = std::make_shared<sol::state>();
+		lua_state->open_libraries(sol::lib::base, sol::lib::package);
+		init();
 	}
 
-	// End all Animations, I'm not sure jet where to put it.
-	if (jngl::keyPressed(jngl::key::Space))
+	// Restart Game
+	if (jngl::keyPressed("l"))
 	{
-		for (const auto& obj : gameObjects)
-		{
-			obj->skeleton->endAnimation(0);
-		}
+		jngl::writeConfig("savegame", "");
+		gameObjects.clear();
+		lua_state = {};
+		currentScene = nullptr;
+		player = nullptr;
+		pointer = nullptr;
+		lua_state = std::make_shared<sol::state>();
+		lua_state->open_libraries(sol::lib::base, sol::lib::package);
+		init();
 	}
 
 	// Save with Control + 1-9 and Load with 1-9
@@ -342,10 +335,9 @@ void Game::debugStep()
 	{
 		if(gifGameFrame % GIF_FRAME_SKIP == 0)
 		{
-
 			auto pixels = jngl::readPixels();
-			int w = jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR;
-			int h = jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR;
+			const int w = jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR;
+			const int h = jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR;
 
 			for(int y = 0; y < h; y++)
 			{
@@ -370,10 +362,43 @@ void Game::debugStep()
 									false,
 									nullptr);
 
-			gifFrame++;
 			gifTime = currentTime;
 		}
 		gifGameFrame++;
+	}
+
+	if (jngl::keyPressed(jngl::key::F12))
+	{
+		if(!recordingGif)
+		{
+			// start recording
+			recordingGif = true;
+			show_debug_info = false;
+
+			gifGameFrame = 0;
+			gifTime = jngl::getTime();
+
+			std::string filename = "./../";
+			filename += currentDateTime() + ".gif";
+			jngl::debug("start recording ");
+			jngl::debugLn(filename);
+
+			gifAnimation->GifBegin(gifWriter.get(),
+								   filename.c_str(),
+								   jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR,
+								   jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR,
+								   100, // providing 0 ruins the loop count argument ¯\_(ツ)_/¯
+								   0,
+								   8,
+								   false);
+		}
+		else
+		{
+			// stop recording
+			recordingGif = false;
+			gifAnimation->GifEnd(gifWriter.get());
+			jngl::debugLn("stop recording");
+		}
 	}
 #endif
 }
@@ -386,15 +411,25 @@ void Game::draw() const
 	applyCamera();
 	jngl::setColor(30, 200, 30, 255);
 
-	for (auto& obj : gameObjects)
+	for (auto &obj : gameObjects)
 	{
-		if(obj->getVisible())
+		if (obj->getVisible())
+		{
 			obj->draw();
+		}
 	}
 
 	dialogManager->draw();
 	// Der Pointer wird doppelt gedrawed, damit der immer vorne ist.
 	pointer->draw();
+
+#ifndef NDEBUG
+	if (show_debug_info){
+		jngl::setFontColor(255, 255, 255, 255);
+		debug_info.draw();
+	}
+#endif
+
 	jngl::popMatrix();
 }
 

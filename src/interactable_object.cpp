@@ -42,7 +42,7 @@ bool InteractableObject::step(bool force)
                 jngl::debugLn(position);
                 dragposition = jngl::getMousePos();
 #ifndef NDEBUG
-                _game->currentScene->updateObjectPosition(id, dragposition);
+                _game->currentScene->updateObjectPosition(id, position);
 #endif
             }
         }

@@ -33,6 +33,9 @@ public:
     void debugStep();
     bool editMode = false;
     bool enableDebugDraw = false;
+    bool show_debug_info = true;
+
+    jngl::Text debug_info;
 #endif
 
     /// Wendet die Kamera auf JNGLs globale ModelView-Matrix an
@@ -95,7 +98,6 @@ private:
     std::shared_ptr<GifWriter> gifWriter;
     bool recordingGif = false;
     uint8_t* gifBuffer;
-    int gifFrame;
     int gifGameFrame;
     double gifTime;
     const int GIF_FRAME_SKIP = 10;

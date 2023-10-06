@@ -4,17 +4,17 @@
 
 [ALPACA on Discord](https://discord.gg/zWdnq6UJ79)
 
-## Setup your PC for game development
+## Setup your PC for game development (Windows)
 
-1. Get the ALPACA development [build](https://alpaca-engine.de/alpaca_engine.zip).
-2. Install Spine in default folder.
+1. Get the [ALPACA development build](https://alpaca-engine.de/alpaca_engine.zip).
+2. Install [Spine](https://esotericsoftware.com/) in default folder.
 3. Start `prepare_assets.exe` so your changes in the data-src folder will be synced into the data folder.
 4. With `pac.exe` you can start the game.
 5. In the Schnack folder you can find the dialog editor.
 6. For LUA Scripting we recommand [VS Code](https://code.visualstudio.com/) with a LUA extension like [LuaHelper](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper).
-7.
+7. [Start building your game.](#lets-start-our-own-game)
 
-## Setup your PC for engine development
+## Setup your PC for engine development (Windows / Mac / Linux)
 
 1. Clone the ALPACA repository with git via `git clone --recurse https://github.com/pinguin999/ALPACA.git` or clone it with the GutHub Desktop client.
 2. Setup your Mac or Linux for [JNGL development](https://github.com/jhasse/jngl). Or [Windows development](https://github.com/jhasse/jngl-starter)

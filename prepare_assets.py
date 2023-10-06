@@ -351,7 +351,8 @@ def rehash_scenes(dir) -> None:
                     with open(src_path, 'r') as f:
                         data = f.read()
                         parsed = json.loads(data)
-                        parsed['hash'] = hashlib.sha1(data.encode()).hexdigest()
+                        parsed['hash'] = ""
+                        parsed['hash'] = hashlib.sha1(str(parsed).encode()).hexdigest()
                     with open(src_path, 'w') as f:
                         scene_files.append(src_path)
                         f.write(json.dumps(parsed, indent=4))
@@ -446,7 +447,8 @@ def on_data_src_modified(event):
             with open(event.src_path, 'r') as f:
                 data = f.read()
                 parsed = json.loads(data)
-                parsed['hash'] = hashlib.sha1(data.encode()).hexdigest()
+                parsed['hash'] = ""
+                parsed['hash'] = hashlib.sha1(str(parsed).encode()).hexdigest()
             with open(event.src_path, 'w') as f:
                 scene_files.append(event.src_path)
                 f.write(json.dumps(parsed, indent=4))
