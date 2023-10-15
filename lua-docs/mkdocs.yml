@@ -1,4 +1,4 @@
-site_name: ALPACA's LUA Docs
+site_name: ALPACA's documentation
 plugins:
 - mkdocstrings:
     handlers:
@@ -7,8 +7,8 @@ plugins:
 
 nav:
   - "Getting Started": index.md
-  - "LUA API": lua.md
-  - "Assets": asset_pipeline.md
+  - "Lua API": lua.md
   - "Scenes": scene.md
   - "Dialogs": dialogs.md
   - "Spine": spine.md
+  - "Assets": asset_pipeline.md

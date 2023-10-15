@@ -76,7 +76,7 @@ public:
     int getInactivLayerBorder() { return inactivLayerBorder; };
 
     std::shared_ptr<SpineObject> getObjectById(std::string objectId);
-    std::string getLUAPath(std::string objectId);
+    std::string getLuaPath(std::string objectId);
 
     std::string cleanLuaString(std::string variable);
     YAML::Node config;

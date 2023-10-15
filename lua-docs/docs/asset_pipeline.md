@@ -1,20 +1,21 @@
 # Asset Pipeline
 
-ALPACA has a complete automated asset pipeline. Every project has a data folder for runtime optimised files and a data-src folder with the source asset files like ".spine" files. The content of the data folder is generated automatically via the prepare_assets.py script.
+ALPACA has a complete automated asset pipeline. Every project has a data-src folder with the source asset files like ".spine" files and a data folder for runtime optimised files.
+The content of the data folder is generated automatically via the prepare_assets.py script.
 
-**All changes should be made in the data-src folder. Otherwise changes will be overwritten**
+> ⚠️ **All changes have to be made in the data-src folder. Otherwise changes will be overwritten.**
 
-The data-src folder should have the following structure:
+The data-src folder has to have the following structure:
 
 ```bash
 /data-src/
-    ├── audio
+    ├── audio                 # All audio as .ogg files
     ├── config
     │   └── game.json         # Game config file
     ├── dialog
     │   └── dialogs.schnack   # Schnack file
-    ├── fonts                 # Font in .ttf format
+    ├── fonts                 # Fonts in .ttf format
     ├── icons                 # Game icons (512 x 512 WebP file)
     ├── scenes                # All scene definition files
-    └── scripts               # All LUA scripts.
+    └── scripts               # All Lua scripts
 ```

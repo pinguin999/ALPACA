@@ -202,7 +202,7 @@ bool Player::step(bool)
 
         if (_game->pointer->secondaryPressed())
         {
-            // Maybe LUA's DeattatchAllFromPointer here?
+            // Maybe Lua's DeattatchAllFromPointer here?
             for (auto obj : _game->pointer->attatchedObjects)
             {
                 obj->setParent(nullptr);

@@ -477,9 +477,9 @@ class DocFunction:
     returns: str = ""
 
 
-class LUADocsGen():
+class LuaDocsGen():
     """
-        The PAC's LUA handler class.
+        The PAC's Lua handler class.
     """
 
     def collect(self, identifier: str, config: dict) -> str:
@@ -594,7 +594,7 @@ end
 
 if __name__ == "__main__":
     freeze_support()
-    LUADocsGen().render("lua.cpp")
+    LuaDocsGen().render("lua.cpp")
     print(colored("Start convert", 'green'))
     spine_reexport(["./data-src"])
     scripts_recopy(["./data-src/scripts/"])

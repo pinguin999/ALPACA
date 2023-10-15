@@ -6,13 +6,15 @@
 
 ## Setup your PC for game development (Windows)
 
-1. Get the [ALPACA development build](https://alpaca-engine.de/alpaca_engine.zip).
-2. Install [Spine](https://esotericsoftware.com/) in default folder.
+1. Get [ALPACA for Windows](https://alpaca-engine.de/alpaca_engine.zip).
+2. Install [Spine](https://esotericsoftware.com/) into the default folder.
 3. Start `prepare_assets.exe` so your changes in the data-src folder will be synced into the data folder.
 4. With `pac.exe` you can start the game.
 5. In the Schnack folder you can find the dialog editor.
-6. For LUA Scripting we recommand [VS Code](https://code.visualstudio.com/) with a LUA extension like [LuaHelper](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper).
-7. [Start building your game.](#lets-start-our-own-game)
+6. For Lua Scripting it's recommand to use [VS Code](https://code.visualstudio.com/) with a Lua extension like [LuaHelper](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper).
+7. [Start building your game.](#lets-start-your-own-game)
+8. If you need help setting up your first project or want to talk about your game.
+Book a time slot with the developers of ALPACA at [calendly](https://calendly.com/pinguin999/pac-indie-game-development) 🇩🇪🇬🇧, mail me at [kolja@portaldogs.com](mailto:kolja@portaldogs.com) 🇩🇪🇬🇧 or join [ALPACA on Discord](https://discord.gg/zWdnq6UJ79)
 
 ## Setup your PC for engine development (Windows / Mac / Linux)
 
@@ -21,8 +23,7 @@
 3. Now you should be able to play the demo project.
 4. Check that you have installed [Spine](http://de.esotericsoftware.com/), [Rhubarb](https://github.com/DanielSWolf/rhubarb-lip-sync/releases), [Lua](https://github.com/rjpcomputing/luaforwindows) and [Python](https://www.python.org/downloads/). Now you can re-export all assets from data-src to data with the prepare_assets.py script. **On Windows you need [Spine](http://de.esotericsoftware.com/) installed and you can use prepare_assets.exe to export the assets.**
 5. If you need help setting up your first project or want to talk about your game.
-Book a time slot with the developers of ALPACA at [calendly](https://calendly.com/pinguin999/pac-indie-game-development) 🇩🇪🇬🇧
-or mail me at [kolja@portaldogs.com](mailto:kolja@portaldogs.com) 🇩🇪🇬🇧 or join [ALPACA on Discord](https://discord.gg/zWdnq6UJ79)
+Book a time slot with the developers of ALPACA at [calendly](https://calendly.com/pinguin999/pac-indie-game-development) 🇩🇪🇬🇧, mail me at [kolja@portaldogs.com](mailto:kolja@portaldogs.com) 🇩🇪🇬🇧 or join [ALPACA on Discord](https://discord.gg/zWdnq6UJ79)
 
 ## What's in the demo game?
 
@@ -37,7 +38,7 @@ We can play and learn in/from the project. Here are some easy tasks you can try 
 - Move an object
 - Play with the scripts
 
-### Let's start our own game
+### Let's start your own game
 
 **All game content is in the data-src folder and the prepare_assets converts it and puts it into the data folder. So never change any files in the data folder. It should always be safe to delete the data folder and prepare_assets will recreate everything from data-src.**
 
@@ -55,9 +56,9 @@ In the development mode we can press the <kbd>Tab</kbd> key to go into the edit 
 
 But we want to interact with the item. So jumping back to Spine and adding a collision box around our item and name it something like "click_ITEMNAME". Now save the Spine project and the file watcher in **prepare_assets.py** will re-export the project to data and also create a lua script with the bounding box name in the **data-src/scripts** folder. Per default the new created script prints the collision box name to the console. Press <kbd>R</kbd> ingame and all Spine files are reloaded without closing the game. Now you should be able to click your item and see a text in the console.
 
-Now we come to **LUA scripting**, the way logic is defined in an ALPACA game. A full list of functions can be found at [LUA API](lua.md). But for the quick intro we want the player to go to the item and interact with it. To be able to go somewhere we have to define a [Point](http://esotericsoftware.com/spine-points) in Spine, so let's add the Point to our item and save it again. *I have named the Point in the example "game center" and will also use this name in this tutorial's script*.
+Now we come to **Lua scripting**, the way logic is defined in an ALPACA game. A full list of functions can be found at [Lua API](lua.md). But for the quick intro we want the player to go to the item and interact with it. To be able to go somewhere we have to define a [Point](http://esotericsoftware.com/spine-points) in Spine, so let's add the Point to our item and save it again. *I have named the Point in the example "game center" and will also use this name in this tutorial's script*.
 
-Most LUA Function like `GoToPoint` have two versions: GoToPoint and GoToPointOn
+Most Lua Function like `GoToPoint` have two versions: GoToPoint and GoToPointOn
 
 ```lua
 print("banana_clicked")

@@ -152,7 +152,7 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
         this->loadObjects(json["items"]);
     }
 
-    // Move cross_scene object's LUA from old to new scene
+    // Move cross_scene object's Lua from old to new scene
     for (auto it = game->gameObjects.begin(); it != game->gameObjects.end();)
 	{
 		if ((*it)->cross_scene && (*game->lua_state)["scenes"][old_scene]["items"][(*it)->getId()].valid())

@@ -9,6 +9,8 @@ ALPACA supports Spine's **Animations**, **Skins**, **Events** and **Bounding Box
 We recommend to have one folder per Spine project.
 **The folder name and the .spine file have to have the same name. For example door/door.spine for a door object. Also the Spine skeleton must be renamed to door.**
 
+> ⚠️ **Spine object names can only inclue ASCII characters and none of this characters + - * / % ^ # < > = ( ) { } [ ] ; : , .**
+
 ### Root Position
 
 For interactable objects the roots y position defines the rendering order. Objects that have a larger y position value will be rendered first. So normally you want to have the root position at the bottom of the Object.

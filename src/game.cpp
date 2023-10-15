@@ -425,7 +425,7 @@ void Game::draw() const
 
 #ifndef NDEBUG
 	if (show_debug_info){
-		jngl::setFontColor(255, 255, 255, 255);
+		jngl::setFontColor(0, 0, 0, 255);
 		debug_info.draw();
 	}
 #endif
@@ -570,7 +570,7 @@ void Game::runAction(std::string actionName, std::shared_ptr<SpineObject> thisOb
 	else
 	{
 		std::string file = "scripts/" + actionName + ".lua";
-		errorMessage = "The LUA code of " + file + " has failed to run!\n";
+		errorMessage = "The Lua code of " + file + " has failed to run!\n";
 		std::stringstream scriptstream = jngl::readAsset(file);
 
 		if (!scriptstream)
@@ -748,7 +748,7 @@ std::shared_ptr<SpineObject> Game::getObjectById(std::string objectId)
 	return obj;
 }
 
-std::string Game::getLUAPath(std::string objectId)
+std::string Game::getLuaPath(std::string objectId)
 {
 	if (objectId == "Player")
 	{
