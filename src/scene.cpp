@@ -309,6 +309,7 @@ void Scene::loadObjects(YAML::Node objects)
                 interactable->setLuaIndex(object_id);
                 interactable->cross_scene = cross_scene;
                 interactable->abs_position = abs_position;
+                interactable->setVisible(visible);
 
                 (*_game->lua_state)["scenes"][scene]["items"][object_id] = _game->lua_state->create_table_with(
                     "spine", spine_file,
