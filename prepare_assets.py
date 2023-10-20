@@ -57,6 +57,18 @@ elif sys.platform == "win32":
     set_read_only = False
 
 
+spine_objects: dict[str, set[str]] = {}
+spine_animations: dict[str, set[str]] = {}
+spine_skins: dict[str, set[str]] = {}
+spine_points: dict[str, set[str]] = {}
+all_dialogs: dict[str, set[str]] = {}
+all_scenes: dict[str, set[str]] = {}
+all_audio: dict[str, set[str]] = {}
+all_language: dict[str, set[str]] = {}
+
+scene_files = []  # Temp list to prevent infinite loop
+
+
 class Progress(object):
     def __init__(self, initialCount: int, maxCount: int, maxTitleLength: int = 26, barLength: int = 46):
         self._initialCount = initialCount
@@ -66,7 +78,6 @@ class Progress(object):
         self._maxTitleLength = maxTitleLength
         self._barLength = barLength
         self._errors = []
-        self._warnings = []
 
     def updateTitle(self, title: str):
         self._title = title
@@ -89,7 +100,6 @@ class Progress(object):
         percentage = "%3.1f" % (percent * 100)
         print(colored(f"\r{printedTitle} |{filled}{unfilled}| {percentage}%",
                       "red" if len(self._errors) > 0
-                      else "yellow" if len(self._warnings) > 0
                       else "blue"), end="\r")
 
     def finish(self):
@@ -99,17 +109,12 @@ class Progress(object):
         self._errors.append(errorMsg)
         self.print()
 
-    def addWarning(self, warnMsg: str):
-        self._warnings.append(warnMsg)
-        self.print()
-
 
 def rhubarb_export(node_info):
     node_id = node_info[0]
     errors = []
-    warnings = []
     if not RHUBARB:
-        return errors, warnings
+        return errors
     rhubarb_out = f"{RHUBARB_OUT}{node_id}.json"
     try:
         if set_read_only:
@@ -123,7 +128,7 @@ def rhubarb_export(node_info):
         errors.append(output.decode())
     if set_read_only:
         os.chmod(rhubarb_out, S_IREAD | S_IRGRP | S_IROTH)
-    return errors, warnings
+    return errors
 
 
 def rhubarb_reexport():
@@ -134,14 +139,13 @@ def rhubarb_reexport():
     results = []
     Path(RHUBARB_OUT).mkdir(parents=True, exist_ok=True)
     with Pool(SPINE_THREADS) as p:
-        for i, (errors, warnings) in enumerate(p.imap_unordered(rhubarb_export, nodes), 0):
+        for i, (errors) in enumerate(p.imap_unordered(rhubarb_export, nodes), 0):
             progress.advance()
 
-            if len(errors) > 0 or len(warnings) > 0:
+            if len(errors) > 0:
                 results.append({
                     "file": nodes[i],
                     "errors": errors,
-                    "warnings": warnings,
                 })
     progress.finish()
 
@@ -225,50 +229,104 @@ def spine_reexport(dir):
         for root, dirs, files in os.walk(folder):
             for file in files:
                 if file.endswith(".spine"):
-                    # spine_export(file=root + '/' + file)
                     spinefiles.append(root + '/' + file)
 
     progress = Progress(0, len(spinefiles))
     progress.updateTitle(" Re-Exporting Spine Files")
     results = []
     with Pool(SPINE_THREADS) as p:
-        for i, (errors, warnings) in enumerate(p.imap_unordered(spine_export, spinefiles), 0):
+        for i, (errors, spine_object, spine_file) in enumerate(p.imap_unordered(spine_export, spinefiles), 0):
             progress.advance()
 
-            if len(errors) > 0 or len(warnings) > 0:
+            spine_objects.update(spine_object)
+            parse_spine_json(spine_file=spine_file)
+            if len(errors) > 0:
                 results.append({
                     "file": spinefiles[i],
                     "errors": errors,
-                    "warnings": warnings,
                 })
     progress.finish()
 
     for result in results:
-        printErrorsAndWarnings(
-            result["file"], result["errors"], result["warnings"])
+        printErrors(
+            result["file"], result["errors"])
 
 
-def printErrorsAndWarnings(fileName, errors, warnings):
+def printErrors(fileName, errors):
     color = "red" if len(errors) > 0 else "yellow"
     print(colored(f"  {fileName}", color))
     for error in errors:
         print(colored(f"    ERROR: {error}", "red"))
-    for warning in warnings:
-        print(colored(f"    WARNING: {warning}", "yellow"))
     print()
+
+
+def parse_spine_json(spine_file):
+    # read spine json to check for missing scripts
+    with open(spine_file) as spine_json:
+        spine_object = json.load(spine_json)
+
+        if 'animations' in spine_object:
+            for animation in spine_object["animations"].keys():
+                if animation in spine_animations:
+                    spine_animations[animation].add(spine_file)
+                else:
+                    spine_animations[animation] = {spine_file}
+
+        if "skins" in spine_object:
+            for i, skin in enumerate(spine_object["skins"]):
+                if skin['name'] in spine_skins:
+                    spine_skins[skin['name']].add(spine_file)
+                else:
+                    spine_skins[skin['name']] = {spine_file}
+
+                if "attachments" not in skin:
+                    continue
+
+                for attachment in skin["attachments"].keys():
+                    for subattachment in skin["attachments"][attachment].keys():
+                        if "type" in skin["attachments"][attachment][subattachment]:
+                            if skin["attachments"][attachment][subattachment]["type"] == "point":
+                                point_name = subattachment
+                                if point_name in spine_points:
+                                    spine_points[point_name].add(spine_file)
+                                else:
+                                    spine_points[point_name] = {spine_file}
+
+            for i, _skin in enumerate(spine_object["skins"]):
+
+                if "attachments" not in spine_object["skins"][i]:
+                    continue
+
+                for attachment in spine_object["skins"][i]["attachments"].keys():
+                    for subattachment in spine_object["skins"][i]["attachments"][attachment].keys():
+                        if "name" in spine_object["skins"][i]["attachments"][attachment][subattachment]:
+                            bbname = spine_object["skins"][i]["attachments"][attachment][subattachment]["name"]
+                        else:
+                            bbname = subattachment
+
+                        if "type" in spine_object["skins"][i]["attachments"][attachment][subattachment] \
+                                and spine_object["skins"][i]["attachments"][attachment][subattachment]["type"] == "boundingbox":
+                            if bbname == "walkable_area":  # No scripts for navmeshes
+                                continue
+                            if not bbname.startswith("dlg:") and not bbname.startswith("anim:") and not os.path.exists(
+                                 f"./data-src/scripts/{bbname}.lua"):
+                                if not os.path.exists("./data-src/scripts/"):
+                                    Path("./data-src/scripts/").mkdir(parents=True, exist_ok=True)
+                                with open(f"./data-src/scripts/{bbname}.lua", 'w') as f:
+                                    f.write(f'print("{bbname}")')
+                                print(colored(f"Script {bbname}.lua was created automatically!"), 'blue')
 
 
 # there is no print allowed in this function, since this would destroy the progress bar
 def spine_export(file: str):
     errors = []
-    warnings = []
     if not file.endswith('.spine'):
         errors.append("invalid spine file " + file)
-        return errors, warnings
+        return errors, {}, ""
 
     if not os.path.exists(SPINE):
         errors.append("spine executable '" + SPINE + "' could not be found!")
-        return errors, warnings
+        return errors, {}, ""
 
     name = os.path.splitext(Path(file).name)[0]
     command = [SPINE, '-i', file, '-m', '-o',
@@ -294,35 +352,7 @@ def spine_export(file: str):
     if not os.path.exists(f"./data/{name}/{name}.json"):
         errors.append(
             f"Spine export of {name} failed. No file ./data/{name}/{name}.json was created. \nIs the sceleton of {name}.spine named {name}?")
-        return errors, warnings
-
-    # read spine json to check for missing scripts
-    with open(f"./data/{name}/{name}.json") as spine_json:
-        spine_object = json.load(spine_json)
-        if "skins" in spine_object:
-            for i, _skin in enumerate(spine_object["skins"]):
-
-                if "attachments" not in spine_object["skins"][i]:
-                    continue
-
-                for attachment in spine_object["skins"][i]["attachments"].keys():
-                    for subattachment in spine_object["skins"][i]["attachments"][attachment].keys():
-                        if "name" in spine_object["skins"][i]["attachments"][attachment][subattachment]:
-                            bbname = spine_object["skins"][i]["attachments"][attachment][subattachment]["name"]
-                        else:
-                            bbname = subattachment
-
-                        if "type" in spine_object["skins"][i]["attachments"][attachment][subattachment] \
-                                and spine_object["skins"][i]["attachments"][attachment][subattachment]["type"] == "boundingbox":
-                            if bbname == "walkable_area":  # No scripts for navmeshes
-                                continue
-                            if not bbname.startswith("dlg:") and not bbname.startswith("anim:") and not os.path.exists(
-                                 f"./data-src/scripts/{bbname}.lua"):
-                                if not os.path.exists("./data-src/scripts/"):
-                                    Path("./data-src/scripts/").mkdir(parents=True, exist_ok=True)
-                                with open(f"./data-src/scripts/{bbname}.lua", 'w') as f:
-                                    f.write(f'print("{bbname}")')
-                                warnings.append(f"Script {bbname}.lua was created automatically!")
+        return errors, {}, ""
 
     if set_read_only:
         try:
@@ -331,7 +361,7 @@ def spine_export(file: str):
         except Exception:
             pass
 
-    return errors, warnings
+    return errors, {name: {file}}, f"./data/{name}/{name}.json"
 
 
 def scripts_recopy(dir):
@@ -346,6 +376,12 @@ def rehash_scenes(dir) -> None:
     for root, dirs, files in os.walk(dir):
         for file in files:
             if file.endswith(".json"):
+
+                if file in all_scenes:
+                    all_scenes[file.rstrip('.json')].add('data-src')
+                else:
+                    all_scenes[file.rstrip('.json')] = {'data-src'}
+
                 src_path = root + '/' + file
                 try:
                     with open(src_path, 'r') as f:
@@ -390,6 +426,8 @@ def copy_folder(src, des):
     for root, dirs, files in os.walk(src):
         for file in files:
             copy_file(src=root + '/' + file, des=des)
+            if ".schnack" in file:
+                fill_all_dialogs(root + '/' + file, file)
 
 
 def copy_file(src, des):
@@ -418,22 +456,21 @@ def on_deleted(event):
     print(colored(f"{event.src_path} was deleted! Please delete it manually from data.", 'red'))
 
 
-scene_files = []
-
-
 def on_data_src_modified(event):
     time.sleep(.5)
     print(
         colored(f"data-src file '{event.src_path}' has been modified", 'green'))
     if event.src_path.endswith(".spine"):
-        (errors, warnings) = spine_export(event.src_path)
-        if len(errors) > 0 or len(warnings) > 0:
-            printErrorsAndWarnings(event.src_path, errors, warnings)
+        (errors, spine_object, spine_file) = spine_export(event.src_path)
+        spine_objects.update(spine_object)
+        parse_spine_json(spine_file=spine_file)
+        if len(errors) > 0:
+            printErrors(event.src_path, errors)
         apply_rhubarb()
     if event.src_path.endswith(".ogg"):
-        (errors, warnings) = rhubarb_export(event.src_path)
-        if len(errors) > 0 or len(warnings) > 0:
-            printErrorsAndWarnings(event.src_path, errors, warnings)
+        (errors) = rhubarb_export(event.src_path)
+        if len(errors) > 0:
+            printErrors(event.src_path, errors)
     if event.src_path.endswith(".lua"):
         copy_script(event.src_path)
     if event.src_path.endswith(".json") and 'scenes' in event.src_path:
@@ -441,6 +478,10 @@ def on_data_src_modified(event):
         if event.src_path in scene_files:
             scene_files.remove(event.src_path)
             copy_file(f"./data-src/scenes/{file}", "./data/scenes")
+            if file in all_scenes:
+                all_scenes[file.rstrip('.json')].add('data-src')
+            else:
+                all_scenes[file.rstrip('.json')] = {'data-src'}
             return
         parsed = None
         try:
@@ -460,6 +501,17 @@ def on_data_src_modified(event):
     if event.src_path.endswith(".schnack") and 'dialog' in event.src_path:
         file = Path(event.src_path).name
         copy_file(f"./data-src/dialog/{file}", "./data/dialog")
+        fill_all_dialogs(f"./data-src/dialog/{file}", file)
+
+
+def fill_all_dialogs(path, file):
+    with open(path, 'r') as f:
+        dialogs = json.load(f)
+        for dialog in dialogs["dialogs"]:
+            if dialog['name'] in all_dialogs:
+                all_dialogs[dialog['name']].add(file)
+            else:
+                all_dialogs[dialog['name']] = {file}
 
 
 def on_moved(event):
@@ -495,20 +547,31 @@ class LuaDocsGen():
         result = parameters.replace('[](', '').replace(')', '')
         result = result.replace('[this](', '').replace(')', '')
         result = result.replace("const ", "")
-        result = result.replace("std::string ", "String ")
+        result = result.replace("std::string ", "string ")
         result = result.replace("&", "")
-        result = result.replace("int ", "Number ")
-        result = result.replace("float ", "Number ")
-        result = result.replace("sol::function ", "Function ")
+        result = result.replace("\tint ", "number ")
+        result = result.replace(", int ", ", number ")
+        result = result.replace("float ", "number ")
+        result = result.replace("bool ", "boolean ")
+        result = result.replace("sol::function ", "function ")
 
         return result.strip()
 
     def get_copy_parameters(self, parameters: str) -> str:
         result = self.get_parameters(parameters)
-        result = result.replace("String ", "")
-        result = result.replace("Number ", "")
-        result = result.replace("Function ", "")
-        result = result.replace("bool ", "")
+        result = result.replace("string ", "")
+        result = result.replace("number ", "")
+        result = result.replace("function ", "")
+        result = result.replace("boolean ", "")
+        result = result.replace("LuaSpineObject ", "")
+        result = result.replace("LuaSpineAnimation ", "")
+        result = result.replace("LuaSpineSkin ", "")
+        result = result.replace("LuaSpinePoint ", "")
+        result = result.replace("LuaDialog ", "")
+        result = result.replace("LuaScene ", "")
+        result = result.replace("LuaAudio ", "")
+        result = result.replace("LuaLanguage ", "")
+
         return result.strip()
 
     def get_docs(self, code: List[str], index: int) -> List[str]:
@@ -554,7 +617,6 @@ class LuaDocsGen():
             with code_file.open() as f:
                 code = f.readlines()
 
-        code = None
         if code is None:
             code = requests.get('https://raw.githubusercontent.com/pinguin999/ALPACA/main/src/lua.cpp').text
             code = code.split('\n')
@@ -570,6 +632,24 @@ class LuaDocsGen():
                 result.append(doc_obj)
 
         with Path("data-src/scripts/ALPACA.lua").open('w') as output:
+            output.write("")  # Clear file
+
+        def write_alias(alias, entries):
+            with Path("data-src/scripts/ALPACA.lua").open('+a') as output:
+                output.write(f"\n\n---@alias {alias}")
+                for spine_object in entries.items():
+                    output.write(f"""\n---| '"{spine_object[0]}"' # Found in {spine_object[1]}""")
+
+        write_alias("LuaSpineObject", spine_objects)
+        write_alias("LuaSpineAnimation", spine_animations)
+        write_alias("LuaSpineSkin", spine_skins)
+        write_alias("LuaSpinePoint", spine_points)
+        write_alias("LuaDialog", all_dialogs)
+        write_alias("LuaScene", all_scenes)
+        write_alias("LuaAudio", all_audio)
+        write_alias("LuaLanguage", all_language)
+
+        with Path("data-src/scripts/ALPACA.lua").open('+a') as output:
 
             for func in result:
                 docs = f"--- {func.docs[0]}"
@@ -582,7 +662,7 @@ class LuaDocsGen():
                     if parameter == "":
                         continue
                     parameter = parameter.split(" ")
-                    docs += f"\n---@param {parameter[1]} {parameter[0].lower()}"
+                    docs += f"\n---@param {parameter[1]} {parameter[0]}"
                 output.write(f"""
 {docs}
 function {func.name}({func.copy_parameters})
@@ -594,7 +674,6 @@ end
 
 if __name__ == "__main__":
     freeze_support()
-    LuaDocsGen().render("lua.cpp")
     print(colored("Start convert", 'green'))
     spine_reexport(["./data-src"])
     scripts_recopy(["./data-src/scripts/"])
@@ -607,6 +686,7 @@ if __name__ == "__main__":
     copy_folder("./data-src/dialog", "./data/dialog")
     rhubarb_reexport()
     apply_rhubarb()
+    LuaDocsGen().render("lua.cpp")
     print(colored("Convert sucess", 'green'))
     patterns_src = ["*.spine", "*.lua", "*.json", "*.schnack", "*.ogg"]
     ignore_patterns = None
