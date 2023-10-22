@@ -135,18 +135,15 @@ void Game::loadLevel(const std::string &level)
 	dialogManager->cancelDialog();
 
 	// Clear the level if there is already a level loaded
-	for (auto it = gameObjects.begin(); it != gameObjects.end();)
+	for (auto it = gameObjects.rbegin(); it != gameObjects.rend();)
 	{
-		if ((*it)->cross_scene)
+		if (!(*it)->cross_scene)
 		{
-			++it;
+			remove(*it);
 		}
-		else
-		{
-			(*it)->setDeleted();
-			++it;
-		}
+		std::advance(it, 1);
 	}
+
 	auto newScene = std::make_shared<Scene>(level, shared_from_this());
 	if(!newScene->background)
 	{
