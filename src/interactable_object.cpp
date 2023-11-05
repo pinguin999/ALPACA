@@ -62,6 +62,11 @@ bool InteractableObject::step(bool force)
             return false;
         }
 
+        if (!force && !_game->player->interruptible)
+        {
+            return false;
+        }
+
         // TODO Double Click on Objekts
         if (_game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
         {

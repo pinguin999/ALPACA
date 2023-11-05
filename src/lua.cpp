@@ -310,6 +310,18 @@ void Game::setupLuaFunctions()
 							{
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								auto inter = std::static_pointer_cast<InteractableObject>(obj);
+								obj->setParent(nullptr);
+								for (auto it = pointer->attatchedObjects.begin(); it != pointer->attatchedObjects.end();)
+								{
+									if ((*it) == nullptr || (*it) == obj)
+									{
+										it = pointer->attatchedObjects.erase(it);
+									}
+									else
+									{
+										++it;
+									}
+								}
 								if (inter)
 									inter->registerToDelete();
 							});
@@ -321,6 +333,18 @@ void Game::setupLuaFunctions()
 							{
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
 								auto inter = std::static_pointer_cast<InteractableObject>(obj);
+								obj->setParent(nullptr);
+								for (auto it = pointer->attatchedObjects.begin(); it != pointer->attatchedObjects.end();)
+								{
+									if ((*it) == nullptr || (*it) == obj)
+									{
+										it = pointer->attatchedObjects.erase(it);
+									}
+									else
+									{
+										++it;
+									}
+								}
 								if (inter)
 									inter->registerToDelete();
 							});

@@ -23,14 +23,17 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
         background = nullptr;
         return;
     }
-    else if (!json.IsMap())
+
+    if (!json.IsMap())
     {
         throw LoadException("Invalid JSON for Scene, expected a JSON object");
     }
 
     // Get old scene and set game.scene to current
     if (!(*game->lua_state)["game"].valid())
+    {
 		(*game->lua_state).script("game = {}");
+    }
 	std::string old_scene = "";
 	if ((*game->lua_state)["game"]["scene"].valid())
     {

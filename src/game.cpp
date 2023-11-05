@@ -762,7 +762,8 @@ std::string Game::getLuaPath(std::string objectId)
 	{
 		return "inventory_items[\"" + objectId + "\"]";
 	}
-	else if ((*this->lua_state)["scenes"][scene]["items"][objectId].valid())
+
+	if ((*this->lua_state)["scenes"][scene]["items"][objectId].valid())
 	{
 		return "scenes[\"" + scene + "\"][\"items\"][\"" + objectId + "\"]";
 	}
