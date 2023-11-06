@@ -4,7 +4,18 @@
 
 [ALPACA on Discord](https://discord.gg/zWdnq6UJ79)
 
+When you want to use ALPACA, you have two different options:
+
+1. You can use ALPACA for game development without the need to compile C++ code,
+   only using Lua scripting and the Spine editor (Windows only)
+2. You can set up ALPACA for engine development, where you compile the engine (C++ code)
+   yourself and are able to make changes to the core functionality of ALPACA
+   (this is required on Mac and Linux, but also possible on Windows)
+
 ## Setup your PC for game development (Windows)
+
+This is the easiest way to work with ALPACA. You won't have to mess with C++ compilers
+and will use a pre-compiled version of ALPACA. Unfortunately, this only works on Windows.
 
 1. Get [ALPACA for Windows](https://alpaca-engine.de/alpaca_engine.zip).
 2. Install [Spine](https://esotericsoftware.com/) into the default folder.
@@ -17,6 +28,10 @@
 Book a time slot with the developers of ALPACA at [calendly](https://calendly.com/pinguin999/pac-indie-game-development) 🇩🇪🇬🇧, mail me at [kolja@portaldogs.com](mailto:kolja@portaldogs.com) 🇩🇪🇬🇧 or join [ALPACA on Discord](https://discord.gg/zWdnq6UJ79)
 
 ## Setup your PC for engine development (Windows / Mac / Linux)
+
+This is the advanced way to work with ALPACA. You will compile the engine yourself.
+This will also enable you to make changes to the engine core, if you feel this is
+necessary for your use-case.
 
 1. Clone the ALPACA repository with git via `git clone --recurse https://github.com/pinguin999/ALPACA.git` or clone it with the GutHub Desktop client.
 2. Setup your Mac or Linux for [JNGL development](https://github.com/jhasse/jngl). Or [Windows development](https://github.com/jhasse/jngl-starter)
@@ -40,19 +55,19 @@ smooth start it's recommanded to start from the demo game.
 
 You can play and learn from the project. Here are some tasks you can try out yourself.
 
-**All game content is in the data-src folder and the prepare_assets converts it and puts it into the data folder. So never change any files in the data folder. It should always be safe to delete the data folder and prepare_assets will recreate everything from data-src.**
+**All game content is in the `data-src` folder and the `prepare_assets` converts it and puts it into the `data` folder. So never change any files in the `data` folder. It should always be safe to delete the `data` folder and `prepare_assets` will recreate everything from `data-src`.**
 
 #### Add a Spine object
 
 All items in a ALPACA game are Spine objects. So to add an new item to a scene you have to start a new Spine project.
 
-1. Create a folder in data-src with the name of your object. Let's name it `dog`
+1. Create a folder in `data-src` with the name of your object. Let's name it `dog`
 2. Open Spine and click `New Project`
 3. Name the skeleton also like your folder. In our case it's `dog` again
 4. Add images to your spine file and create nice animations.
 5. Save the Spine file in `data-src/dog/dog.spine`
-6. The prepare_assets script should already running, if not start it. Check the output for `...dog.spine has been modified`
-7. Now open data-src/scenes/test_chamber_one.json in VS Code and add the dog item into the items list.
+6. The `prepare_assets` script should already running, if not start it. Check the output for `...dog.spine has been modified`
+7. Now open `data-src/scenes/test_chamber_one.json` in VS Code and add the dog item into the items list.
 
 ```josn
 {
@@ -108,7 +123,7 @@ print("bark")
 PlayAnimation(0, "bark", false, pass)
 ```
 
-Now you come to **Lua scripting**, the way logic is defined in an ALPACA game. A full list of functions can be found at [Lua API](lua.md). But for the quick intro you want the player to go to the item and interact with it. To be able to go somewhere you have to define a [Point](http://esotericsoftware.com/spine-points) in Spine, so let's add the Point to our item and save it again. *I have named the Point in the example "game center" and will also use this name in this tutorial's script*.
+Now we will start with the **Lua scripting**, the way logic is defined in an ALPACA game. A full list of functions can be found in the [Lua API](lua.md) documentation. For the quick intro you want the player to go to the item and interact with it. To be able to go somewhere you have to define a [Point](http://esotericsoftware.com/spine-points) in Spine, so let's add the Point to our item and save it again. *I have named the Point in the example "game center" and will also use this name in this tutorial's script*.
 
 Most Lua Function like `GoToPoint` have two versions: GoToPoint and GoToPointOn
 
@@ -144,8 +159,8 @@ Everything in an ALPACA project is organized in **scenes**. A scene exists out o
 In ALPACA everything you can see on the screen is a Spine project, so for the **scene background** you need to create a Spine project. Open Spine and click *New Project* and name the [skeleton](http://esotericsoftware.com/spine-skeletons#Skeletons) to your scene name. The background is drawn from the center so the Spine 0,0 point should be in the middle of the screen. If you want the player to walk in the scene you need a `walkable_area` [bounding box](http://esotericsoftware.com/spine-bounding-boxes). For reference you can check out **data-src/scene1/scene1.spine**. After saving our scene background you should update the background entry in our scene file. If it's not already running you should start **prepare_assets.py** to get the files exported into the data folder. If you start your game now you should see your new scene.
 
 
-But an empty scene is boring, so why not start with our first **object** now? Let's create a new spine project and it's a very good habit to rename the skeleton to what you want to call the object. *This name is used by the export and is needed to load an object*. Now save your Spine file for the first time. I always create a new folder for every Spine project and name the folder and the Spine file again with the same name that was used for the skeleton. Now you need images for the Spine project, if you have not made any images yet you can reuse the **banana.png** from **data-src/banana/** and copy it over into your Spine project folder.
+Since an empty scene is boring, we should add our first **object**! Let's create a new spine project and it's a very good habit to rename the skeleton to what you want to call the object. *This name is used by the export and is needed to load an object*. Now save your Spine file for the first time. I always create a new folder for every Spine project and name the folder and the Spine file again with the same name that was used for the skeleton. Now you need images for the Spine project, if you have not made any images yet you can reuse the **banana.png** from **data-src/banana/** and copy it over into your Spine project folder.
 Normally I place the image on top of the Spine 0,0 point, which makes it easy to place the object in the game and results in good results for the z-order. *But there can be situations where you want to do tricks with the z-order and place the image somewhere else in the Spine file*. Now you can try to place the object in our scene, therefore you open our **scene file** and add it with position 0,0 into the **items** section. If you now start our game you see the item in the center of the scene. *If you do not see the item, you may already have a save game file. Quit the game and delete the save game. Now try again.*
 In the development mode you can press the <kbd>Tab</kbd> key to go into the edit mode and every object gets a green dot to move it around. The position will be printed in red on the dot and to the console window and if you are happy with the position you have to update the position in the **scene file**.
 
-But you want to interact with the item. So jumping back to Spine and adding a collision box around our item and name it something like "click_ITEMNAME". Now save the Spine project and the file watcher in **prepare_assets.py** will re-export the project to data and also create a lua script with the bounding box name in the **data-src/scripts** folder. Per default the new created script prints the collision box name to the console. Press <kbd>R</kbd> ingame and all Spine files are reloaded without closing the game. Now you should be able to click your item and see a text in the console.
+Now you want to interact with the item. So go back to Spine and add a collision box around our item and name it something like "click_ITEMNAME". Now save the Spine project and the file watcher in **prepare_assets.py** will re-export the project to data and also create a Lua script with the bounding box name in the **data-src/scripts** folder. Per default the newly created script prints the collision box name to the console. Press <kbd>R</kbd> ingame and all Spine files are reloaded without closing the game. Now you should be able to click your item and see a text on the console.
