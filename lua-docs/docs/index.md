@@ -89,9 +89,9 @@ All items in an ALPACA game are Spine objects. So to add an new item to a scene 
 }
 ```
 
-More about [scene objects](scene.md) and [Spine](spine.md)
-
 8. The Scene should now reload and show the dog.
+
+Find out more about [scene objects](scene.md) and [Spine](spine.md)
 
 #### Move an object
 
