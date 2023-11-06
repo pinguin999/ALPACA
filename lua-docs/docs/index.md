@@ -59,7 +59,7 @@ You can play and learn from the project. Here are some tasks you can try out you
 
 #### Add a Spine object
 
-All items in a ALPACA game are Spine objects. So to add an new item to a scene you have to start a new Spine project.
+All items in an ALPACA game are Spine objects. So to add an new item to a scene you have to start a new Spine project.
 
 1. Create a folder in `data-src` with the name of your object. Let's name it `dog`
 2. Open Spine and click `New Project`
@@ -88,6 +88,8 @@ All items in a ALPACA game are Spine objects. So to add an new item to a scene y
 ...
 }
 ```
+
+More about [scene objects](scene.md) and [Spine](spine.md)
 
 8. The Scene should now reload and show the dog.
 
@@ -142,7 +144,7 @@ end
 GoToPointOn("banana", "center", play_death)
 ```
 
-What you did not touch on in this quick intro: Fonts, the player or the pointer.
+For a full overview about all Lua functions see the [Lua documentation](lua.md)
 
 #### Change Dialog and play audio
 
@@ -157,10 +159,3 @@ First you should look into the **data-src/config/game.json** file. There you can
 Everything in an ALPACA project is organized in **scenes**. A scene exists out of a background, some items placed in the scene and music that will be played in the background. So let's look into the  **scenes** folder. There you have the two example scenes. Let's copy one of the example scene files and rename it to what you set **start_scene** to in **game.json**. If you do not need the test_chambers it's safe to delete them.
 
 In ALPACA everything you can see on the screen is a Spine project, so for the **scene background** you need to create a Spine project. Open Spine and click *New Project* and name the [skeleton](http://esotericsoftware.com/spine-skeletons#Skeletons) to your scene name. The background is drawn from the center so the Spine 0,0 point should be in the middle of the screen. If you want the player to walk in the scene you need a `walkable_area` [bounding box](http://esotericsoftware.com/spine-bounding-boxes). For reference you can check out **data-src/scene1/scene1.spine**. After saving our scene background you should update the background entry in our scene file. If it's not already running you should start **prepare_assets.py** to get the files exported into the data folder. If you start your game now you should see your new scene.
-
-
-Since an empty scene is boring, we should add our first **object**! Let's create a new spine project and it's a very good habit to rename the skeleton to what you want to call the object. *This name is used by the export and is needed to load an object*. Now save your Spine file for the first time. I always create a new folder for every Spine project and name the folder and the Spine file again with the same name that was used for the skeleton. Now you need images for the Spine project, if you have not made any images yet you can reuse the **banana.png** from **data-src/banana/** and copy it over into your Spine project folder.
-Normally I place the image on top of the Spine 0,0 point, which makes it easy to place the object in the game and results in good results for the z-order. *But there can be situations where you want to do tricks with the z-order and place the image somewhere else in the Spine file*. Now you can try to place the object in our scene, therefore you open our **scene file** and add it with position 0,0 into the **items** section. If you now start our game you see the item in the center of the scene. *If you do not see the item, you may already have a save game file. Quit the game and delete the save game. Now try again.*
-In the development mode you can press the <kbd>Tab</kbd> key to go into the edit mode and every object gets a green dot to move it around. The position will be printed in red on the dot and to the console window and if you are happy with the position you have to update the position in the **scene file**.
-
-Now you want to interact with the item. So go back to Spine and add a collision box around our item and name it something like "click_ITEMNAME". Now save the Spine project and the file watcher in **prepare_assets.py** will re-export the project to data and also create a Lua script with the bounding box name in the **data-src/scripts** folder. Per default the newly created script prints the collision box name to the console. Press <kbd>R</kbd> ingame and all Spine files are reloaded without closing the game. Now you should be able to click your item and see a text on the console.
