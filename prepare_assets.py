@@ -126,7 +126,7 @@ def rhubarb_export(node_info: list[tuple[str, str]]) -> list[Any]:
     with contextlib.suppress(FileNotFoundError):
         if set_read_only:
             rhubarb_out.chmod(S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
-    command = [RHUBARB, f"data/audio/{node_id}.ogg", "-r", "phonetic", "-f", "json", "-o", rhubarb_out]
+    command = [RHUBARB, f"data/audio/{node_id}.ogg", "-r", "phonetic", "-f", "json", "-o", str(rhubarb_out)]
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
     output = p.communicate()[0]
     if p.returncode != 0:
@@ -175,6 +175,9 @@ def apply_rhubarb() -> None:
             with character_path.open("r+") as character_file:
                 mouthCues = json.load(rhubarb_outfile)
                 character = json.load(character_file)
+
+                if "animations" not in character:
+                    character["animations"] = {}
 
                 character["animations"][f"say_{node_id}"] = {}
                 character["animations"][f"say_{node_id}"]["slots"] = {}
