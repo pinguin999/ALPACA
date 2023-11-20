@@ -51,7 +51,7 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
     }
 }
 
-SpineObject::SpineObject(std::shared_ptr<Game> game, const std::string &spine_file, const std::string &id, float scale) : walk_callback((*game->lua_state)["pass"]), spine_name(spine_file), id(id), game(game)
+SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, std::string id, float scale) : walk_callback((*game->lua_state)["pass"]), spine_name(spine_file), id(id), game(game)
 {
     atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
     assert(atlas);
@@ -92,17 +92,20 @@ SpineObject::SpineObject(std::shared_ptr<Game> game, const std::string &spine_fi
 
 std::optional<jngl::Vec2> SpineObject::getPoint(const std::string &point_name) const
 {
-    auto slot = spSkeleton_findSlot(skeleton->skeleton, point_name.c_str());
+    auto *slot = spSkeleton_findSlot(skeleton->skeleton, point_name.c_str());
     if (!slot)
     {
         return std::nullopt;
     }
     // Possible Problem: Slot and Point have to have the same name
-    auto att = spSkeleton_getAttachmentForSlotName(skeleton->skeleton, point_name.c_str(), point_name.c_str());
+    auto *att = spSkeleton_getAttachmentForSlotName(skeleton->skeleton, point_name.c_str(), point_name.c_str());
     spPointAttachment *point = SUB_CAST(spPointAttachment, att);
-    float x = 0, y = 0;
-    if(point)
+    float x = 0;
+    float y = 0;
+    if (point)
+    {
         spPointAttachment_computeWorldPosition(point, slot->bone, &x, &y);
+    }
     return jngl::Vec2(x, y);
 }
 
@@ -129,9 +132,12 @@ std::vector<std::string> SpineObject::getPointNames() const
 
 void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimation, bool loop, sol::function callback)
 {
-    this->animation_callback[std::to_string(trackIndex) + currentAnimation] = callback;
-    this->currentAnimation = currentAnimation;
-    spAnimation* animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData, currentAnimation.c_str());
+    this->animation_callback[std::to_string(trackIndex) + currentAnimation] = std::move(callback);
+    if (trackIndex == 0)
+    {
+        this->currentAnimation = currentAnimation;
+    }
+    spAnimation *animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData, currentAnimation.c_str());
     if (animation)
     {
         spAnimationState_setAnimation(skeleton->state, trackIndex, animation, loop);
@@ -144,9 +150,12 @@ void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimat
 
 void SpineObject::addAnimation(int trackIndex, const std::string& currentAnimation, bool loop, float delay, sol::function callback)
 {
-    this->animation_callback[std::to_string(trackIndex) + currentAnimation] = callback;
-    this->currentAnimation = currentAnimation;
-    spAnimation* animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData, currentAnimation.c_str());
+    this->animation_callback[std::to_string(trackIndex) + currentAnimation] = std::move(callback);
+    if (trackIndex == 0)
+    {
+        this->currentAnimation = currentAnimation;
+    }
+    spAnimation *animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData, currentAnimation.c_str());
     if (animation)
     {
         spAnimationState_addAnimation(skeleton->state, trackIndex, animation, loop, delay);
@@ -157,34 +166,23 @@ void SpineObject::addAnimation(int trackIndex, const std::string& currentAnimati
     }
 }
 
-void SpineObject::onAnimationComplete(std::string key)
+void SpineObject::onAnimationComplete(const std::string &key)
 {
     if (auto _game = game.lock())
     {
-        if (nextAnimation.empty())
-        {
-            // Set animation back to default animation in Lua state
-            std::string lua_object = _game->getLuaPath(getId());
-            (*_game->lua_state).script(lua_object + ".animation = \"" + _game->config["spine_default_animation"].as<std::string>() + "\"");
-            (*_game->lua_state).script(lua_object + ".loop_animation = true");
-        }
+        // Set animation back to default animation in Lua state
+        const std::string lua_object = _game->getLuaPath(getId());
+        (*_game->lua_state).script(lua_object + ".animation = \"" + _game->config["spine_default_animation"].as<std::string>() + "\"");
+        (*_game->lua_state).script(lua_object + ".loop_animation = true");
 
         animation_callback[key]();
         animation_callback[key] = (*_game->lua_state)["pass"];
-
-        if (nextAnimation.empty())
-        {
-            return;
-        }
-        currentAnimation = nextAnimation;
-        nextAnimation = "";
-        playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
     }
 }
 
 void SpineObject::setSkin(const std::string &skin)
 {
-    int resault = spSkeleton_setSkinByName(skeleton->skeleton, skin.c_str());
+    const int resault = spSkeleton_setSkinByName(skeleton->skeleton, skin.c_str());
     spSkeleton_setSlotsToSetupPose(skeleton->skeleton);
     if (!resault)
     {

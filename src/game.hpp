@@ -16,15 +16,15 @@
 class Game : public jngl::Work, public std::enable_shared_from_this<Game>
 {
 public:
-    explicit Game(YAML::Node config);
+    explicit Game(const YAML::Node &config);
     ~Game() override;
     void init();
     void loadLevel(const std::string &level);
     void setupLuaFunctions();
-    void saveLuaState(std::string savefile = "savegame");
-    void loadLuaState(std::string savefile = "savegame");
+    void saveLuaState(const std::string &savefile = "savegame");
+    void loadLuaState(const std::string &savefile = "savegame");
 
-    void runAction(std::string actionName, std::shared_ptr<SpineObject> thisObject);
+    void runAction(const std::string &actionName, std::shared_ptr<SpineObject> thisObject);
 
     void step() override;
     void draw() const override;
@@ -52,8 +52,8 @@ public:
     void stepCamera();
     void triangulateBorder();
 
-    void add(std::shared_ptr<SpineObject> obj);
-    void remove(std::shared_ptr<SpineObject> obj);
+    void add(const std::shared_ptr<SpineObject> &obj);
+    void remove(const std::shared_ptr<SpineObject> &obj);
     std::string language;
 
     std::shared_ptr<Player> player = nullptr;
@@ -75,10 +75,10 @@ public:
     };
     int getInactivLayerBorder() { return inactivLayerBorder; };
 
-    std::shared_ptr<SpineObject> getObjectById(std::string objectId);
-    std::string getLuaPath(std::string objectId);
+    const std::shared_ptr<SpineObject> getObjectById(std::string objectId);
+    const std::string getLuaPath(std::string objectId);
 
-    std::string cleanLuaString(std::string variable);
+    const std::string cleanLuaString(std::string variable);
     YAML::Node config;
     std::vector<std::shared_ptr<SpineObject>> gameObjects;
 private:

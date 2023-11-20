@@ -179,6 +179,7 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
             "x", game->config["player_start_position"]["x"].as<int>(),
             "y", game->config["player_start_position"]["y"].as<int>(),
             "visible", true,
+            "cross_scene", true,
             "layer", 1,
             "scaleX", 1,
             "scaleY", 1);
@@ -202,6 +203,7 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
             game->player->setMaxSpeed((*game->lua_state)["player"]["max_speed"]);
             float layer = (*game->lua_state)["player"]["layer"];
             game->player->layer = int(layer);
+            game->player->cross_scene = (*game->lua_state)["player"]["cross_scene"];
 
             (*game->lua_state)["player"]["object"] = std::static_pointer_cast<SpineObject>(game->player);
 

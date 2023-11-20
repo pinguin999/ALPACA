@@ -20,12 +20,15 @@
 using jngl::Vec2;
 using namespace std::string_literals;
 
-Game::Game(YAML::Node config) : config(config), cameraPosition(jngl::Vec2(0,0)), targetCameraPosition(jngl::Vec2(0,0))
-{
+Game::Game(const YAML::Node &config) : config(config),
+									  cameraPosition(jngl::Vec2(0,0)),
+									  targetCameraPosition(jngl::Vec2(0,0))
 #if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
-	gifGameFrame = 0;
-	gifTime = 0.0;
+	,
+	gifGameFrame(0),
+	gifTime(0.0)
 #endif
+{
 
 	auto screensize = jngl::getScreenSize();
 	auto zoomx = this->config["screenSize"]["x"].as<int>() / screensize.x;
@@ -87,7 +90,7 @@ Game::Game(YAML::Node config) : config(config), cameraPosition(jngl::Vec2(0,0)),
 #else
 #define TYPE std::string
 #endif
-	static filewatch::FileWatch<TYPE> watch(
+	const static filewatch::FileWatch<TYPE> watch(
 #ifdef _WIN32
 		L"."s,
 #else
@@ -221,7 +224,7 @@ void Game::step()
 
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
 std::string currentDateTime() {
-    time_t     now = time(0);
+    const time_t now = time(0);
     struct tm  tstruct;
     char       buf[80];
     tstruct = *localtime(&now);
@@ -461,13 +464,21 @@ void Game::setCameraPosition(Vec2 position, const double deadzoneFactorX,
 							 const double deadzoneFactorY)
 {
 	if (position.x < currentScene->left_border)
+	{
 		position.x = currentScene->left_border;
+	}
 	if (position.x > currentScene->right_border)
+	{
 		position.x = currentScene->right_border;
+	}
 	if (position.y < currentScene->top_border)
+	{
 		position.y = currentScene->top_border;
-	if(position.y > currentScene->bottom_border)
+	}
+	if (position.y > currentScene->bottom_border)
+	{
 		position.y = currentScene->bottom_border;
+	}
 
 	cameraDeadzone = position - targetCameraPosition;
 	const double x = 160 * deadzoneFactorX;
@@ -490,13 +501,21 @@ void Game::setCameraPosition(Vec2 position, const double deadzoneFactorX,
 void Game::setCameraPositionImmediately(Vec2 position)
 {
 	if (position.x < currentScene->left_border)
+	{
 		position.x = currentScene->left_border;
+	}
 	if (position.x > currentScene->right_border)
+	{
 		position.x = currentScene->right_border;
+	}
 	if (position.y < currentScene->top_border)
+	{
 		position.y = currentScene->top_border;
-	if(position.y > currentScene->bottom_border)
+	}
+	if (position.y > currentScene->bottom_border)
+	{
 		position.y = currentScene->bottom_border;
+	}
 	targetCameraPosition = cameraPosition = position;
 }
 
@@ -506,11 +525,11 @@ void Game::stepCamera()
 	cameraPosition += speed / 36.0;
 }
 
-void Game::add(std::shared_ptr<SpineObject> obj) {
+void Game::add(const std::shared_ptr<SpineObject> &obj) {
 	needToAdd.emplace_back(obj);
 }
 
-void Game::remove(std::shared_ptr<SpineObject> object) {
+void Game::remove(const std::shared_ptr<SpineObject> &object) {
 	needToRemove.push_back(object);
 }
 
@@ -541,10 +560,12 @@ AudioManager *Game::getAudioManager()
 	return &audioManager;
 }
 
-void Game::runAction(std::string actionName, std::shared_ptr<SpineObject> thisObject)
+void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject> thisObject)
 {
-	if (actionName == "")
-        return;
+	if (actionName.empty())
+	{
+		return;
+	}
 
 	std::string errorMessage;
 	std::string script;
@@ -554,21 +575,21 @@ void Game::runAction(std::string actionName, std::shared_ptr<SpineObject> thisOb
 	// no need for a separate Lua file
 	if(actionName.substr(0, 4) == "dlg:")
 	{
-		std::string dialogName = actionName.substr(4);
+		const std::string dialogName = actionName.substr(4);
 		script = "PlayDialog(\"" + dialogName + "\", pass)";
 		errorMessage = "Failed to play dialog " + dialogName + "!\n";
 	}else if (actionName.substr(0, 5) == "anim:")
 	{
-		std::string animName = actionName.substr(5);
+		const std::string animName = actionName.substr(5);
 		script = "PlayAnimationOn(\"" + thisObject->getName() + "\", 0, \"" + animName + "\", false, pass)";
 		errorMessage = "Failed to play animation " + animName + "!\n";
 	}
 	// if there is no specific prefix, just load the according Lua file
 	else
 	{
-		std::string file = "scripts/" + actionName + ".lua";
+		const std::string file = "scripts/" + actionName + ".lua";
 		errorMessage = "The Lua code of " + file + " has failed to run!\n";
-		std::stringstream scriptstream = jngl::readAsset(file);
+		const std::stringstream scriptstream = jngl::readAsset(file);
 
 		if (!scriptstream)
 		{
@@ -581,56 +602,56 @@ void Game::runAction(std::string actionName, std::shared_ptr<SpineObject> thisOb
     auto result = lua_state->safe_script(script, sol::script_pass_on_error);
 
 	if (!result.valid()) {
-		sol::error err = result;
+		const sol::error err = result;
 		std::cerr << errorMessage
 		          << err.what()
 		          << std::endl;
 	}
 }
 
-void Game::saveLuaState(std::string savefile)
+void Game::saveLuaState(const std::string &savefile)
 {
 	// jngl::debugLn("Backup all globals start");
 	const sol::table &globals = lua_state->globals();
 
-	std::string backup = backupLuaTable(globals, "");
+	const std::string backup = backupLuaTable(globals, "");
 	jngl::debugLn("Backup all globals end: \n" + backup);
 
 	jngl::writeConfig(savefile, backup);
 }
 
-void Game::loadLuaState(std::string savefile)
+void Game::loadLuaState(const std::string &savefile)
 {
 	jngl::debugLn("Load all globals");
-	std::string state = jngl::readConfig(savefile);
+	const std::string state = jngl::readConfig(savefile);
 	auto result = lua_state->safe_script(state, sol::script_pass_on_error);
 
 	if (!result.valid())
 	{
-		sol::error err = result;
+		const sol::error err = result;
 		std::cerr << "Failed to load savgame " + savefile + " \n"
 				  << err.what()
 				  << std::endl;
 	}
 
-	std::string dialogFilePath = config["dialog"].as<std::string>();
+	const std::string dialogFilePath = config["dialog"].as<std::string>();
 	if ((*lua_state)["game"].valid() && (*lua_state)["game"]["scene"].valid())
 	{
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
-		std::string scene = (*lua_state)["game"]["scene"];
+		const std::string scene = (*lua_state)["game"]["scene"];
 		loadLevel(scene);
 	}
 	else
 	{
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, true);
-		std::string startscene = config["start_scene"].as<std::string>();
+		const std::string startscene = config["start_scene"].as<std::string>();
 		loadLevel(startscene);
 	}
 	// TODO Error handling
 	jngl::debugLn("Loaded all globals");
 }
 
-std::string Game::cleanLuaString(std::string variable)
+const std::string Game::cleanLuaString(std::string variable)
 {
 	// The following strings denote other tokens:
 
@@ -654,8 +675,8 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 	std::string result = "";
 	for (const auto &key_value_pair : table)
 	{
-		sol::object key = key_value_pair.first;
-		sol::object value = key_value_pair.second;
+		const sol::object key = key_value_pair.first;
+		const sol::object value = key_value_pair.second;
 
 		std::string k = "";
 		if (key.get_type() == sol::type::string)
@@ -714,7 +735,7 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 	return result;
 }
 
-std::shared_ptr<SpineObject> Game::getObjectById(std::string objectId)
+const std::shared_ptr<SpineObject> Game::getObjectById(std::string objectId)
 {
 	if (objectId == "Player")
 	{
@@ -745,7 +766,7 @@ std::shared_ptr<SpineObject> Game::getObjectById(std::string objectId)
 	return obj;
 }
 
-std::string Game::getLuaPath(std::string objectId)
+const std::string Game::getLuaPath(std::string objectId)
 {
 	if (objectId == "Player")
 	{
