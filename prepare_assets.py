@@ -245,7 +245,8 @@ def spine_reexport(directorys: list[str]) -> None:
             progress.advance()
 
             spine_objects.update(spine_object)
-            parse_spine_json(spine_file=spine_file)
+            if not errors:
+                parse_spine_json(spine_file=spine_file)
             if len(errors) > 0:
                 results.append({
                     "file": spinefiles[i],
@@ -454,7 +455,8 @@ def on_data_src_modified(event) -> None:
     if event.src_path.endswith(".spine"):
         (errors, spine_object, spine_file) = spine_export(event.src_path)
         spine_objects.update(spine_object)
-        parse_spine_json(spine_file=spine_file)
+        if not errors:
+            parse_spine_json(spine_file=spine_file)
         if len(errors) > 0:
             printErrors(event.src_path, errors)
         apply_rhubarb()
