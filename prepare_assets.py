@@ -632,11 +632,13 @@ class LuaDocsGen:
                 doc_obj.returns = self.get_returns(code, i)
                 result.append(doc_obj)
 
-        with Path("data-src/scripts/ALPACA.lua").open("w") as output:
+        alpaca_lua = Path("data-src/scripts/ALPACA.lua")
+        alpaca_lua.touch(exist_ok=True)
+        with alpaca_lua.open("w") as output:
             output.write("")  # Clear file
 
         def write_alias(alias: str, entries: dict[str, set[str]]) -> None:
-            with Path("data-src/scripts/ALPACA.lua").open("+a") as output:
+            with alpaca_lua.open("+a") as output:
                 output.write(f"\n\n---@alias {alias}")
                 for spine_object in entries.items():
                     output.write(f"""\n---| '"{spine_object[0]}"' # Found in {spine_object[1]}""")

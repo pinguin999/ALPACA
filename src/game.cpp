@@ -166,13 +166,16 @@ void Game::loadLevel(const std::string &level)
 		add(pointer);
 	}
 
-	auto position = currentScene->background->getPoint(old_scene);
-	if (position)
+	if(player)
 	{
-		player->setPosition(position.value());
+		auto position = currentScene->background->getPoint(old_scene);
+		if (position)
+		{
+			player->setPosition(position.value());
+		}
+		player->stop_walking();
+		setCameraPositionImmediately(player->calcCamPos());
 	}
-	player->stop_walking();
-	setCameraPositionImmediately(player->calcCamPos());
 
     runAction(level, std::static_pointer_cast<SpineObject>(newScene->background));
 }
