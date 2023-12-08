@@ -36,7 +36,7 @@ android {
     compileSdkVersion 31
     productFlavors {
     }
-    ndkVersion "25.0.8775105"
+    ndkVersion '26.1.10909125'
     namespace 'com.alpaca.game'
 }
 

@@ -633,7 +633,8 @@ class LuaDocsGen:
                 result.append(doc_obj)
 
         alpaca_lua = Path("data-src/scripts/ALPACA.lua")
-        alpaca_lua.touch(exist_ok=True)
+        if not alpaca_lua.exists():
+            alpaca_lua.touch(exist_ok=True)
         with alpaca_lua.open("w") as output:
             output.write("")  # Clear file
 

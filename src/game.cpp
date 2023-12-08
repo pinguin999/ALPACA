@@ -12,7 +12,7 @@
 #include "pointer.hpp"
 #include "interactable_object.hpp"
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 #include "FileWatch.hpp"
 #include <filesystem>
 #endif
@@ -23,7 +23,7 @@ using namespace std::string_literals;
 Game::Game(const YAML::Node &config) : config(config),
 									  cameraPosition(jngl::Vec2(0,0)),
 									  targetCameraPosition(jngl::Vec2(0,0))
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 	,
 	gifGameFrame(0),
 	gifTime(0.0)
@@ -74,7 +74,7 @@ Game::Game(const YAML::Node &config) : config(config),
 	}
 
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
     gifAnimation = std::make_shared<GifAnim>();
     gifWriter = std::make_shared<GifWriter>();
 	gifBuffer = new uint8_t[(jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR * (jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR)) * 4];
@@ -84,7 +84,7 @@ Game::Game(const YAML::Node &config) : config(config),
 	lua_state = std::make_shared<sol::state>();
 	lua_state->open_libraries(sol::lib::base, sol::lib::package);
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 #ifdef _WIN32
 #define TYPE std::wstring
 #else
@@ -186,7 +186,7 @@ Game::~Game()
 	gameObjects.clear();
 	needToAdd.clear();
 	needToRemove.clear();
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 	delete[] gifBuffer;
 #endif
 }
@@ -333,7 +333,7 @@ void Game::debugStep()
 	//     dialogManager.showCharacterText("Wir schreiben das Jahr 2080.\nDie Menschheit ist auf der Suche nach außerirdischem Leben", jngl::Vec2(0,0));
 	// }
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 	if(recordingGif)
 	{
 		if(gifGameFrame % GIF_FRAME_SKIP == 0)
