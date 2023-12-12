@@ -113,7 +113,17 @@ suite alpaca_test_suite = [] {
             game->step();
             if(game->getDialogManager()->isActive())
             {
-                game->getDialogManager()->continueCurrent();
+                if(game->getDialogManager()->isSelectTextActive())
+                {
+                    auto choices = game->getDialogManager()->getChoiceTextsSize();
+                    int min = 0;
+                    int max = choices - 1;
+                    int choice = rand()%(max-min + 1) + min;
+                    game->getDialogManager()->selectCurrentAnswer(choice);
+                }else{
+                    game->getDialogManager()->continueCurrent();
+
+                }
             }
         }
     }
@@ -213,7 +223,17 @@ suite alpaca_test_suite = [] {
             game->step();
             if(game->getDialogManager()->isActive())
             {
-                game->getDialogManager()->continueCurrent();
+                if(game->getDialogManager()->isSelectTextActive())
+                {
+                    auto choices = game->getDialogManager()->getChoiceTextsSize();
+                    int min = 0;
+                    int max = choices - 1;
+                    int choice = rand()%(max-min + 1) + min;
+                    game->getDialogManager()->selectCurrentAnswer(choice);
+                }else{
+                    game->getDialogManager()->continueCurrent();
+
+                }
             }
         }
 
