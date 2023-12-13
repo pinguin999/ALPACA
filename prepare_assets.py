@@ -131,8 +131,9 @@ def rhubarb_export(node_info: list[tuple[str, str]]) -> list[Any]:
     output = p.communicate()[0]
     if p.returncode != 0:
         errors.append(output.decode())
-    if set_read_only:
-        rhubarb_out.chmod(S_IREAD | S_IRGRP | S_IROTH)
+    with contextlib.suppress(FileNotFoundError):
+        if set_read_only:
+            rhubarb_out.chmod(S_IREAD | S_IRGRP | S_IROTH)
     return errors
 
 

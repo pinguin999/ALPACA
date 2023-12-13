@@ -780,6 +780,23 @@ void Game::setupLuaFunctions()
 								jngl::play("audio/" + file);
 							});
 
+	/// Stop a audio file via script.
+	/// string file: The audio file
+	lua_state->set_function("StopAudio",
+							[](const LuaAudio &file)
+							{
+								jngl::stop("audio/" + file);
+							});
+
+	/// Checks if a audio file is playing.
+	/// string file: The audio file
+	/// returns:a bool indication if the audio is playing
+	lua_state->set_function("isAudioPlaying",
+							[](const LuaAudio &file)
+							{
+								return jngl::isPlaying("audio/" + file);
+							});
+
 	/// Set SpeechBubble to a Spine point
 	/// string point_name: Spine point name
 	lua_state->set_function("SetSpeechBubbleToPoint",

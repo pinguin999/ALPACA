@@ -62,7 +62,7 @@ bool InteractableObject::step(bool force)
             return false;
         }
 
-        if (!force && !_game->player->interruptible)
+        if (!force && _game->player && !_game->player->interruptible)
         {
             return false;
         }
