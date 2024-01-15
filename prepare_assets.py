@@ -126,13 +126,14 @@ def rhubarb_export(node_info: list[tuple[str, str]]) -> list[Any]:
     with contextlib.suppress(FileNotFoundError):
         if set_read_only:
             rhubarb_out.chmod(S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
-    command = [RHUBARB, f"data/audio/{node_id}.ogg", "-r", "phonetic", "-f", "json", "-o", rhubarb_out]
+    command = [RHUBARB, f"data/audio/{node_id}.ogg", "-r", "phonetic", "-f", "json", "-o", str(rhubarb_out)]
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
     output = p.communicate()[0]
     if p.returncode != 0:
         errors.append(output.decode())
-    if set_read_only:
-        rhubarb_out.chmod(S_IREAD | S_IRGRP | S_IROTH)
+    with contextlib.suppress(FileNotFoundError):
+        if set_read_only:
+            rhubarb_out.chmod(S_IREAD | S_IRGRP | S_IROTH)
     return errors
 
 
@@ -175,6 +176,9 @@ def apply_rhubarb() -> None:
             with character_path.open("r+") as character_file:
                 mouthCues = json.load(rhubarb_outfile)
                 character = json.load(character_file)
+
+                if "animations" not in character:
+                    character["animations"] = {}
 
                 character["animations"][f"say_{node_id}"] = {}
                 character["animations"][f"say_{node_id}"]["slots"] = {}
@@ -242,7 +246,8 @@ def spine_reexport(directorys: list[str]) -> None:
             progress.advance()
 
             spine_objects.update(spine_object)
-            parse_spine_json(spine_file=spine_file)
+            if not errors:
+                parse_spine_json(spine_file=spine_file)
             if len(errors) > 0:
                 results.append({
                     "file": spinefiles[i],
@@ -451,7 +456,8 @@ def on_data_src_modified(event) -> None:
     if event.src_path.endswith(".spine"):
         (errors, spine_object, spine_file) = spine_export(event.src_path)
         spine_objects.update(spine_object)
-        parse_spine_json(spine_file=spine_file)
+        if not errors:
+            parse_spine_json(spine_file=spine_file)
         if len(errors) > 0:
             printErrors(event.src_path, errors)
         apply_rhubarb()
@@ -627,11 +633,14 @@ class LuaDocsGen:
                 doc_obj.returns = self.get_returns(code, i)
                 result.append(doc_obj)
 
-        with Path("data-src/scripts/ALPACA.lua").open("w") as output:
+        alpaca_lua = Path("data-src/scripts/ALPACA.lua")
+        if not alpaca_lua.exists():
+            alpaca_lua.touch(exist_ok=True)
+        with alpaca_lua.open("w") as output:
             output.write("")  # Clear file
 
         def write_alias(alias: str, entries: dict[str, set[str]]) -> None:
-            with Path("data-src/scripts/ALPACA.lua").open("+a") as output:
+            with alpaca_lua.open("+a") as output:
                 output.write(f"\n\n---@alias {alias}")
                 for spine_object in entries.items():
                     output.write(f"""\n---| '"{spine_object[0]}"' # Found in {spine_object[1]}""")

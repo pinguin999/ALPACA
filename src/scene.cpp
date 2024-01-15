@@ -166,50 +166,54 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
         ++it;
     }
 
-    if (!(*game->lua_state)["player"].valid())
+    if (game->config["player"])
     {
-        // TODO der Player sollte hier nicht so eine extra behandlung bekommen.
-        std::string animation = game->config["player_start_animation"].as<std::string>();
-        (*game->lua_state)["player"] = game->lua_state->create_table_with(
-            "animation", animation,
-            "loop_animation", true,
-            "max_speed", game->config["player_max_speed"].as<float>(),
-            "spine", game->config["player"].as<std::string>(),
-            "skin", game->config["player_default_skin"].as<std::string>(),
-            "x", game->config["player_start_position"]["x"].as<int>(),
-            "y", game->config["player_start_position"]["y"].as<int>(),
-            "visible", true,
-            "cross_scene", true,
-            "layer", 1,
-            "scaleX", 1,
-            "scaleY", 1);
-
-        if (game->player == nullptr)
+        if (!(*game->lua_state)["player"].valid())
         {
-            game->player = std::make_shared<Player>(game, game->config["player"].as<std::string>());
-            game->player->cross_scene = true;
-            game->player->playAnimation(0, animation, true, (*game->lua_state)["pass"]);
-            (*game->lua_state)["player"]["object"] = std::static_pointer_cast<SpineObject>(game->player);
+            // TODO der Player sollte hier nicht so eine extra behandlung bekommen.
+            std::string animation = game->config["player_start_animation"].as<std::string>();
+            (*game->lua_state)["player"] = game->lua_state->create_table_with(
+                "animation", animation,
+                "loop_animation", true,
+                "max_speed", game->config["player_max_speed"].as<float>(),
+                "spine", game->config["player"].as<std::string>(),
+                "skin", game->config["player_default_skin"].as<std::string>(),
+                "x", game->config["player_start_position"]["x"].as<int>(),
+                "y", game->config["player_start_position"]["y"].as<int>(),
+                "visible", true,
+                "cross_scene", true,
+                "layer", 1,
+                "scaleX", 1,
+                "scaleY", 1);
 
-            game->add(game->player);
-        }
-    }else{
-        if (game->player == nullptr)
-        {
-            game->player = std::make_shared<Player>(game, (*game->lua_state)["player"]["spine"]);
-            game->player->playAnimation(0, (*game->lua_state)["player"]["animation"], (*game->lua_state)["player"]["loop_animation"], (*game->lua_state)["pass"]);
-            game->player->setPosition(jngl::Vec2((*game->lua_state)["player"]["x"], (*game->lua_state)["player"]["y"]));
-            game->player->setVisible((*game->lua_state)["player"]["visible"]);
-            game->player->setMaxSpeed((*game->lua_state)["player"]["max_speed"]);
-            float layer = (*game->lua_state)["player"]["layer"];
-            game->player->layer = int(layer);
-            game->player->cross_scene = (*game->lua_state)["player"]["cross_scene"];
+            if (game->player == nullptr)
+            {
+                game->player = std::make_shared<Player>(game, game->config["player"].as<std::string>());
+                game->player->cross_scene = true;
+                game->player->playAnimation(0, animation, true, (*game->lua_state)["pass"]);
+                (*game->lua_state)["player"]["object"] = std::static_pointer_cast<SpineObject>(game->player);
 
-            (*game->lua_state)["player"]["object"] = std::static_pointer_cast<SpineObject>(game->player);
+                game->add(game->player);
+            }
+        }else{
+            if (game->player == nullptr)
+            {
+                game->player = std::make_shared<Player>(game, (*game->lua_state)["player"]["spine"]);
+                game->player->playAnimation(0, (*game->lua_state)["player"]["animation"], (*game->lua_state)["player"]["loop_animation"], (*game->lua_state)["pass"]);
+                game->player->setPosition(jngl::Vec2((*game->lua_state)["player"]["x"], (*game->lua_state)["player"]["y"]));
+                game->player->setVisible((*game->lua_state)["player"]["visible"]);
+                game->player->setMaxSpeed((*game->lua_state)["player"]["max_speed"]);
+                float layer = (*game->lua_state)["player"]["layer"];
+                game->player->layer = int(layer);
+                game->player->cross_scene = (*game->lua_state)["player"]["cross_scene"];
 
-            game->add(game->player);
+                (*game->lua_state)["player"]["object"] = std::static_pointer_cast<SpineObject>(game->player);
+
+                game->add(game->player);
+            }
         }
     }
+
 
     if (!(*game->lua_state)["inventory_items"].valid())
         (*game->lua_state)["inventory_items"] = game->lua_state->create_table();

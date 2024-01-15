@@ -17,7 +17,7 @@ android {
     defaultConfig {
         applicationId = 'com.alpaca.game'
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 33
     }
     buildTypes {
         release {
@@ -33,10 +33,10 @@ android {
             path 'src/main/cpp/CMakeLists.txt'
         }
     }
-    compileSdkVersion 31
+    compileSdkVersion 33
     productFlavors {
     }
-    ndkVersion "25.0.8775105"
+    ndkVersion '26.1.10909125'
     namespace 'com.alpaca.game'
 }
 

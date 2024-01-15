@@ -30,10 +30,12 @@ public:
 
     void play(std::string characterName, jngl::Vec2 pos, sol::function callback); // TODO: multiple positions for different characters
     void continueCurrent();
-    void selectCurrentAnswer();
+    void selectCurrentAnswer(int selected_index);
 
     void setSpeechBubblePosition(jngl::Vec2 position);
-
+#ifndef NDEBUG
+    int getChoiceTextsSize(){return choiceTexts.size();};
+#endif
 private:
     void showTypewriterAnimation(const std::string &text);
     void showNarratorText(const std::string &text);

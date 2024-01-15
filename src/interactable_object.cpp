@@ -14,11 +14,6 @@ InteractableObject::InteractableObject(std::shared_ptr<Game> game, const std::st
 
 }
 
-InteractableObject::~InteractableObject()
-{
-
-}
-
 bool InteractableObject::step(bool force)
 {
     if (auto _game = game.lock())
@@ -62,7 +57,7 @@ bool InteractableObject::step(bool force)
             return false;
         }
 
-        if (!force && !_game->player->interruptible)
+        if (!force && _game->player && !_game->player->interruptible)
         {
             return false;
         }
@@ -76,13 +71,12 @@ bool InteractableObject::step(bool force)
                 click_position -= _game->getCameraPosition();
             }
 
-            auto collision = spSkeletonBounds_containsPoint(bounds, (float)click_position.x - (float)position.x, (float)click_position.y - (float)position.y);
+            auto *collision = spSkeletonBounds_containsPoint(bounds, (float)click_position.x - (float)position.x, (float)click_position.y - (float)position.y);
             if (collision)
             {
                 collision_script = collision->super.super.name;
-
                 jngl::debug("clicked interactable item ");
-                jngl::debugLn(this->bounds->boundingBoxes[0]->super.super.name);
+                jngl::debugLn(collision_script);
                 _game->pointer->setPrimaryHandled();
                 _game->runAction(collision_script, getptr());
             }

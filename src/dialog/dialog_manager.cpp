@@ -88,7 +88,7 @@ void DialogManager::step()
             {
                 if (selected_index != -1)
                 {
-                    selectCurrentAnswer();
+                    selectCurrentAnswer(selected_index);
                     _game->pointer->setPrimaryHandled();
                 }
                 else
@@ -306,16 +306,16 @@ void DialogManager::cancelDialog()
     currentAnswers = nullptr;
 }
 
-void DialogManager::selectCurrentAnswer()
+void DialogManager::selectCurrentAnswer(int index)
 {
     if(currentAnswers == nullptr
         || currentDialog == nullptr ||
-        selected_index < 0)
+        index < 0)
     {
         return;
     }
 
-    currentNode = currentAnswers->chooseAnswer(currentDialog, std::get<0>(currentAnswers->answers[selected_index]));
+    currentNode = currentAnswers->chooseAnswer(currentDialog, std::get<0>(currentAnswers->answers[index]));
     selected_index = -1;
     hideChoices();
     continueCurrent();
