@@ -14,10 +14,6 @@ Background::Background(std::shared_ptr<Game> game, const std::string &spine_file
     corners = getCorners();
 }
 
-Background::~Background()
-{
-}
-
 bool Background::step(bool force)
 {
     skeleton->step();
@@ -37,10 +33,15 @@ bool Background::stepClickableRegions(bool force)
         if (!force && _game->getInactivLayerBorder() > layer)
             return false;
 
+        if (!force && _game->player && !_game->player->interruptible)
+        {
+            return false;
+        }
+
         if (_game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
         {
             jngl::Vec2 mousePos = _game->pointer->getPosition();
-            auto collision = spine::spSkeletonBounds_containsPointNotMatchingName(bounds, "walkable_area", (float)mousePos.x - (float)position.x, (float)mousePos.y - (float)position.y);
+            auto *collision = spine::spSkeletonBounds_containsPointNotMatchingName(bounds, "walkable_area", (float)mousePos.x - (float)position.x, (float)mousePos.y - (float)position.y);
             // TODO Double Click on Regions
             if (collision)
             {

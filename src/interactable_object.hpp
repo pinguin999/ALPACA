@@ -10,7 +10,7 @@ class InteractableObject : public SpineObject
 {
 public:
     explicit InteractableObject(std::shared_ptr<Game> game, const std::string &spine_file, const std::string &id, float scale = 1.0);
-    ~InteractableObject();
+    ~InteractableObject() = default;
 
     bool step(bool force = false) override;
 

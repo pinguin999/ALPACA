@@ -22,7 +22,7 @@ class Background : public SpineObject
 {
 public:
     explicit Background(std::shared_ptr<Game> game, const std::string &spine_file);
-    ~Background();
+    ~Background() = default;
 
     bool is_walkable(jngl::Vec2 position) const;
     bool step(bool force = false) override;
