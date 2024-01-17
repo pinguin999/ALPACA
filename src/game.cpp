@@ -82,7 +82,7 @@ Game::Game(const YAML::Node &config) : config(config),
 
 	// open some common libraries
 	lua_state = std::make_shared<sol::state>();
-	lua_state->open_libraries(sol::lib::base, sol::lib::package);
+	lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 #ifdef _WIN32
@@ -284,7 +284,7 @@ void Game::debugStep()
 		player = nullptr;
 		pointer = nullptr;
 		lua_state = std::make_shared<sol::state>();
-		lua_state->open_libraries(sol::lib::base, sol::lib::package);
+		lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 		init();
 	}
 
@@ -298,7 +298,7 @@ void Game::debugStep()
 		player = nullptr;
 		pointer = nullptr;
 		lua_state = std::make_shared<sol::state>();
-		lua_state->open_libraries(sol::lib::base, sol::lib::package);
+		lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 		init();
 	}
 
