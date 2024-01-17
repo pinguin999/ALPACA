@@ -78,17 +78,20 @@ void Background::draw() const
         if(_game->enableDebugDraw)
         {
             jngl::setColor(255, 0, 0);
-            for (size_t i = 0; i < corners.size(); i++)
+            if (_game->player)
             {
-                if (hasPathTo(_game->player->getPosition(), corners.at(i)))
-                    jngl::drawLine(_game->player->getPosition(), corners.at(i));
-            }
+                for (size_t i = 0; i < corners.size(); i++)
+                {
+                    if (hasPathTo(_game->player->getPosition(), corners.at(i)))
+                        jngl::drawLine(_game->player->getPosition(), corners.at(i));
+                }
 
-            jngl::setColor(255, 255, 0);
-            auto debugPath = getPathToTarget(_game->player->getPosition(), _game->pointer->getPosition());
-            for (size_t i = 1; i < debugPath.size(); i++)
-            {
-                jngl::drawLine(debugPath[i - 1], debugPath[i]);
+                jngl::setColor(255, 255, 0);
+                auto debugPath = getPathToTarget(_game->player->getPosition(), _game->pointer->getPosition());
+                for (size_t i = 1; i < debugPath.size(); i++)
+                {
+                    jngl::drawLine(debugPath[i - 1], debugPath[i]);
+                }
             }
 
 			auto point_names = getPointNames();
