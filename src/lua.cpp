@@ -863,4 +863,11 @@ void Game::setupLuaFunctions()
 									}
 								}
 							});
+
+	/// Exit the game
+	lua_state->set_function("Exit",
+							[this]()
+							{
+								exit(EXIT_SUCCESS);
+							});
 }
