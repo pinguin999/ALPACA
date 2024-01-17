@@ -206,7 +206,10 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
                 float layer = (*game->lua_state)["player"]["layer"];
                 game->player->layer = int(layer);
                 game->player->cross_scene = (*game->lua_state)["player"]["cross_scene"];
-
+                if ( (*game->lua_state)["game"].valid() && (*game->lua_state)["game"]["interruptible"].valid())
+                {
+                    game->player->interruptible = (*game->lua_state)["game"]["interruptible"];
+                }
                 (*game->lua_state)["player"]["object"] = std::static_pointer_cast<SpineObject>(game->player);
 
                 game->add(game->player);

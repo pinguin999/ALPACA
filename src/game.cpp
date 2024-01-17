@@ -312,6 +312,15 @@ void Game::debugStep()
 		}
 		else if (jngl::keyPressed(number))
 		{
+			gameObjects.clear();
+			lua_state = {};
+			currentScene = nullptr;
+			player = nullptr;
+			pointer = nullptr;
+			lua_state = std::make_shared<sol::state>();
+			lua_state->open_libraries(sol::lib::base, sol::lib::package);
+			dialogManager = std::make_shared<DialogManager>(shared_from_this());
+			setupLuaFunctions();
 			loadLuaState("savegame" + std::string(number));
 		}
 	}

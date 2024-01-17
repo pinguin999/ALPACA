@@ -58,6 +58,7 @@ void Game::setupLuaFunctions()
 							[this]()
 							{
 								player->interruptible = false;
+								lua_state->script("game.interruptible = false");
 							});
 
 	/// Enable interruption again
@@ -65,6 +66,7 @@ void Game::setupLuaFunctions()
 							[this]()
 							{
 								player->interruptible = true;
+								lua_state->script("game.interruptible = true");
 							});
 
 	/// Plays immediately an animation on the calling Spine object
