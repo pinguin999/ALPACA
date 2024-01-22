@@ -223,7 +223,7 @@ def get_notes() -> list[Any]:
 
                                 for lang_code in dialogs["locales"]:
                                     if not Path(f"data/audio/{lang_code}_{node_id}.ogg").exists():
-                                        print("Can not load: ", f"data/audio/{lang_code}_{node_id}.ogg")
+                                        print(colored(f"Can not load: data/audio/{lang_code}_{node_id}.ogg", "red"))
                                         continue
 
                                     nodes.append((f"{lang_code}_{node_id}", character_name))
@@ -323,7 +323,9 @@ def parse_spine_json(spine_file: str) -> None:
                                     Path("./data-src/scripts/").mkdir(parents=True, exist_ok=True)
                                 with Path(f"./data-src/scripts/{bbname}.lua").open("w") as f:
                                     f.write(f'print("{bbname}")')
-                                print(colored(f"Script {bbname}.lua was created automatically!"), "blue")
+                                print(colored(f"Script {bbname}.lua was created automatically!", "blue"))
+                            if bbname.startswith("dlg:") and bbname[4:] not in all_dialogs:
+                                print(colored(f"Dialog {bbname[4:]} is missing!", "red"))
 
 
 # there is no print allowed in this function, since this would destroy the progress bar
@@ -679,15 +681,15 @@ end
 if __name__ == "__main__":
     freeze_support()
     print(colored("Start convert", "green"))
-    spine_reexport(["./data-src"])
     scripts_recopy(["./data-src/scripts/"])
-    rehash_scenes("./data-src/scenes")
     copy_folder("./data-src/config", "./data/config")
     copy_folder("./data-src/fonts", "./data/fonts")
     copy_folder("./data-src/scenes", "./data/scenes")
     copy_folder("./data-src/audio", "./data/audio")
     copy_folder("./data-src/icons", "./data/icons")
     copy_folder("./data-src/dialog", "./data/dialog")
+    spine_reexport(["./data-src"])
+    rehash_scenes("./data-src/scenes")
     rhubarb_reexport()
     apply_rhubarb()
     LuaDocsGen().render("lua.cpp")
