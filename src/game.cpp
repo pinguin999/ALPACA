@@ -155,6 +155,7 @@ void Game::loadLevel(const std::string &level)
 	}
 
 	currentScene = newScene;
+	currentScene->background->step();
 	currentScene->playMusic();
 
 	// Pointer should be last in gameObjects so it's on top

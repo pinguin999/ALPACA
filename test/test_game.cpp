@@ -86,9 +86,7 @@ suite alpaca_test_suite = [] {
             {
                 for(int j = 0; j < obj->bounds->count; j++)
                 {
-                    if(std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "walkable_area"
-                        && std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "seastar_inventory"
-                        )
+                    if(std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "walkable_area")
                     {
                         jngl::debug(obj->bounds->boundingBoxes[j]->super.super.name);
                         jngl::debug(", ");

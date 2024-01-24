@@ -8,10 +8,7 @@
 
 Background::Background(std::shared_ptr<Game> game, const std::string &spine_file) : SpineObject(game, spine_file, "Background")
 {
-    spSkeleton_updateWorldTransform(skeleton->skeleton);
-    spSkeletonBounds_update(bounds, skeleton->skeleton, true);
-
-    corners = getCorners();
+    step();
 }
 
 bool Background::step(bool force)
@@ -19,6 +16,9 @@ bool Background::step(bool force)
     skeleton->step();
     spSkeleton_updateWorldTransform(skeleton->skeleton);
     spSkeletonBounds_update(bounds, skeleton->skeleton, true);
+    corners = getCorners();
+    forbidden_corners = getForbiddenCorners();
+    // corners.insert( corners.end(), forbidden_corners.begin(), forbidden_corners.end() );
 
     return stepClickableRegions(force) || deleted;
 }
@@ -28,19 +28,23 @@ bool Background::stepClickableRegions(bool force)
     if (auto _game = game.lock())
     {
         if (!force && _game->getDialogManager()->isActive())
+        {
             return false;
+        }
 
         if (!force && _game->getInactivLayerBorder() > layer)
+        {
             return false;
+        }
 
         if (!force && _game->player && !_game->player->interruptible)
         {
             return false;
         }
 
-        if (_game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
+        if (_game->pointer && _game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
         {
-            jngl::Vec2 mousePos = _game->pointer->getPosition();
+            const jngl::Vec2 mousePos = _game->pointer->getPosition();
             auto *collision = spine::spSkeletonBounds_containsPointNotMatchingName(bounds, "walkable_area", (float)mousePos.x - (float)position.x, (float)mousePos.y - (float)position.y);
             // TODO Double Click on Regions
             if (collision)
@@ -83,7 +87,24 @@ void Background::draw() const
                 for (size_t i = 0; i < corners.size(); i++)
                 {
                     if (hasPathTo(_game->player->getPosition(), corners.at(i)))
+                    {
                         jngl::drawLine(_game->player->getPosition(), corners.at(i));
+                    }
+                }
+
+                jngl::setColor(0, 0, 0);
+                for (size_t i = 1; i < forbidden_corners.size(); i++)
+                {
+                    jngl::drawLine(forbidden_corners.at(i), forbidden_corners.at(i - 1));
+                }
+
+                jngl::setColor(0, 0, 255);
+                for (size_t i = 0; i < forbidden_corners.size(); i++)
+                {
+                    if (hasPathTo(_game->player->getPosition(), forbidden_corners.at(i)))
+                    {
+                        jngl::drawLine(_game->player->getPosition(), forbidden_corners.at(i));
+                    }
                 }
 
                 jngl::setColor(255, 255, 0);
@@ -95,15 +116,18 @@ void Background::draw() const
             }
 
 			auto point_names = getPointNames();
-            for ( auto point_name : point_names)
+            for (const auto &point_name : point_names)
             {
                 auto pos = getPoint(point_name);
-                jngl::drawPoint(pos->x, pos->y);
-    			jngl::Text bbname;
-                bbname.setText(point_name);
-                bbname.setAlign(jngl::Alignment::CENTER);
-                bbname.setCenter(pos->x, pos->y);
-                bbname.draw();
+                if (pos)
+                {
+                    jngl::drawPoint(pos->x, pos->y);
+                    jngl::Text bbname;
+                    bbname.setText(point_name);
+                    bbname.setAlign(jngl::Alignment::CENTER);
+                    bbname.setCenter(pos->x, pos->y);
+                    bbname.draw();
+                }
             }
         }
     }
@@ -168,7 +192,7 @@ std::deque<jngl::Vec2> Background::getPathToTarget(jngl::Vec2 start, jngl::Vec2 
 
         for (auto it = openSet.begin(); it != openSet.end(); it++)
         {
-            auto node = *it;
+            const auto node = *it;
             if (node->getScore() <= current->getScore())
             {
                 current = node;
@@ -184,25 +208,25 @@ std::deque<jngl::Vec2> Background::getPathToTarget(jngl::Vec2 start, jngl::Vec2 
         closedSet.push_back(current);
         openSet.erase(current_it);
 
-        // auto directions = getDirections(current->coordinates);
         auto directions = corners;
+        directions.insert( directions.end(), forbidden_corners.begin(), forbidden_corners.end() );
         directions.push_back(target);
-        for (size_t i = 0; i < directions.size(); ++i)
+        for (auto direction : directions)
         {
-            bool hastpath = !hasPathTo(current->coordinates, directions[i]);
-            auto visited = findNodeOnList(closedSet, directions[i]);
+            const bool hastpath = !hasPathTo(current->coordinates, direction);
+            const auto visited = findNodeOnList(closedSet, direction);
 
             if (hastpath || visited)
             {
                 continue;
             }
 
-            int totalCost = current->G + heuristic(current->coordinates, directions[i]);
+            const int totalCost = current->G + heuristic(current->coordinates, direction);
 
-            Node *successor = findNodeOnList(openSet, directions[i]);
+            Node *successor = findNodeOnList(openSet, direction);
             if (successor == nullptr)
             {
-                successor = new Node(directions[i], current);
+                successor = new Node(direction, current);
                 successor->G = totalCost;
                 successor->H = heuristic(successor->coordinates, target);
                 openSet.push_back(successor);
@@ -256,18 +280,50 @@ int Background::heuristic(jngl::Vec2 start, jngl::Vec2 target) const
 bool Background::hasPathTo(jngl::Vec2 start, jngl::Vec2 target) const
 {
     int count = 0;
+
+    if (corners.empty())
+    {
+        return false;
+    }
+
     for (size_t i = 0; i < corners.size() - 1; i++)
     {
         if (lineIntersection(start, target, corners.at(i), corners.at(i + 1)))
-            count++;
+        {            count++;        }
     }
 
     bool corner = false;
+    bool forbidden_corner = false;
 
     if (std::any_of(corners.cbegin(), corners.cend(), [&target](jngl::Vec2 corn)
                     { return corn == target; }))
     {
         corner = true;
+    }
+
+    if (std::any_of(forbidden_corners.cbegin(), forbidden_corners.cend(), [&target](jngl::Vec2 corn)
+                    { return corn == target; }))
+    {
+        forbidden_corner = true;
+    }
+
+    int forbidden_count = 0;
+
+    if (!forbidden_corners.empty())
+    {
+        for (size_t i = 0; i < forbidden_corners.size() - 1; i++)
+        {
+            if (lineIntersection(start, target, forbidden_corners.at(i), forbidden_corners.at(i + 1)))
+            {
+                forbidden_count++;
+            }
+        }
+    }
+
+    if ((forbidden_corner && (forbidden_count > 2 || count != 0)) ||
+        (corner && forbidden_count > 0))
+    {
+        return false;
     }
 
     // TODO Clean up. Can be moved into first loop.
@@ -278,12 +334,22 @@ bool Background::hasPathTo(jngl::Vec2 start, jngl::Vec2 target) const
         startcorner = true;
     }
 
-    if (startcorner && count <= 2)
+    bool forbidden_startcorner = false;
+    if (std::any_of(forbidden_corners.cbegin(), forbidden_corners.cend(), [&start](jngl::Vec2 corn)
+                    { return corn == start; }))
+    {
+        forbidden_startcorner = true;
+    }
+
+    if ((startcorner && !forbidden_startcorner && count <= 2 && forbidden_count == 0) || (forbidden_startcorner && !startcorner && forbidden_count <= 2 && count == 0))
     {
         return true;
     }
 
-    return (corner && count <= 2) || (!corner && count == 0);
+    return (corner && forbidden_count <= 2 && count <= 2) ||
+           (!corner && forbidden_count == 0 && count == 0) ||
+           (forbidden_corner && forbidden_count <= 2 && count <= 2) ||
+           (!forbidden_corner && forbidden_count == 0 && count == 0);
 }
 
 std::vector<jngl::Vec2> Background::getCorners() const
@@ -295,16 +361,16 @@ std::vector<jngl::Vec2> Background::getCorners() const
     }
     for (int iPoly = 0; iPoly < bounds->count; iPoly++)
     {
-        auto polygonName = bounds->boundingBoxes[iPoly]->super.super.name;
+        const auto *polygonName = bounds->boundingBoxes[iPoly]->super.super.name;
         if(polygonName == std::string("walkable_area"))
         {
             // bounds->polygons
             for (int i = 0; i < (bounds->polygons[iPoly])->count; i += 2)
             {
-                result.push_back(jngl::Vec2((bounds->polygons[iPoly])->vertices[i + 0], (bounds->polygons[iPoly])->vertices[i + 1]));
+                result.emplace_back((bounds->polygons[iPoly])->vertices[i + 0], (bounds->polygons[iPoly])->vertices[i + 1]);
             }
             // Add first to the back again.
-            result.push_back(jngl::Vec2((bounds->polygons[iPoly])->vertices[0], (bounds->polygons[iPoly])->vertices[1]));
+            result.emplace_back((bounds->polygons[iPoly])->vertices[0], (bounds->polygons[iPoly])->vertices[1]);
             break;
         }
     }
@@ -312,14 +378,62 @@ std::vector<jngl::Vec2> Background::getCorners() const
     return result;
 }
 
+std::vector<jngl::Vec2> Background::getForbiddenCorners() const
+{
+    std::vector<jngl::Vec2> result;
+    if (bounds->count == 0)
+    {
+        return result;
+    }
+
+    if (auto _game = game.lock())
+    {
+        for(auto obj : _game->gameObjects)
+        {
+            for (int iPoly = 0; iPoly < obj->bounds->count; iPoly++)
+            {
+                const auto *polygonName = obj->bounds->boundingBoxes[iPoly]->super.super.name;
+                if(polygonName == std::string("non_walkable_area"))
+                {
+                    // obj->bounds->polygons
+                    for (int i = 0; i < (obj->bounds->polygons[iPoly])->count; i += 2)
+                    {
+                        result.emplace_back(((obj->bounds->polygons[iPoly])->vertices[i + 0]) + obj->getPosition().x, ((obj->bounds->polygons[iPoly])->vertices[i + 1]) + obj->getPosition().y);
+                    }
+                    // Add first to the back again.
+                    result.emplace_back(((obj->bounds->polygons[iPoly])->vertices[0]) + obj->getPosition().x, ((obj->bounds->polygons[iPoly])->vertices[1]) + obj->getPosition().y);
+                    break;
+                }
+            }
+
+        }
+    }
+    return result;
+}
+
 bool Background::is_walkable(jngl::Vec2 position) const
 {
-    auto walkableResult = spine::spSkeletonBounds_containsPointMatchingName(bounds, "walkable_area", (float)position.x, (float)position.y);
+    auto *walkableResult = spine::spSkeletonBounds_containsPointMatchingName(bounds, "walkable_area", (float)position.x, (float)position.y);
     if(!walkableResult)
+    {
         return false;
+    }
+
+    if(auto _game = game.lock())
+    {
+        for(const auto &obj : _game->gameObjects)
+        {
+            auto *non_walkable = spine::spSkeletonBounds_containsPointMatchingName(obj->bounds, "non_walkable_area", (float)position.x - (float)obj->getPosition().x, (float)position.y - (float)obj->getPosition().y);
+            if(non_walkable)
+            {
+                jngl::debugLn("non walkable");
+                return false;
+            }
+        }
+    }
 
     // if there is an interactable region and a walkable spot,
     // just interact, don't walk there
-    auto interactableResult = spine::spSkeletonBounds_containsPointNotMatchingName(bounds, "walkable_area", (float)position.x, (float)position.y);
+    auto *interactableResult = spine::spSkeletonBounds_containsPointNotMatchingName(bounds, "walkable_area", (float)position.x, (float)position.y);
     return !interactableResult;
 }

@@ -315,7 +315,7 @@ def parse_spine_json(spine_file: str) -> None:
 
                         if "type" in attatchment_obj[attachment][subattachment] \
                                 and attatchment_obj[attachment][subattachment]["type"] == "boundingbox":
-                            if bbname == "walkable_area":  # No scripts for navmeshes
+                            if bbname == "walkable_area" or bbname == "non_walkable_area":  # No scripts for navmeshes
                                 continue
                             if (not bbname.startswith("dlg:") and not bbname.startswith("anim:") and
                                     not Path(f"./data-src/scripts/{bbname}.lua").exists()):

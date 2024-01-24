@@ -143,23 +143,29 @@ void SkeletonDrawable::draw() const {
 			continue;
 		}else if(attachment->type == SP_ATTACHMENT_BOUNDING_BOX){
 #ifndef NDEBUG
-		if(debugdraw)
-		{
-			float* bbvertices = worldVertices;
+			if (debugdraw)
+			{
+				float *bbvertices = worldVertices;
 
-			spBoundingBoxAttachment* box = (spBoundingBoxAttachment*)attachment;
+				spBoundingBoxAttachment *box = (spBoundingBoxAttachment *)attachment;
 
-			spVertexAttachment_computeWorldVertices(SUPER(box), slot, 0, box->super.verticesCount, bbvertices, 0, 2);
-			for(int i = 0; i < box->super.verticesCount - 2; i+=2){
-				jngl::drawLine(bbvertices[i], bbvertices[i+1], bbvertices[i+2], bbvertices[i+3]);
+				spVertexAttachment_computeWorldVertices(SUPER(box), slot, 0, box->super.verticesCount, bbvertices, 0, 2);
+				if(std::string(box->super.super.name) == "non_walkable_area")
+				{
+
+				}else{
+					for (int i = 0; i < box->super.verticesCount - 2; i += 2)
+					{
+						jngl::drawLine(bbvertices[i], bbvertices[i + 1], bbvertices[i + 2], bbvertices[i + 3]);
+					}
+					jngl::drawLine(bbvertices[box->super.verticesCount - 2], bbvertices[box->super.verticesCount - 1], bbvertices[0], bbvertices[1]);
+				}
+				jngl::Text bbname;
+				bbname.setText(box->super.super.name);
+				bbname.setAlign(jngl::Alignment::CENTER);
+				bbname.setCenter(bbvertices[0], bbvertices[1]);
+				bbname.draw();
 			}
-			jngl::drawLine(bbvertices[box->super.verticesCount -2], bbvertices[box->super.verticesCount - 1], bbvertices[0], bbvertices[1]);
-			jngl::Text bbname;
-			bbname.setText(box->super.super.name);
-			bbname.setAlign(jngl::Alignment::CENTER);
-			bbname.setCenter(bbvertices[0], bbvertices[1]);
-			bbname.draw();
-		}
 #endif
 
 		} else

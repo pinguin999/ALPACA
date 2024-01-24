@@ -32,9 +32,11 @@ public:
 
 private:
     std::vector<jngl::Vec2> corners;
+    std::vector<jngl::Vec2> forbidden_corners;
 
     bool stepClickableRegions(bool force = false);
     std::vector<jngl::Vec2> getCorners() const;
+    std::vector<jngl::Vec2> getForbiddenCorners() const;
     bool hasPathTo(jngl::Vec2 start, jngl::Vec2 target) const;
     void releaseNodes(std::vector<Node *> &nodes_) const;
     Node *findNodeOnList(const std::vector<Node *> &nodes_, jngl::Vec2 coordinates_) const;

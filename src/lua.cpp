@@ -851,13 +851,13 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetLanguage",
 							[this](const LuaLanguage &language)
 							{
-								YAML::Node languages = this->config["supportedLanguages"];
+								const YAML::Node languages = this->config["supportedLanguages"];
 								for (auto supported_language : languages)
 								{
 									if (language == supported_language.as<std::string>())
 									{
 										this->language = language;
-										std::string dialogFilePath = config["dialog"].as<std::string>();
+										const std::string dialogFilePath = config["dialog"].as<std::string>();
 										getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
 										return;
 									}
@@ -865,9 +865,12 @@ void Game::setupLuaFunctions()
 							});
 
 	/// Exit the game
+	/// Not supported on iOS
 	lua_state->set_function("Exit",
-							[this]()
+							[]()
 							{
+#if (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0)
 								exit(EXIT_SUCCESS);
+#endif
 							});
 }
