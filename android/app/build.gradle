@@ -18,6 +18,14 @@ android {
         applicationId = 'com.alpaca.game'
         minSdkVersion 21
         targetSdkVersion 33
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_STL=c++_shared"
+            }
+        }
+    }
+    buildFeatures {
+        prefab true
     }
     buildTypes {
         release {
@@ -30,7 +38,7 @@ android {
     externalNativeBuild {
         cmake {
             version '3.18.0+'
-            path 'src/main/cpp/CMakeLists.txt'
+            path '../../CMakeLists.txt'
         }
     }
     compileSdkVersion 33
@@ -42,4 +50,5 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.google.oboe:oboe:1.7.0'
 }
