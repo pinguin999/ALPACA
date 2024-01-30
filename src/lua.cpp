@@ -873,4 +873,33 @@ void Game::setupLuaFunctions()
 								exit(EXIT_SUCCESS);
 #endif
 							});
+
+	/// Write a savegame
+	lua_state->set_function("SaveGame",
+							[this]()
+							{
+								saveLuaState();
+							});
+
+	/// Load the savegame
+	lua_state->set_function("LoadGame",
+							[this]()
+							{
+								gameObjects.clear();
+								lua_state = {};
+								currentScene = nullptr;
+								player = nullptr;
+								pointer = nullptr;
+								lua_state = std::make_shared<sol::state>();
+								lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+								init();
+							});
+
+	/// Clears the savegame file
+	lua_state->set_function("DeleteSaveGame",
+							[]()
+							{
+								jngl::writeConfig("savegame", "");
+							});
+
 }

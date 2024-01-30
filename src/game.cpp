@@ -701,7 +701,15 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 			k = std::to_string(key.as<int>());
 		}
 
-		if (k != "_entry_node" && k != "_VERSION" && k.substr(0, 4) != "sol." && k != "_G" && k != "base" && k != "package" && k != "searches")
+		if (k != "_entry_node" &&
+		    k != "_VERSION" &&
+			k.substr(0, 4) != "sol." &&
+			k != "_G" &&
+			k != "base" &&
+			k != "package" &&
+			k != "math" &&
+			k != "string" &&
+			k != "searches")
 		{
 			std::string v;
 			switch (value.get_type())
