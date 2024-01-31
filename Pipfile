@@ -7,6 +7,7 @@ name = "pypi"
 watchdog = "*"
 termcolor = "*"
 requests = "*"
+google-cloud-texttospeech = "*"
 
 [dev-packages]
 mypy = "*"
