@@ -18,9 +18,9 @@ public:
 	explicit SkeletonDrawable(spSkeletonData* skeleton, spAnimationStateData* stateData = 0);
 	~SkeletonDrawable() override;
 
-	void endAnimation(int trackIndex);
+    void endAnimation(int trackIndex) const;
 
-	void step() override;
+    void step() override;
 
 	void draw() const override;
 

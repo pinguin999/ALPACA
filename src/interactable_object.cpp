@@ -5,13 +5,12 @@
 
 #include <cmath>
 
-InteractableObject::InteractableObject(std::shared_ptr<Game> game, const std::string &spine_file, const std::string &id, float scale) :
-    SpineObject(game, spine_file, id, scale)
+InteractableObject::InteractableObject(const std::shared_ptr<Game> &game, const std::string &spine_file, const std::string &id, float scale) : SpineObject(game, spine_file, id, scale)
 #ifndef NDEBUG
-    ,DEBUG_GRAP_DISTANCE(game->config["debug_grap_distance"].as<float>())
+                                                                                                                                               ,
+                                                                                                                                               DEBUG_GRAP_DISTANCE(game->config["debug_grap_distance"].as<float>())
 #endif
 {
-
 }
 
 bool InteractableObject::step(bool force)
@@ -20,7 +19,7 @@ bool InteractableObject::step(bool force)
     {
         skeleton->step();
         spSkeleton_updateWorldTransform(skeleton->skeleton);
-        spSkeletonBounds_update(bounds, skeleton->skeleton, true);
+        spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
 
 #ifndef NDEBUG
         if (_game->editMode && jngl::mousePressed())
@@ -71,7 +70,7 @@ bool InteractableObject::step(bool force)
                 click_position -= _game->getCameraPosition();
             }
 
-            auto *collision = spSkeletonBounds_containsPoint(bounds, (float)click_position.x - (float)position.x, (float)click_position.y - (float)position.y);
+            auto *collision = spSkeletonBounds_containsPoint(bounds, static_cast<float>(click_position.x) - static_cast<float>(position.x), static_cast<float>(click_position.y) - static_cast<float>(position.y));
             if (collision)
             {
                 collision_script = collision->super.super.name;
@@ -82,7 +81,7 @@ bool InteractableObject::step(bool force)
             }
         }
 
-        if(parent)
+        if (parent)
         {
             position = parent->getPosition();
         }
@@ -117,7 +116,8 @@ void InteractableObject::draw() const
         {
             jngl::scale(_game->getCameraZoom());
         }
-    }else
+    }
+    else
     {
         jngl::translate(position);
     }
@@ -126,7 +126,7 @@ void InteractableObject::draw() const
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
-    skeleton->debugdraw = _game->enableDebugDraw;
+        skeleton->debugdraw = _game->enableDebugDraw;
     }
 #endif
 
@@ -139,11 +139,11 @@ void InteractableObject::draw() const
         {
             jngl::drawCircle(jngl::Vec2(0, 0), DEBUG_GRAP_DISTANCE);
             jngl::Text pposition;
-			pposition.setText("x: " + std::to_string(position.x) + "\ny: " + std::to_string(position.y));
+            pposition.setText("x: " + std::to_string(position.x) + "\ny: " + std::to_string(position.y));
             jngl::setFontColor(jngl::Color(255, 0, 0));
-			pposition.setAlign(jngl::Alignment::CENTER);
-			pposition.setCenter(0, 0);
-			pposition.draw();
+            pposition.setAlign(jngl::Alignment::CENTER);
+            pposition.setCenter(0, 0);
+            pposition.draw();
         }
     }
 #endif
@@ -151,7 +151,7 @@ void InteractableObject::draw() const
     jngl::popMatrix();
 }
 
-void InteractableObject::goToPosition(jngl::Vec2 position, sol::function callback)
+void InteractableObject::goToPosition(jngl::Vec2 position, const sol::function &callback)
 {
     if (auto _game = game.lock())
     {

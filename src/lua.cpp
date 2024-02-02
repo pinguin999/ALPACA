@@ -35,18 +35,17 @@ void Game::setupLuaFunctions()
 	/// pass is a function doing nothing
 	/// You can use it for testing or for not needed callbacks
 	lua_state->set_function("pass",
-							[]()
-							{
+							[]() {
 							});
 
 	/// Loads a new Scene/Room
 	///
 	/// Door Example expects a Spine point object near the door:
 	///
-	///function door()
+	/// function door()
 	///	LoadScene("cockpit")
-	///end
-	///GoToPoint("cockpit", door)
+	/// end
+	/// GoToPoint("cockpit", door)
 	lua_state->set_function("LoadScene",
 							[this](const LuaScene &scene)
 							{
@@ -365,7 +364,7 @@ void Game::setupLuaFunctions()
 	///
 	/// local points = GetPointNamesOn("inventory_object")
 	/// for i = 1, #points do
-    ///    print(i, points[i])
+	///    print(i, points[i])
 	/// end
 	/// SpineObject object: Objects ID that should be effected
 	/// returns: a list of positions
@@ -482,7 +481,7 @@ void Game::setupLuaFunctions()
 								if (frm)
 								{
 									auto position = frm->getPoint(point_name);
-									if(position && frm->abs_position)
+									if (position && frm->abs_position)
 									{
 										position = position.value() + getCameraPosition();
 									}
@@ -901,5 +900,4 @@ void Game::setupLuaFunctions()
 							{
 								jngl::writeConfig("savegame", "");
 							});
-
 }

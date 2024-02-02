@@ -15,7 +15,7 @@ bool Background::step(bool force)
 {
     skeleton->step();
     spSkeleton_updateWorldTransform(skeleton->skeleton);
-    spSkeletonBounds_update(bounds, skeleton->skeleton, true);
+    spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
     corners = getCorners();
     forbidden_corners = getForbiddenCorners();
     // corners.insert( corners.end(), forbidden_corners.begin(), forbidden_corners.end() );
@@ -70,7 +70,7 @@ void Background::draw() const
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
-    skeleton->debugdraw = _game->enableDebugDraw;
+        skeleton->debugdraw = _game->enableDebugDraw;
     }
 #endif
 
@@ -79,7 +79,7 @@ void Background::draw() const
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
-        if(_game->enableDebugDraw)
+        if (_game->enableDebugDraw)
         {
             jngl::setColor(255, 0, 0);
             if (_game->player)
@@ -138,7 +138,7 @@ void Background::draw() const
             //     }
             // }
 
-			auto point_names = getPointNames();
+            auto point_names = getPointNames();
             for (const auto &point_name : point_names)
             {
                 auto pos = getPoint(point_name);
@@ -233,7 +233,7 @@ std::deque<jngl::Vec2> Background::getPathToTarget(jngl::Vec2 start, jngl::Vec2 
         openSet.erase(current_it);
 
         auto directions = corners;
-        directions.insert( directions.end(), forbidden_corners.begin(), forbidden_corners.end() );
+        directions.insert(directions.end(), forbidden_corners.begin(), forbidden_corners.end());
         directions.push_back(target);
         for (auto direction : directions)
         {
@@ -313,7 +313,9 @@ bool Background::hasPathTo(jngl::Vec2 start, jngl::Vec2 target) const
     for (size_t i = 0; i < corners.size() - 1; i++)
     {
         if (lineIntersection(start, target, corners.at(i), corners.at(i + 1)))
-        {            count++;        }
+        {
+            count++;
+        }
     }
 
     bool corner = false;
@@ -386,7 +388,7 @@ std::vector<jngl::Vec2> Background::getCorners() const
     for (int iPoly = 0; iPoly < bounds->count; iPoly++)
     {
         const auto *polygonName = bounds->boundingBoxes[iPoly]->super.super.name;
-        if(polygonName == std::string("walkable_area"))
+        if (polygonName == std::string("walkable_area"))
         {
             // bounds->polygons
             for (int i = 0; i < (bounds->polygons[iPoly])->count; i += 2)
@@ -417,7 +419,7 @@ std::vector<jngl::Vec2> Background::getForbiddenCorners() const
             for (int iPoly = 0; iPoly < obj->bounds->count; iPoly++)
             {
                 const auto *polygonName = obj->bounds->boundingBoxes[iPoly]->super.super.name;
-                if(polygonName == std::string("non_walkable_area"))
+                if (polygonName == std::string("non_walkable_area"))
                 {
                     // obj->bounds->polygons
                     for (int i = 0; i < (obj->bounds->polygons[iPoly])->count; i += 2)
@@ -429,7 +431,6 @@ std::vector<jngl::Vec2> Background::getForbiddenCorners() const
                     break;
                 }
             }
-
         }
     }
     return result;
@@ -438,17 +439,17 @@ std::vector<jngl::Vec2> Background::getForbiddenCorners() const
 bool Background::is_walkable(jngl::Vec2 position) const
 {
     auto *walkableResult = spine::spSkeletonBounds_containsPointMatchingName(bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
-    if(!walkableResult)
+    if (!walkableResult)
     {
         return false;
     }
 
-    if(auto _game = game.lock())
+    if (auto _game = game.lock())
     {
-        for(const auto &obj : _game->gameObjects)
+        for (const auto &obj : _game->gameObjects)
         {
             auto *non_walkable = spine::spSkeletonBounds_containsPointMatchingName(obj->bounds, "non_walkable_area", static_cast<float>(position.x) - static_cast<float>(obj->getPosition().x), static_cast<float>(position.y) - static_cast<float>(obj->getPosition().y));
-            if(non_walkable)
+            if (non_walkable)
             {
                 jngl::debugLn("non walkable");
                 return false;

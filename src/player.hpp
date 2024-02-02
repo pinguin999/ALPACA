@@ -7,7 +7,6 @@
 #include <jngl.hpp>
 #include <sol/sol.hpp>
 
-
 class Player : public SpineObject
 {
 public:
@@ -22,8 +21,8 @@ public:
     void addTargetPositionImmediately(jngl::Vec2 target, const sol::function &callback);
     void stop_walking();
 
-    float getMaxSpeed(){return max_speed;};
-    void setMaxSpeed(float speed){max_speed = speed;};
+    float getMaxSpeed() { return max_speed; };
+    void setMaxSpeed(float speed) { max_speed = speed; };
     jngl::Vec2 calcCamPos();
 
     bool interruptible = true;

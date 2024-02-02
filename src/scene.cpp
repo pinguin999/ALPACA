@@ -6,15 +6,14 @@
 #include "game.hpp"
 #include "player.hpp"
 
-
 LoadException::LoadException(const char *details)
     : std::runtime_error(details)
 {
 }
 
-Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAML::Load(jngl::readAsset("scenes/" + fileName + ".json").str())), game(game)
+Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : fileName(fileName), json(YAML::Load(jngl::readAsset("scenes/" + fileName + ".json").str())), game(game)
 {
-    this->fileName = fileName;
+
     std::string scene = fileName;
 
     if (json.IsNull())
@@ -32,15 +31,14 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
     // Get old scene and set game.scene to current
     if (!(*game->lua_state)["game"].valid())
     {
-		(*game->lua_state).script("game = {}");
+        (*game->lua_state).script("game = {}");
     }
-	std::string old_scene = "";
-	if ((*game->lua_state)["game"]["scene"].valid())
+    std::string old_scene;
+    if ((*game->lua_state)["game"]["scene"].valid())
     {
-       	old_scene = (*game->lua_state)["game"]["scene"];
+        old_scene = (*game->lua_state)["game"]["scene"];
     }
-	(*game->lua_state).script("game.scene = '" + fileName + "'");
-
+    (*game->lua_state).script("game.scene = '" + fileName + "'");
 
     if (!(*game->lua_state)["scenes"].valid())
     {
@@ -53,14 +51,18 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
     }
 
 #ifndef NDEBUG
-    std::string old_hash = "";
+    std::string old_hash;
     if ((*game->lua_state)["scenes"][scene]["hash"].valid())
-        old_hash = (*game->lua_state)["scenes"][scene]["hash"];
-    if(json["hash"].IsDefined() && !json["hash"].IsNull())
     {
-        const std::string new_hash = json["hash"].as<std::string>();
+        old_hash = (*game->lua_state)["scenes"][scene]["hash"];
+    }
+    if (json["hash"].IsDefined() && !json["hash"].IsNull())
+    {
+        const auto new_hash = json["hash"].as<std::string>();
         if (old_hash != new_hash)
+        {
             (*game->lua_state)["scenes"][scene] = game->lua_state->create_table();
+        }
         (*game->lua_state)["scenes"][scene]["hash"] = new_hash;
     }
 #endif
@@ -93,37 +95,37 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
         background->layer = 0;
         if ((*game->lua_state)["scenes"][scene]["background"]["skin"].valid())
         {
-            std::string skin = (*game->lua_state)["scenes"][scene]["background"]["skin"];
+            std::string const skin = (*game->lua_state)["scenes"][scene]["background"]["skin"];
 
             background->setSkin(skin);
         }
-        std::string animation = (*game->lua_state)["scenes"][scene]["background"]["animation"];
-        bool loop_animation = (*game->lua_state)["scenes"][scene]["background"]["loop_animation"];
+        std::string const animation = (*game->lua_state)["scenes"][scene]["background"]["animation"];
+        bool const loop_animation = (*game->lua_state)["scenes"][scene]["background"]["loop_animation"];
 
         background->playAnimation(0, animation, loop_animation, (*game->lua_state)["pass"]);
         game->add(background);
     }
     else if (json["background"].IsDefined() && !json["background"].IsNull())
     {
-        std::string animation = game->config["background_default_animation"].as<std::string>();
-        std::string spine = json["background"]["spine"].as<std::string>();
+        auto const animation = game->config["background_default_animation"].as<std::string>();
+        auto const spine = json["background"]["spine"].as<std::string>();
         if (!(*game->lua_state)["scenes"][scene]["background"].valid())
         {
             (*game->lua_state)["scenes"][scene]["background"] = game->lua_state->create_table_with(
-            "animation", animation,
-            "loop_animation", true,
-            "spine", spine,
-            "x", 0,
-            "y", 0,
-            "visible", true,
-            "layer", 0);
+                "animation", animation,
+                "loop_animation", true,
+                "spine", spine,
+                "x", 0,
+                "y", 0,
+                "visible", true,
+                "layer", 0);
         }
         background = std::make_shared<Background>(game, spine);
         background->setPosition(jngl::Vec2(0, 0));
         background->layer = 0;
         if (json["background"]["skin"])
         {
-            std::string skin = json["background"]["skin"].as<std::string>();
+            auto const skin = json["background"]["skin"].as<std::string>();
             (*game->lua_state)["scenes"][scene]["background"]["skin"] = skin;
 
             background->setSkin(skin);
@@ -157,12 +159,12 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
 
     // Move cross_scene object's Lua from old to new scene
     for (auto it = game->gameObjects.begin(); it != game->gameObjects.end();)
-	{
-		if ((*it)->cross_scene && (*game->lua_state)["scenes"][old_scene]["items"][(*it)->getId()].valid())
-		{
+    {
+        if ((*it)->cross_scene && (*game->lua_state)["scenes"][old_scene]["items"][(*it)->getId()].valid())
+        {
             (*game->lua_state).script("scenes[game.scene].items." + (*it)->getId() + " = " + "scenes[\"" + old_scene + "\"].items." + (*it)->getId());
             (*game->lua_state).script("scenes[\"" + old_scene + "\"].items." + (*it)->getId() + " = nil");
-		}
+        }
         ++it;
     }
 
@@ -171,7 +173,7 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
         if (!(*game->lua_state)["player"].valid())
         {
             // TODO der Player sollte hier nicht so eine extra behandlung bekommen.
-            std::string animation = game->config["player_start_animation"].as<std::string>();
+            auto const animation = game->config["player_start_animation"].as<std::string>();
             (*game->lua_state)["player"] = game->lua_state->create_table_with(
                 "animation", animation,
                 "loop_animation", true,
@@ -195,7 +197,9 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
 
                 game->add(game->player);
             }
-        }else{
+        }
+        else
+        {
             if (game->player == nullptr)
             {
                 game->player = std::make_shared<Player>(game, (*game->lua_state)["player"]["spine"]);
@@ -203,10 +207,10 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
                 game->player->setPosition(jngl::Vec2((*game->lua_state)["player"]["x"], (*game->lua_state)["player"]["y"]));
                 game->player->setVisible((*game->lua_state)["player"]["visible"]);
                 game->player->setMaxSpeed((*game->lua_state)["player"]["max_speed"]);
-                float layer = (*game->lua_state)["player"]["layer"];
-                game->player->layer = int(layer);
+                float const layer = (*game->lua_state)["player"]["layer"];
+                game->player->layer = static_cast<int>(layer);
                 game->player->cross_scene = (*game->lua_state)["player"]["cross_scene"];
-                if ( (*game->lua_state)["game"].valid() && (*game->lua_state)["game"]["interruptible"].valid())
+                if ((*game->lua_state)["game"].valid() && (*game->lua_state)["game"]["interruptible"].valid())
                 {
                     game->player->interruptible = (*game->lua_state)["game"]["interruptible"];
                 }
@@ -217,17 +221,18 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
         }
     }
 
-
     if (!(*game->lua_state)["inventory_items"].valid())
+    {
         (*game->lua_state)["inventory_items"] = game->lua_state->create_table();
+    }
 
     // TODO CLean up. Code Duplikat von weiter unten
     // Load from Lua and not from json
-    sol::table objects = (*game->lua_state)["inventory_items"];
-    for (const auto& key_value_pair : objects)
+    sol::table const objects = (*game->lua_state)["inventory_items"];
+    for (const auto &key_value_pair : objects)
     {
-        sol::object key = key_value_pair.first;
-        sol::object value = key_value_pair.second;
+        sol::object const key = key_value_pair.first;
+        sol::object const value = key_value_pair.second;
 
         std::string id = key.as<std::string>();
 
@@ -237,11 +242,11 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
         {
             auto interactable = std::make_shared<InteractableObject>(game, (*game->lua_state)["inventory_items"][id]["spine"], id, (*game->lua_state)["inventory_items"][id]["scale"]);
 
-            std::string x = (*game->lua_state)["inventory_items"][id]["x"];
-            std::string y = (*game->lua_state)["inventory_items"][id]["y"];
+            std::string const x = (*game->lua_state)["inventory_items"][id]["x"];
+            std::string const y = (*game->lua_state)["inventory_items"][id]["y"];
 
-            std::string animation = (*game->lua_state)["inventory_items"][id]["animation"];
-            bool loop_animation = (*game->lua_state)["inventory_items"][id]["loop_animation"];
+            std::string const animation = (*game->lua_state)["inventory_items"][id]["animation"];
+            bool const loop_animation = (*game->lua_state)["inventory_items"][id]["loop_animation"];
 
             interactable->playAnimation(0, animation, loop_animation, (*game->lua_state)["pass"]);
             interactable->setPosition(jngl::Vec2(std::stof(x), std::stof(y)));
@@ -253,7 +258,7 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
 
             if ((*game->lua_state)["inventory_items"][id]["skin"].valid())
             {
-                std::string skin = (*game->lua_state)["inventory_items"][id]["skin"];
+                std::string const skin = (*game->lua_state)["inventory_items"][id]["skin"];
 
                 interactable->setSkin(skin);
             }
@@ -262,12 +267,11 @@ Scene::Scene(const std::string &fileName, std::shared_ptr<Game> game) : json(YAM
     }
 }
 
-
 void Scene::playMusic()
 {
     if (auto _game = game.lock())
     {
-        if(backgroundMusic.has_value())
+        if (backgroundMusic.has_value())
         {
             _game->getAudioManager()->loopMusic(backgroundMusic.value());
         }
@@ -290,30 +294,33 @@ void Scene::loadObjects(YAML::Node objects)
 
             for (YAML::const_iterator object = objects.begin(); object != objects.end(); ++object)
             {
-                std::string spine_file = (*object)["spine"].as<std::string>();
+                auto const spine_file = (*object)["spine"].as<std::string>();
                 std::string object_id;
-                if((*object)["id"])
+                if ((*object)["id"])
                 {
                     object_id = (*object)["id"].as<std::string>();
-                }else
+                }
+                else
                 {
                     // Fallback to spine file name if id is not set
                     object_id = spine_file;
                 }
 
-                float scale = (*object)["scale"].as<float>(1);
-                int layer = (*object)["layer"].as<int>(1);
-                std::string animation = (*object)["animation"].as<std::string>("");
-                bool cross_scene = (*object)["cross_scene"].as<bool>(false);
-                bool abs_position = (*object)["abs_position"].as<bool>(false);
-                bool visible = (*object)["visible"].as<bool>(true);
+                auto const scale = (*object)["scale"].as<float>(1);
+                int const layer = (*object)["layer"].as<int>(1);
+                auto animation = (*object)["animation"].as<std::string>("");
+                bool const cross_scene = (*object)["cross_scene"].as<bool>(false);
+                bool const abs_position = (*object)["abs_position"].as<bool>(false);
+                bool const visible = (*object)["visible"].as<bool>(true);
 
                 auto interactable = std::make_shared<InteractableObject>(_game, spine_file, object_id, scale);
                 interactable->layer = layer;
-                if (animation != "")
+                if (!animation.empty())
                 {
                     interactable->playAnimation(0, animation, true, (*_game->lua_state)["pass"]);
-                }else{
+                }
+                else
+                {
                     animation = _game->config["spine_default_animation"].as<std::string>();
                 }
 
@@ -338,7 +345,7 @@ void Scene::loadObjects(YAML::Node objects)
 
                 if ((*object)["skin"])
                 {
-                    std::string skin = (*object)["skin"].as<std::string>();
+                    auto const skin = (*object)["skin"].as<std::string>();
                     (*_game->lua_state)["scenes"][scene]["items"][object_id]["skin"] = skin;
 
                     interactable->setSkin(skin);
@@ -348,15 +355,15 @@ void Scene::loadObjects(YAML::Node objects)
         }
         else
         {
-            float inactivLayerBorder = (*_game->lua_state)["inactivLayerBorder"];
+            float const inactivLayerBorder = (*_game->lua_state)["inactivLayerBorder"];
             _game->setInactivLayerBorder(static_cast<int>(inactivLayerBorder));
 
             // Load from Lua and not from json
-            sol::table items = (*_game->lua_state)["scenes"][scene]["items"];
+            sol::table const items = (*_game->lua_state)["scenes"][scene]["items"];
             for (const auto &key_value_pair : items)
             {
-                sol::object key = key_value_pair.first;
-                sol::object value = key_value_pair.second;
+                sol::object const key = key_value_pair.first;
+                sol::object const value = key_value_pair.second;
 
                 std::string id = key.as<std::string>();
 
@@ -366,22 +373,22 @@ void Scene::loadObjects(YAML::Node objects)
                 {
                     auto interactable = createObject((*_game->lua_state)["scenes"][scene]["items"][id]["spine"], id, (*_game->lua_state)["scenes"][scene]["items"][id]["scale"]);
 
-                    std::string x = (*_game->lua_state)["scenes"][scene]["items"][id]["x"];
-                    std::string y = (*_game->lua_state)["scenes"][scene]["items"][id]["y"];
-                    bool visible = (*_game->lua_state)["scenes"][scene]["items"][id]["visible"];
-                    float layer = (*_game->lua_state)["scenes"][scene]["items"][id]["layer"];
+                    std::string const x = (*_game->lua_state)["scenes"][scene]["items"][id]["x"];
+                    std::string const y = (*_game->lua_state)["scenes"][scene]["items"][id]["y"];
+                    bool const visible = (*_game->lua_state)["scenes"][scene]["items"][id]["visible"];
+                    float const layer = (*_game->lua_state)["scenes"][scene]["items"][id]["layer"];
                     std::string animation = (*_game->lua_state)["scenes"][scene]["items"][id]["animation"];
-                    bool cross_scene = (*_game->lua_state)["scenes"][scene]["items"][id]["cross_scene"];
-                    bool abs_position = (*_game->lua_state)["scenes"][scene]["items"][id]["abs_position"];
+                    bool const cross_scene = (*_game->lua_state)["scenes"][scene]["items"][id]["cross_scene"];
+                    bool const abs_position = (*_game->lua_state)["scenes"][scene]["items"][id]["abs_position"];
 
                     interactable->setPosition(jngl::Vec2(std::stof(x), std::stof(y)));
                     interactable->setLuaIndex(id);
                     interactable->setVisible(visible);
-                    interactable->layer = (int)layer;
+                    interactable->layer = static_cast<int>(layer);
                     interactable->cross_scene = cross_scene;
                     interactable->abs_position = abs_position;
 
-                    if (animation == "")
+                    if (animation.empty())
                     {
                         animation = _game->config["spine_default_animation"].as<std::string>();
                     }
@@ -389,9 +396,9 @@ void Scene::loadObjects(YAML::Node objects)
 
                     (*_game->lua_state)["scenes"][scene]["items"][id]["object"] = std::static_pointer_cast<SpineObject>(interactable);
 
-                    if ((*_game->lua_state)["scenes"][scene]["items"][id]["skin"].valid() )
+                    if ((*_game->lua_state)["scenes"][scene]["items"][id]["skin"].valid())
                     {
-                        std::string skin = (*_game->lua_state)["scenes"][scene]["items"][id]["skin"];
+                        std::string const skin = (*_game->lua_state)["scenes"][scene]["items"][id]["skin"];
 
                         interactable->setSkin(skin);
                     }
@@ -402,7 +409,7 @@ void Scene::loadObjects(YAML::Node objects)
     }
 }
 
-std::shared_ptr<InteractableObject> Scene::createObject(const std::string &spine_file, std::string id, float scale)
+std::shared_ptr<InteractableObject> Scene::createObject(const std::string &spine_file, const std::string &id, float scale)
 {
     if (auto _game = game.lock())
     {
@@ -410,7 +417,6 @@ std::shared_ptr<InteractableObject> Scene::createObject(const std::string &spine
     }
     return nullptr;
 }
-
 
 #ifndef NDEBUG
 void Scene::writeToFile()
@@ -423,7 +429,6 @@ void Scene::writeToFile()
     jngl::debugLn("Rewrite ./../data-src/scenes/" + fileName + ".json");
     fout << emitter1.c_str();
 }
-
 
 void Scene::updateObjectPosition(const std::string &id, jngl::Vec2 position)
 {

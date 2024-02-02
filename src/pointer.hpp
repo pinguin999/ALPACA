@@ -52,6 +52,5 @@ private:
 
     jngl::Vec2 last_mouse_pose = jngl::Vec2(0, 0);
 
-
     size_t pointerNr = 0;
 };
