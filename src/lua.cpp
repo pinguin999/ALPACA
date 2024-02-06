@@ -35,7 +35,9 @@ void Game::setupLuaFunctions()
 	/// pass is a function doing nothing
 	/// You can use it for testing or for not needed callbacks
 	lua_state->set_function("pass",
-							[]() {
+							[]()
+							{
+								// Just do nothing
 							});
 
 	/// Loads a new Scene/Room

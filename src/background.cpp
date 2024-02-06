@@ -93,17 +93,23 @@ void Background::draw() const
                 }
 
                 jngl::setColor(0, 0, 0);
-                for (size_t i = 1; i < forbidden_corners.size(); i++)
+                for (auto forbidden_area : forbidden_corners)
                 {
-                    jngl::drawLine(forbidden_corners.at(i), forbidden_corners.at(i - 1));
+                    for (size_t i = 1; i < forbidden_area.size(); i++)
+                    {
+                        jngl::drawLine(forbidden_area.at(i), forbidden_area.at(i - 1));
+                    }
                 }
 
                 jngl::setColor(0, 0, 255);
-                for (auto forbidden_corner : forbidden_corners)
+                for (auto forbidden_area : forbidden_corners)
                 {
-                    if (hasPathTo(_game->player->getPosition(), forbidden_corner))
+                    for (auto forbidden_corner : forbidden_area)
                     {
-                        jngl::drawLine(_game->player->getPosition(), forbidden_corner);
+                        if (hasPathTo(_game->player->getPosition(), forbidden_corner))
+                        {
+                            jngl::drawLine(_game->player->getPosition(), forbidden_corner);
+                        }
                     }
                 }
 
@@ -233,7 +239,10 @@ std::deque<jngl::Vec2> Background::getPathToTarget(jngl::Vec2 start, jngl::Vec2 
         openSet.erase(current_it);
 
         auto directions = corners;
-        directions.insert(directions.end(), forbidden_corners.begin(), forbidden_corners.end());
+        for (auto forbidden_area : forbidden_corners)
+        {
+            directions.insert(directions.end(), forbidden_area.begin(), forbidden_area.end());
+        }
         directions.push_back(target);
         for (auto direction : directions)
         {
@@ -319,7 +328,6 @@ bool Background::hasPathTo(jngl::Vec2 start, jngl::Vec2 target) const
     }
 
     bool corner = false;
-    bool forbidden_corner = false;
 
     if (std::any_of(corners.cbegin(), corners.cend(), [&target](jngl::Vec2 corn)
                     { return corn == target; }))
@@ -327,29 +335,38 @@ bool Background::hasPathTo(jngl::Vec2 start, jngl::Vec2 target) const
         corner = true;
     }
 
-    if (std::any_of(forbidden_corners.cbegin(), forbidden_corners.cend(), [&target](jngl::Vec2 corn)
-                    { return corn == target; }))
+    std::vector<bool> is_forbidden_corner;
+    std::vector<int> forbidden_counts;
+    for (auto forbidden_area : forbidden_corners)
     {
-        forbidden_corner = true;
-    }
-
-    int forbidden_count = 0;
-
-    if (!forbidden_corners.empty())
-    {
-        for (size_t i = 0; i < forbidden_corners.size() - 1; i++)
+        bool forbidden_corner = false;
+        if (std::any_of(forbidden_area.cbegin(), forbidden_area.cend(), [&target](jngl::Vec2 corn)
+                        { return corn == target; }))
         {
-            if (lineIntersection(start, target, forbidden_corners.at(i), forbidden_corners.at(i + 1)))
+            forbidden_corner = true;
+        }
+        is_forbidden_corner.push_back(forbidden_corner);
+
+        int forbidden_count = 0;
+        for (size_t i = 0; i < forbidden_area.size() - 1; i++)
+        {
+            if (lineIntersection(start, target, forbidden_area.at(i), forbidden_area.at(i + 1)))
             {
                 forbidden_count++;
             }
         }
+        forbidden_counts.push_back(forbidden_count);
     }
 
-    if ((forbidden_corner && (forbidden_count > 2 || count != 0)) ||
-        (corner && forbidden_count > 0))
+    int i = 0;
+    for (auto forbidden_area : forbidden_corners)
     {
-        return false;
+        if ((is_forbidden_corner[i] && (forbidden_counts[i] > 2 || count != 0)) ||
+            (corner && forbidden_counts[i] > 0))
+        {
+            return false;
+        }
+        i++;
     }
 
     // TODO Clean up. Can be moved into first loop.
@@ -360,22 +377,36 @@ bool Background::hasPathTo(jngl::Vec2 start, jngl::Vec2 target) const
         startcorner = true;
     }
 
+    i = 0;
     bool forbidden_startcorner = false;
-    if (std::any_of(forbidden_corners.cbegin(), forbidden_corners.cend(), [&start](jngl::Vec2 corn)
-                    { return corn == start; }))
+    for (auto forbidden_area : forbidden_corners)
     {
-        forbidden_startcorner = true;
+        if (std::any_of(forbidden_area.cbegin(), forbidden_area.cend(), [&start](jngl::Vec2 corn)
+                        { return corn == start; }))
+        {
+            forbidden_startcorner = true;
+        }
+
+        if ((startcorner && !forbidden_startcorner && count <= 2 && forbidden_counts[i] == 0) || (forbidden_startcorner && !startcorner && forbidden_counts[i] <= 2 && count == 0))
+        {
+            return true;
+        }
+        i++;
     }
 
-    if ((startcorner && !forbidden_startcorner && count <= 2 && forbidden_count == 0) || (forbidden_startcorner && !startcorner && forbidden_count <= 2 && count == 0))
+    bool bla = true;
+    i = 0;
+    for (auto forbidden_corner : is_forbidden_corner)
     {
-        return true;
+
+        bla = bla && ((corner && forbidden_counts[i] <= 2 && count <= 2) ||
+                      (!corner && forbidden_counts[i] == 0 && count == 0) ||
+                      (forbidden_corner && forbidden_counts[i] <= 2 && count <= 2) ||
+                      (!forbidden_corner && forbidden_counts[i] == 0 && count == 0));
+        i++;
     }
 
-    return (corner && forbidden_count <= 2 && count <= 2) ||
-           (!corner && forbidden_count == 0 && count == 0) ||
-           (forbidden_corner && forbidden_count <= 2 && count <= 2) ||
-           (!forbidden_corner && forbidden_count == 0 && count == 0);
+    return bla;
 }
 
 std::vector<jngl::Vec2> Background::getCorners() const
@@ -404,13 +435,11 @@ std::vector<jngl::Vec2> Background::getCorners() const
     return result;
 }
 
-std::vector<jngl::Vec2> Background::getForbiddenCorners() const
+std::vector<std::vector<jngl::Vec2>> Background::getForbiddenCorners() const
 {
-    std::vector<jngl::Vec2> result;
-    if (bounds->count == 0)
-    {
-        return result;
-    }
+    std::vector<std::vector<jngl::Vec2>> result;
+
+    std::vector<jngl::Vec2> forbidden_area;
 
     if (auto _game = game.lock())
     {
@@ -424,11 +453,12 @@ std::vector<jngl::Vec2> Background::getForbiddenCorners() const
                     // obj->bounds->polygons
                     for (int i = 0; i < (obj->bounds->polygons[iPoly])->count; i += 2)
                     {
-                        result.emplace_back(((obj->bounds->polygons[iPoly])->vertices[i + 0]) + obj->getPosition().x, ((obj->bounds->polygons[iPoly])->vertices[i + 1]) + obj->getPosition().y);
+                        forbidden_area.emplace_back(((obj->bounds->polygons[iPoly])->vertices[i + 0]) + obj->getPosition().x, ((obj->bounds->polygons[iPoly])->vertices[i + 1]) + obj->getPosition().y);
                     }
                     // Add first to the back again.
-                    result.emplace_back(((obj->bounds->polygons[iPoly])->vertices[0]) + obj->getPosition().x, ((obj->bounds->polygons[iPoly])->vertices[1]) + obj->getPosition().y);
-                    break;
+                    forbidden_area.emplace_back(((obj->bounds->polygons[iPoly])->vertices[0]) + obj->getPosition().x, ((obj->bounds->polygons[iPoly])->vertices[1]) + obj->getPosition().y);
+                    result.emplace_back(forbidden_area);
+                    forbidden_area.clear();
                 }
             }
         }
