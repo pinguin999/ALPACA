@@ -40,11 +40,12 @@ Game::Game(const YAML::Node &config) : config(config),
 		"Press Tab to enter editmode. \n"
 		"Press F10 to show debug draw. \n"
 		"Press F12 to start/end gif recording. \n"
-		"Press R to reload the scene. \n"
-		"Press L start the game from the beginning. \n"
-		"Press C to save the game. \n"
-		"Press V to load the game. \n"
-		"Press X to hide this text.");
+		"Press r to reload the scene. \n"
+		"Press l start the game from the beginning. \n"
+		"Press c to save the game. \n"
+		"Press v to load the game. \n"
+		"Press s in editmode to save changes to a scene. \n"
+		"Press x to hide this text.");
 	debug_info.setPos(jngl::Vec2(-screensize.x / 2, -screensize.y / 2));
 #endif
 
