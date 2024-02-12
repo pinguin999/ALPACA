@@ -5,6 +5,7 @@ It's written in C++ and can easily be scripted in Lua.
 
 [📚 Documentation](https://alpaca-engine.de/)
 [🎮 Example Game](https://hobbyspieleentwicklerpodcast.de/2080-Demo/)
+[🪟 Windows Build](https://brain-connected.itch.io/alpaca)
 
 [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.gg/zWdnq6UJ79)
 
