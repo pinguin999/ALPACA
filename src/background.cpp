@@ -165,9 +165,26 @@ void Background::draw() const
     jngl::popMatrix();
 }
 
+enum class Result {
+    INTERSECTION,
+    NO_INTERSECTION,
+    TWO_POINTS_EQUAL,
+};
+
 // Quelle: https://www.youtube.com/watch?v=c065KoXooSw
-bool lineIntersection(jngl::Vec2 a, jngl::Vec2 b, jngl::Vec2 c, jngl::Vec2 d)
+Result lineIntersection(jngl::Vec2 a, jngl::Vec2 b, jngl::Vec2 c, jngl::Vec2 d)
 {
+    if (boost::qvm::mag_sqr(a - c) < 0.1) {
+        return boost::qvm::mag_sqr(b - d) < 0.1 ? Result::TWO_POINTS_EQUAL
+                                                : Result::NO_INTERSECTION;
+    }
+    if (boost::qvm::mag_sqr(a - d) < 0.1) {
+        return boost::qvm::mag_sqr(b - c) < 0.1 ? Result::TWO_POINTS_EQUAL
+                                                : Result::NO_INTERSECTION;
+    }
+    if (boost::qvm::mag_sqr(b - d) < 0.1 || boost::qvm::mag_sqr(b - c) < 0.1) {
+        return Result::NO_INTERSECTION;
+    }
     jngl::Vec2 const r = (b - a);
     jngl::Vec2 const s = (d - c);
 
@@ -176,8 +193,8 @@ bool lineIntersection(jngl::Vec2 a, jngl::Vec2 b, jngl::Vec2 c, jngl::Vec2 d)
     double const t = ((c.x - a.x) * s.y - (c.y - a.y) * s.x) / e;
 
     // Intersection Point a + t * r
-    // Expand line with 0.01 to get right resault on corners
-    return (-0.01 <= u && u <= 1.01 && -0.01 <= t && t <= 1.01);
+    return (0 <= u && u <= 1 && 0 <= t && t <= 1) ? Result::INTERSECTION
+                                                  : Result::NO_INTERSECTION;
 }
 
 Node::Node(jngl::Vec2 coordinates_, Node *parent_) : coordinates(coordinates_), parent(parent_)
@@ -246,11 +263,8 @@ std::deque<jngl::Vec2> Background::getPathToTarget(jngl::Vec2 start, jngl::Vec2 
         directions.push_back(target);
         for (auto direction : directions)
         {
-            const bool hastpath = !hasPathTo(current->coordinates, direction);
-            auto *const visited = findNodeOnList(closedSet, direction);
-
-            if (hastpath || visited)
-            {
+            const auto visited = findNodeOnList(closedSet, direction);
+            if (visited || !hasPathTo(current->coordinates, direction)) {
                 continue;
             }
 
@@ -312,101 +326,54 @@ int Background::heuristic(jngl::Vec2 start, jngl::Vec2 target)
 
 bool Background::hasPathTo(jngl::Vec2 start, jngl::Vec2 target) const
 {
-    int count = 0;
-
     if (corners.empty())
     {
         return false;
     }
+    if (boost::qvm::mag_sqr(target - start) < 0.1) {
+        return false;
+    }
 
+    bool twoPointsEqual = false;
     for (size_t i = 0; i < corners.size() - 1; i++)
     {
-        if (lineIntersection(start, target, corners.at(i), corners.at(i + 1)))
+        // do we intersect with an edge of the walkable area?
+        switch (lineIntersection(start, target, corners.at(i), corners.at(i + 1)))
         {
-            count++;
+        case Result::INTERSECTION:
+            return false;
+        case Result::NO_INTERSECTION:
+            break;
+        case Result::TWO_POINTS_EQUAL:
+            twoPointsEqual = true;
+            break;
         }
     }
 
-    bool corner = false;
-
-    if (std::any_of(corners.cbegin(), corners.cend(), [&target](jngl::Vec2 corn)
-                    { return corn == target; }))
+    if (!forbidden_corners.empty())
     {
-        corner = true;
-    }
-
-    std::vector<bool> is_forbidden_corner;
-    std::vector<int> forbidden_counts;
-    for (auto forbidden_area : forbidden_corners)
-    {
-        bool forbidden_corner = false;
-        if (std::any_of(forbidden_area.cbegin(), forbidden_area.cend(), [&target](jngl::Vec2 corn)
-                        { return corn == target; }))
-        {
-            forbidden_corner = true;
-        }
-        is_forbidden_corner.push_back(forbidden_corner);
-
-        int forbidden_count = 0;
-        for (size_t i = 0; i < forbidden_area.size() - 1; i++)
-        {
-            if (lineIntersection(start, target, forbidden_area.at(i), forbidden_area.at(i + 1)))
+        for (auto forbidden_corner : forbidden_corners){
+            for (size_t i = 0; i < forbidden_corner.size() - 1; i++)
             {
-                forbidden_count++;
+                switch (lineIntersection(start, target, forbidden_corner.at(i), forbidden_corner.at(i + 1)))
+                {
+                case Result::INTERSECTION:
+                    return false;
+                case Result::NO_INTERSECTION:
+                    break;
+                case Result::TWO_POINTS_EQUAL:
+                    twoPointsEqual = true;
+                    break;
+                }
             }
         }
-        forbidden_counts.push_back(forbidden_count);
     }
 
-    int i = 0;
-    for (auto forbidden_area : forbidden_corners)
-    {
-        if ((is_forbidden_corner[i] && (forbidden_counts[i] > 2 || count != 0)) ||
-            (corner && forbidden_counts[i] > 0))
-        {
-            return false;
-        }
-        i++;
+    if (twoPointsEqual) {
+        return true;
     }
-
-    // TODO Clean up. Can be moved into first loop.
-    bool startcorner = false;
-    if (std::any_of(corners.cbegin(), corners.cend(), [&start](jngl::Vec2 corn)
-                    { return corn == start; }))
-    {
-        startcorner = true;
-    }
-
-    i = 0;
-    bool forbidden_startcorner = false;
-    for (auto forbidden_area : forbidden_corners)
-    {
-        if (std::any_of(forbidden_area.cbegin(), forbidden_area.cend(), [&start](jngl::Vec2 corn)
-                        { return corn == start; }))
-        {
-            forbidden_startcorner = true;
-        }
-
-        if ((startcorner && !forbidden_startcorner && count <= 2 && forbidden_counts[i] == 0) || (forbidden_startcorner && !startcorner && forbidden_counts[i] <= 2 && count == 0))
-        {
-            return true;
-        }
-        i++;
-    }
-
-    bool bla = true;
-    i = 0;
-    for (auto forbidden_corner : is_forbidden_corner)
-    {
-
-        bla = bla && ((corner && forbidden_counts[i] <= 2 && count <= 2) ||
-                      (!corner && forbidden_counts[i] == 0 && count == 0) ||
-                      (forbidden_corner && forbidden_counts[i] <= 2 && count <= 2) ||
-                      (!forbidden_corner && forbidden_counts[i] == 0 && count == 0));
-        i++;
-    }
-
-    return bla;
+    auto direction = boost::qvm::normalized(target - start);
+    return is_walkable(start + direction); // move 1 pixel and see if that wouldn't leave the walkable area
 }
 
 std::vector<jngl::Vec2> Background::getCorners() const
