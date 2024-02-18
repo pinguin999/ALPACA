@@ -1,0 +1,154 @@
+{
+    "bones": [
+        {
+            "name": "root"
+        }
+    ], 
+    "slots": [
+        {
+            "name": "alpaca", 
+            "bone": "root", 
+            "attachment": "alpaca"
+        }, 
+        {
+            "name": "mouth-a", 
+            "bone": "root", 
+            "attachment": "mouth-a"
+        }, 
+        {
+            "name": "mouth-b", 
+            "bone": "root", 
+            "attachment": "mouth-b"
+        }, 
+        {
+            "name": "mouth-c", 
+            "bone": "root", 
+            "attachment": "mouth-c"
+        }, 
+        {
+            "name": "mouth-d", 
+            "bone": "root", 
+            "attachment": "mouth-d"
+        }, 
+        {
+            "name": "mouth-e", 
+            "bone": "root", 
+            "attachment": "mouth-e"
+        }, 
+        {
+            "name": "mouth-f", 
+            "bone": "root", 
+            "attachment": "mouth-f"
+        }, 
+        {
+            "name": "mouth-g", 
+            "bone": "root", 
+            "attachment": "mouth-g"
+        }, 
+        {
+            "name": "mouth-h", 
+            "bone": "root", 
+            "attachment": "mouth-h"
+        }, 
+        {
+            "name": "mouth-x", 
+            "bone": "root", 
+            "attachment": "mouth-x"
+        }
+    ], 
+    "animations": {}, 
+    "skins": {
+        "default": {
+            "alpaca": {
+                "alpaca": {
+                    "y": 715.0, 
+                    "x": 0.0, 
+                    "rotation": 0, 
+                    "height": 1430, 
+                    "width": 541
+                }
+            }, 
+            "mouth-x": {
+                "mouth-x": {
+                    "y": 1076.0, 
+                    "x": -29.0, 
+                    "rotation": 0, 
+                    "height": 42, 
+                    "width": 63
+                }
+            }, 
+            "mouth-h": {
+                "mouth-h": {
+                    "y": 1070.0, 
+                    "x": -26.0, 
+                    "rotation": 0, 
+                    "height": 55, 
+                    "width": 54
+                }
+            }, 
+            "mouth-e": {
+                "mouth-e": {
+                    "y": 1064.0, 
+                    "x": -30.0, 
+                    "rotation": 0, 
+                    "height": 44, 
+                    "width": 54
+                }
+            }, 
+            "mouth-d": {
+                "mouth-d": {
+                    "y": 1070.0, 
+                    "x": -29.0, 
+                    "rotation": 0, 
+                    "height": 58, 
+                    "width": 59
+                }
+            }, 
+            "mouth-g": {
+                "mouth-g": {
+                    "y": 1063.0, 
+                    "x": -29.0, 
+                    "rotation": 0, 
+                    "height": 43, 
+                    "width": 52
+                }
+            }, 
+            "mouth-f": {
+                "mouth-f": {
+                    "y": 1063.0, 
+                    "x": -30.0, 
+                    "rotation": 0, 
+                    "height": 42, 
+                    "width": 52
+                }
+            }, 
+            "mouth-a": {
+                "mouth-a": {
+                    "y": 1072.0, 
+                    "x": -24.0, 
+                    "rotation": 0, 
+                    "height": 48, 
+                    "width": 48
+                }
+            }, 
+            "mouth-c": {
+                "mouth-c": {
+                    "y": 1070.0, 
+                    "x": -28.0, 
+                    "rotation": 0, 
+                    "height": 55, 
+                    "width": 58
+                }
+            }, 
+            "mouth-b": {
+                "mouth-b": {
+                    "y": 1073.0, 
+                    "x": -24.0, 
+                    "rotation": 0, 
+                    "height": 51, 
+                    "width": 51
+                }
+            }
+        }
+    }
+}
