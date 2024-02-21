@@ -152,7 +152,6 @@ void Game::loadLevel(const std::string &level)
 	{
 		jngl::debugLn("There is no scene with the name: " + level);
 		newScene = std::make_shared<Scene>(old_scene, shared_from_this());
-		;
 	}
 
 	currentScene = newScene;
