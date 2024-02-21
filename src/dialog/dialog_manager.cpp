@@ -264,6 +264,10 @@ void DialogManager::continueCurrent()
         }
 
         auto result = currentNode->step(currentDialog);
+        if(result == nullptr){
+            cancelDialog();
+            return;
+        }
         currentNode = result->currentNode;
 
         auto textResult = std::dynamic_pointer_cast<schnacker::TextStepResult>(result);

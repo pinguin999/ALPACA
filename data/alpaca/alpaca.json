@@ -1,1 +1,222 @@
-{"skeleton":{"hash":"M+8OPw31fu4","spine":"4.1.23","x":-255.5,"y":-14,"width":541,"height":1430,"images":"","audio":""},"bones":[{"name":"root"}],"slots":[{"name":"pasted image 0","bone":"root","attachment":"pasted image 0"},{"name":"dlg:alpaca","bone":"root","attachment":"dlg:alpaca"}],"skins":[{"name":"default","attachments":{"dlg:alpaca":{"dlg:alpaca":{"type":"boundingbox","vertexCount":6,"vertices":[-279.68,1429.25,-298.64,961.41,-115.3,683.23,93.33,765.42,207.13,1113.14,194.49,1460.86]}},"pasted image 0":{"pasted image 0":{"x":15,"y":701,"width":541,"height":1430}}}}],"animations":{"animation":{}}}
+{
+    "skeleton": {
+        "hash": "kMlXHaBsXbc",
+        "spine": "4.1.24",
+        "x": -270.5,
+        "width": 541,
+        "height": 1430,
+        "images": "",
+        "audio": ""
+    },
+    "bones": [
+        {
+            "name": "root"
+        }
+    ],
+    "slots": [
+        {
+            "name": "alpaca",
+            "bone": "root",
+            "attachment": "alpaca"
+        },
+        {
+            "name": "dlg:alpaca",
+            "bone": "root",
+            "attachment": "dlg:alpaca"
+        },
+        {
+            "name": "mouth",
+            "bone": "root"
+        },
+        {
+            "name": "default-mouth",
+            "bone": "root",
+            "attachment": "default/mouth-a"
+        },
+        {
+            "name": "non_walkable_area",
+            "bone": "root",
+            "attachment": "non_walkable_area"
+        }
+    ],
+    "skins": [
+        {
+            "name": "default",
+            "attachments": {
+                "alpaca": {
+                    "alpaca": {
+                        "y": 715,
+                        "width": 541,
+                        "height": 1430
+                    }
+                },
+                "default-mouth": {
+                    "default/mouth-a": {
+                        "x": -24.77,
+                        "y": 1069.85,
+                        "width": 48,
+                        "height": 48
+                    },
+                    "default/mouth-b": {
+                        "x": -24.77,
+                        "y": 1069.85,
+                        "width": 51,
+                        "height": 51
+                    },
+                    "default/mouth-c": {
+                        "x": -24.77,
+                        "y": 1069.85,
+                        "width": 58,
+                        "height": 55
+                    },
+                    "default/mouth-d": {
+                        "x": -24.77,
+                        "y": 1069.85,
+                        "width": 59,
+                        "height": 58
+                    },
+                    "default/mouth-e": {
+                        "x": -24.77,
+                        "y": 1069.85,
+                        "width": 54,
+                        "height": 44
+                    },
+                    "default/mouth-f": {
+                        "x": -24.77,
+                        "y": 1069.85,
+                        "width": 52,
+                        "height": 42
+                    },
+                    "default/mouth-g": {
+                        "x": -24.77,
+                        "y": 1069.85,
+                        "width": 52,
+                        "height": 43
+                    },
+                    "default/mouth-h": {
+                        "x": -24.77,
+                        "y": 1069.85,
+                        "width": 54,
+                        "height": 55
+                    },
+                    "default/mouth-x": {
+                        "x": -24.77,
+                        "y": 1069.85,
+                        "width": 63,
+                        "height": 42
+                    }
+                },
+                "dlg:alpaca": {
+                    "dlg:alpaca": {
+                        "type": "boundingbox",
+                        "vertexCount": 6,
+                        "vertices": [
+                            -279.68,
+                            1429.25,
+                            -298.64,
+                            961.41,
+                            -115.3,
+                            683.23,
+                            93.33,
+                            765.42,
+                            207.13,
+                            1113.14,
+                            194.49,
+                            1460.86
+                        ]
+                    }
+                },
+                "non_walkable_area": {
+                    "non_walkable_area": {
+                        "type": "boundingbox",
+                        "vertexCount": 4,
+                        "vertices": [
+                            -323.4,
+                            214.46,
+                            -269.5,
+                            -80.55,
+                            190.04,
+                            -94.74,
+                            300.67,
+                            222.97
+                        ]
+                    }
+                }
+            }
+        }
+    ],
+    "animations": {
+        "animation": {},
+        "idle": {
+            "slots": {
+                "default-mouth": {
+                    "attachment": [
+                        {
+                            "name": "default/mouth-a"
+                        }
+                    ]
+                }
+            }
+        },
+        "say_en_7Rsc3TCAja": {
+            "slots": {
+                "default-mouth": {
+                    "attachment": [
+                        {
+                            "time": 0.0,
+                            "name": "default/mouth-x"
+                        },
+                        {
+                            "time": 0.25,
+                            "name": "default/mouth-b"
+                        },
+                        {
+                            "time": 0.29,
+                            "name": "default/mouth-f"
+                        },
+                        {
+                            "time": 0.33,
+                            "name": "default/mouth-c"
+                        },
+                        {
+                            "time": 0.61,
+                            "name": "default/mouth-b"
+                        },
+                        {
+                            "time": 0.68,
+                            "name": "default/mouth-c"
+                        },
+                        {
+                            "time": 0.82,
+                            "name": "default/mouth-b"
+                        },
+                        {
+                            "time": 1.03,
+                            "name": "default/mouth-c"
+                        },
+                        {
+                            "time": 1.17,
+                            "name": "default/mouth-b"
+                        },
+                        {
+                            "time": 1.31,
+                            "name": "default/mouth-e"
+                        },
+                        {
+                            "time": 1.38,
+                            "name": "default/mouth-f"
+                        },
+                        {
+                            "time": 1.66,
+                            "name": "default/mouth-b"
+                        },
+                        {
+                            "time": 1.8,
+                            "name": "default/mouth-x"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

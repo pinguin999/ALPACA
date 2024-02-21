@@ -6,19 +6,19 @@
 #include <cmath>
 
 Player::Player(const std::shared_ptr<Game> &game, const std::string &spine_file) : SpineObject(game, spine_file, "Player", game->config["player_scale"].as<float>()),
-                                                                            DOUBLE_CLICK_TIME(game->config["double_click_time"].as<double>()),
-                                                                            MAX_CLICK_DISTANCE(game->config["max_click_distance"].as<int>()),
-                                                                            NEAR_OBJECT(game->config["near_object"].as<int>()),
-                                                                            X_BORDER(game->config["border"]["x"].as<int>()),
-                                                                            Y_BORDER(game->config["border"]["y"].as<int>()),
-                                                                            max_speed(std::abs(game->config["player_max_speed"].as<float>())),
-                                                                            player_walk_animation(game->config["player_walk_animation"].as<std::string>()),
-                                                                            player_side_skin(game->config["player_side_skin"].as<std::string>()),
-                                                                            player_up_skin(game->config["player_up_skin"].as<std::string>()),
-                                                                            player_front_skin(game->config["player_front_skin"].as<std::string>()),
-                                                                            player_beam_animation(game->config["player_beam_animation"].as<std::string>()),
-                                                                            player_idle_animation(game->config["player_idle_animation"].as<std::string>()),
-                                                                            last_click_time(std::numeric_limits<double>::min())
+                                                                                   DOUBLE_CLICK_TIME(game->config["double_click_time"].as<double>()),
+                                                                                   MAX_CLICK_DISTANCE(game->config["max_click_distance"].as<int>()),
+                                                                                   NEAR_OBJECT(game->config["near_object"].as<int>()),
+                                                                                   X_BORDER(game->config["border"]["x"].as<int>()),
+                                                                                   Y_BORDER(game->config["border"]["y"].as<int>()),
+                                                                                   max_speed(std::abs(game->config["player_max_speed"].as<float>())),
+                                                                                   player_walk_animation(game->config["player_walk_animation"].as<std::string>()),
+                                                                                   player_side_skin(game->config["player_side_skin"].as<std::string>()),
+                                                                                   player_up_skin(game->config["player_up_skin"].as<std::string>()),
+                                                                                   player_front_skin(game->config["player_front_skin"].as<std::string>()),
+                                                                                   player_beam_animation(game->config["player_beam_animation"].as<std::string>()),
+                                                                                   player_idle_animation(game->config["player_idle_animation"].as<std::string>()),
+                                                                                   last_click_time(std::numeric_limits<double>::min())
 {
     target_position = jngl::Vec2((*game->lua_state)["player"]["x"], (*game->lua_state)["player"]["y"]);
     position = target_position;
@@ -177,7 +177,7 @@ bool Player::step(bool)
             currentAnimation = player_idle_animation;
             // Callback to Lua
             auto old_callback = walk_callback;
-            walk_callback();  // walk_callback can be changed in here.
+            walk_callback(); // walk_callback can be changed in here.
             if (old_callback == walk_callback)
             {
                 // only adjust the walk_callback if the Lua script itself hasn't changed it since
@@ -237,8 +237,8 @@ bool Player::step(bool)
         {
             const jngl::Vec2 click_position = _game->pointer->getPosition();
             auto *collision = spSkeletonBounds_containsPoint(bounds,
-                                                            static_cast<float>(click_position.x) - static_cast<float>(position.x),
-                                                            static_cast<float>(click_position.y) - static_cast<float>(position.y));
+                                                             static_cast<float>(click_position.x) - static_cast<float>(position.x),
+                                                             static_cast<float>(click_position.y) - static_cast<float>(position.y));
             if (collision)
             {
                 collision_script = collision->super.super.name;

@@ -49,7 +49,13 @@ if (NOT CMAKE_BUILD_TYPE MATCHES "Release" AND NOT ANDROID AND NOT ${CMAKE_SYSTE
 endif()
 
 if(ANDROID)
+	add_library(native_app_glue STATIC
+		${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c)
+
 	add_library(pac SHARED ${SOURCES})
+	# Export ANativeActivity_onCreate(),
+	# Refer to: https://github.com/android-ndk/ndk/issues/381.
+	set_property(TARGET pac APPEND_STRING PROPERTY LINK_FLAGS " -u ANativeActivity_onCreate")
 	target_link_libraries(pac PRIVATE
 		android
 		native_app_glue

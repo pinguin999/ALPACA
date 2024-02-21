@@ -2,7 +2,7 @@
 #include "game.hpp"
 
 void SpineObject::animationStateListener(spAnimationState *state, spEventType type, spTrackEntry *entry,
-                                               spEvent *event)
+                                         spEvent *event)
 {
     if (event)
     {
@@ -23,7 +23,8 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
                 (*_game->lua_state)["this"] = reinterpret_cast<SpineObject *>(state->userData)->getptr();
                 std::string extension = ".lua";
                 std::string event_string = std::string(event->data->stringValue);
-                if (std::equal(extension.rbegin(), extension.rend(), event_string.rbegin())) {
+                if (std::equal(extension.rbegin(), extension.rend(), event_string.rbegin()))
+                {
                     // run lua script from file
                 }
                 else
@@ -31,7 +32,7 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
                     _game->lua_state->script(event_string);
                 }
             }
-            //if (event_string.ends_with(".lua"))
+            // if (event_string.ends_with(".lua"))
         }
     }
 
@@ -51,7 +52,7 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
     }
 }
 
-SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, std::string id, float scale) : walk_callback((*game->lua_state)["pass"]), spine_name(spine_file), id(id), game(game)
+SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, const std::string &id, float scale) : walk_callback((*game->lua_state)["pass"]), spine_name(spine_file), id(id), game(game)
 {
     atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
     assert(atlas);
@@ -71,7 +72,7 @@ SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &s
             json = spSkeletonJson_create(atlas);
             json->scale = scale;
             // assert(skeletonData);
-    		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
         }
         break;
@@ -83,8 +84,8 @@ SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &s
     animationStateData = spAnimationStateData_create(skeletonData);
     skeleton = std::make_unique<spine::SkeletonDrawable>(skeletonData, animationStateData);
     skeleton->state->userData = this;
-    skeleton->state->listener = (spAnimationStateListener) & this->animationStateListener;
-    playAnimation(0, game->config["spine_default_animation"].as<std::string>().c_str(), true, (*game->lua_state)["pass"]);
+    skeleton->state->listener = static_cast<spAnimationStateListener>(&this->animationStateListener);
+    playAnimation(0, game->config["spine_default_animation"].as<std::string>(), true, (*game->lua_state)["pass"]);
     bounds = spSkeletonBounds_create();
 
     skeleton->step();
@@ -121,7 +122,7 @@ std::vector<std::string> SpineObject::getPointNames() const
         {
             if (entry->attachment && entry->attachment->type == SP_ATTACHMENT_POINT)
             {
-                result.push_back(entry->attachment->name);
+                result.emplace_back(entry->attachment->name);
             }
             entry = entry->next;
         }
@@ -140,7 +141,7 @@ void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimat
     spAnimation *animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData, currentAnimation.c_str());
     if (animation)
     {
-        spAnimationState_setAnimation(skeleton->state, trackIndex, animation, loop);
+        spAnimationState_setAnimation(skeleton->state, trackIndex, animation, static_cast<int>(loop));
     }
     else
     {
@@ -148,7 +149,7 @@ void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimat
     }
 }
 
-void SpineObject::addAnimation(int trackIndex, const std::string& currentAnimation, bool loop, float delay, sol::function callback)
+void SpineObject::addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, sol::function callback)
 {
     this->animation_callback[std::to_string(trackIndex) + currentAnimation] = std::move(callback);
     if (trackIndex == 0)
@@ -158,7 +159,7 @@ void SpineObject::addAnimation(int trackIndex, const std::string& currentAnimati
     spAnimation *animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData, currentAnimation.c_str());
     if (animation)
     {
-        spAnimationState_addAnimation(skeleton->state, trackIndex, animation, loop, delay);
+        spAnimationState_addAnimation(skeleton->state, trackIndex, animation, static_cast<int>(loop), delay);
     }
     else
     {
@@ -180,7 +181,7 @@ void SpineObject::onAnimationComplete(const std::string &key)
     }
 }
 
-void SpineObject::setSkin(const std::string &skin)
+void SpineObject::setSkin(const std::string &skin) const
 {
     const int resault = spSkeleton_setSkinByName(skeleton->skeleton, skin.c_str());
     spSkeleton_setSlotsToSetupPose(skeleton->skeleton);
@@ -198,7 +199,7 @@ void SpineObject::activate()
     }
 }
 
-double SpineObject::getZ()
+double SpineObject::getZ() const
 {
     return position.y + layer * 2000.0;
 }

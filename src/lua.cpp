@@ -37,16 +37,17 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("pass",
 							[]()
 							{
+								// Just do nothing
 							});
 
 	/// Loads a new Scene/Room
 	///
 	/// Door Example expects a Spine point object near the door:
 	///
-	///function door()
+	/// function door()
 	///	LoadScene("cockpit")
-	///end
-	///GoToPoint("cockpit", door)
+	/// end
+	/// GoToPoint("cockpit", door)
 	lua_state->set_function("LoadScene",
 							[this](const LuaScene &scene)
 							{
@@ -58,6 +59,7 @@ void Game::setupLuaFunctions()
 							[this]()
 							{
 								player->interruptible = false;
+								lua_state->script("game.interruptible = false");
 							});
 
 	/// Enable interruption again
@@ -65,6 +67,7 @@ void Game::setupLuaFunctions()
 							[this]()
 							{
 								player->interruptible = true;
+								lua_state->script("game.interruptible = true");
 							});
 
 	/// Plays immediately an animation on the calling Spine object
@@ -363,7 +366,7 @@ void Game::setupLuaFunctions()
 	///
 	/// local points = GetPointNamesOn("inventory_object")
 	/// for i = 1, #points do
-    ///    print(i, points[i])
+	///    print(i, points[i])
 	/// end
 	/// SpineObject object: Objects ID that should be effected
 	/// returns: a list of positions
@@ -480,7 +483,7 @@ void Game::setupLuaFunctions()
 								if (frm)
 								{
 									auto position = frm->getPoint(point_name);
-									if(position && frm->abs_position)
+									if (position && frm->abs_position)
 									{
 										position = position.value() + getCameraPosition();
 									}
@@ -849,16 +852,54 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetLanguage",
 							[this](const LuaLanguage &language)
 							{
-								YAML::Node languages = this->config["supportedLanguages"];
+								const YAML::Node languages = this->config["supportedLanguages"];
 								for (auto supported_language : languages)
 								{
 									if (language == supported_language.as<std::string>())
 									{
 										this->language = language;
-										std::string dialogFilePath = config["dialog"].as<std::string>();
+										const std::string dialogFilePath = config["dialog"].as<std::string>();
 										getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
 										return;
 									}
 								}
+							});
+
+	/// Exit the game
+	/// Not supported on iOS
+	lua_state->set_function("Exit",
+							[]()
+							{
+#if (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0)
+								exit(EXIT_SUCCESS);
+#endif
+							});
+
+	/// Write a savegame
+	lua_state->set_function("SaveGame",
+							[this]()
+							{
+								saveLuaState();
+							});
+
+	/// Load the savegame
+	lua_state->set_function("LoadGame",
+							[this]()
+							{
+								gameObjects.clear();
+								lua_state = {};
+								currentScene = nullptr;
+								player = nullptr;
+								pointer = nullptr;
+								lua_state = std::make_shared<sol::state>();
+								lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+								init();
+							});
+
+	/// Clears the savegame file
+	lua_state->set_function("DeleteSaveGame",
+							[]()
+							{
+								jngl::writeConfig("savegame", "");
 							});
 }

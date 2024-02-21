@@ -21,12 +21,12 @@ using jngl::Vec2;
 using namespace std::string_literals;
 
 Game::Game(const YAML::Node &config) : config(config),
-									  cameraPosition(jngl::Vec2(0,0)),
-									  targetCameraPosition(jngl::Vec2(0,0))
+									   cameraPosition(jngl::Vec2(0, 0)),
+									   targetCameraPosition(jngl::Vec2(0, 0))
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
-	,
-	gifGameFrame(0),
-	gifTime(0.0)
+									   ,
+									   gifGameFrame(0),
+									   gifTime(0.0)
 #endif
 {
 
@@ -40,11 +40,12 @@ Game::Game(const YAML::Node &config) : config(config),
 		"Press Tab to enter editmode. \n"
 		"Press F10 to show debug draw. \n"
 		"Press F12 to start/end gif recording. \n"
-		"Press R to reload the scene. \n"
-		"Press L start the game from the beginning. \n"
-		"Press C to save the game. \n"
-		"Press V to load the game. \n"
-		"Press X to hide this text.");
+		"Press r to reload the scene. \n"
+		"Press l start the game from the beginning. \n"
+		"Press c to save the game. \n"
+		"Press v to load the game. \n"
+		"Press s in editmode to save changes to a scene. \n"
+		"Press x to hide this text.");
 	debug_info.setPos(jngl::Vec2(-screensize.x / 2, -screensize.y / 2));
 #endif
 
@@ -52,16 +53,16 @@ Game::Game(const YAML::Node &config) : config(config),
 	language = jngl::getPreferredLanguage();
 
 	YAML::Node languages = this->config["supportedLanguages"];
-	for(auto supported_language : languages)
+	for (auto supported_language : languages)
 	{
-		if(language == supported_language.as<std::string>())
+		if (language == supported_language.as<std::string>())
 		{
 			language_supportet = true;
 			break;
 		}
 	}
 
-	if(!language_supportet)
+	if (!language_supportet)
 	{
 		if (languages.size() >= 1)
 		{
@@ -73,16 +74,15 @@ Game::Game(const YAML::Node &config) : config(config),
 		}
 	}
 
-
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
-    gifAnimation = std::make_shared<GifAnim>();
-    gifWriter = std::make_shared<GifWriter>();
+	gifAnimation = std::make_shared<GifAnim>();
+	gifWriter = std::make_shared<GifWriter>();
 	gifBuffer = new uint8_t[(jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR * (jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR)) * 4];
 #endif
 
 	// open some common libraries
 	lua_state = std::make_shared<sol::state>();
-	lua_state->open_libraries(sol::lib::base, sol::lib::package);
+	lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 #ifdef _WIN32
@@ -106,8 +106,8 @@ Game::Game(const YAML::Node &config) : config(config),
 				if (path.find(L"webp") != TYPE::npos)
 #elif __unix__
 				if (path.find("webp") != TYPE::npos)
-#else  // Mac has no file extension here
-				if(true)
+#else // Mac has no file extension here
+				if (true)
 #endif
 				{
 					reload = true;
@@ -131,7 +131,7 @@ void Game::init()
 void Game::loadLevel(const std::string &level)
 {
 	std::string old_scene = "";
-	if(currentScene)
+	if (currentScene)
 	{
 		old_scene = currentScene->getSceneName();
 	}
@@ -148,13 +148,14 @@ void Game::loadLevel(const std::string &level)
 	}
 
 	auto newScene = std::make_shared<Scene>(level, shared_from_this());
-	if(!newScene->background)
+	if (!newScene->background)
 	{
 		jngl::debugLn("There is no scene with the name: " + level);
-		newScene = std::make_shared<Scene>(old_scene, shared_from_this());;
+		newScene = std::make_shared<Scene>(old_scene, shared_from_this());
 	}
 
 	currentScene = newScene;
+	currentScene->background->step();
 	currentScene->playMusic();
 
 	// Pointer should be last in gameObjects so it's on top
@@ -166,7 +167,7 @@ void Game::loadLevel(const std::string &level)
 		add(pointer);
 	}
 
-	if(player)
+	if (player)
 	{
 		auto position = currentScene->background->getPoint(old_scene);
 		if (position)
@@ -177,7 +178,7 @@ void Game::loadLevel(const std::string &level)
 		setCameraPositionImmediately(player->calcCamPos());
 	}
 
-    runAction(level, std::static_pointer_cast<SpineObject>(newScene->background));
+	runAction(level, std::static_pointer_cast<SpineObject>(newScene->background));
 }
 
 Game::~Game()
@@ -200,7 +201,7 @@ void Game::step()
 
 	for (auto it = gameObjects.rbegin(); it != gameObjects.rend();)
 	{
-		if((*it) == pointer)
+		if ((*it) == pointer)
 		{
 			std::advance(it, 1);
 			continue;
@@ -226,16 +227,17 @@ void Game::step()
 }
 
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
-std::string currentDateTime() {
-    const time_t now = time(0);
-    struct tm  tstruct;
-    char       buf[80];
-    tstruct = *localtime(&now);
-    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
-    // for more information about date/time format
-    strftime(buf, sizeof(buf), "%Y-%m-%d-%M-%S", &tstruct);
+std::string currentDateTime()
+{
+	const time_t now = time(0);
+	struct tm tstruct;
+	char buf[80];
+	tstruct = *localtime(&now);
+	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+	// for more information about date/time format
+	strftime(buf, sizeof(buf), "%Y-%m-%d-%M-%S", &tstruct);
 
-    return buf;
+	return buf;
 }
 
 #ifndef NDEBUG
@@ -284,7 +286,7 @@ void Game::debugStep()
 		player = nullptr;
 		pointer = nullptr;
 		lua_state = std::make_shared<sol::state>();
-		lua_state->open_libraries(sol::lib::base, sol::lib::package);
+		lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 		init();
 	}
 
@@ -298,7 +300,7 @@ void Game::debugStep()
 		player = nullptr;
 		pointer = nullptr;
 		lua_state = std::make_shared<sol::state>();
-		lua_state->open_libraries(sol::lib::base, sol::lib::package);
+		lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 		init();
 	}
 
@@ -312,6 +314,15 @@ void Game::debugStep()
 		}
 		else if (jngl::keyPressed(number))
 		{
+			gameObjects.clear();
+			lua_state = {};
+			currentScene = nullptr;
+			player = nullptr;
+			pointer = nullptr;
+			lua_state = std::make_shared<sol::state>();
+			lua_state->open_libraries(sol::lib::base, sol::lib::package);
+			dialogManager = std::make_shared<DialogManager>(shared_from_this());
+			setupLuaFunctions();
 			loadLuaState("savegame" + std::string(number));
 		}
 	}
@@ -334,19 +345,19 @@ void Game::debugStep()
 	// }
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
-	if(recordingGif)
+	if (recordingGif)
 	{
-		if(gifGameFrame % GIF_FRAME_SKIP == 0)
+		if (gifGameFrame % GIF_FRAME_SKIP == 0)
 		{
 			auto pixels = jngl::readPixels();
 			const int w = jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR;
 			const int h = jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR;
 
-			for(int y = 0; y < h; y++)
+			for (int y = 0; y < h; y++)
 			{
-				for(int x = 0; x < w; x++)
+				for (int x = 0; x < w; x++)
 				{
-					gifBuffer[((w * y) + x) * 4]     = (uint8_t)(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3] * 255);
+					gifBuffer[((w * y) + x) * 4] = (uint8_t)(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3] * 255);
 					gifBuffer[((w * y) + x) * 4 + 1] = (uint8_t)(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3 + 1] * 255);
 					gifBuffer[((w * y) + x) * 4 + 2] = (uint8_t)(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3 + 2] * 255);
 					gifBuffer[((w * y) + x) * 4 + 3] = 255;
@@ -357,13 +368,13 @@ void Game::debugStep()
 			auto timeDiff = currentTime - gifTime;
 
 			gifAnimation->GifWriteFrame(gifWriter.get(),
-									gifBuffer,
-									jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR,
-									jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR,
-									(uint32_t)timeDiff,
-									8,
-									false,
-									nullptr);
+										gifBuffer,
+										jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR,
+										jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR,
+										(uint32_t)timeDiff,
+										8,
+										false,
+										nullptr);
 
 			gifTime = currentTime;
 		}
@@ -372,7 +383,7 @@ void Game::debugStep()
 
 	if (jngl::keyPressed(jngl::key::F12))
 	{
-		if(!recordingGif)
+		if (!recordingGif)
 		{
 			// start recording
 			recordingGif = true;
@@ -427,7 +438,8 @@ void Game::draw() const
 	pointer->draw();
 
 #ifndef NDEBUG
-	if (show_debug_info){
+	if (show_debug_info)
+	{
 		jngl::setFontColor(0, 0, 0, 255);
 		debug_info.draw();
 	}
@@ -528,23 +540,30 @@ void Game::stepCamera()
 	cameraPosition += speed / 36.0;
 }
 
-void Game::add(const std::shared_ptr<SpineObject> &obj) {
+void Game::add(const std::shared_ptr<SpineObject> &obj)
+{
 	needToAdd.emplace_back(obj);
 }
 
-void Game::remove(const std::shared_ptr<SpineObject> &object) {
+void Game::remove(const std::shared_ptr<SpineObject> &object)
+{
 	needToRemove.push_back(object);
 }
 
-void Game::addObjects() {
+void Game::addObjects()
+{
 	std::copy(needToAdd.begin(), needToAdd.end(), std::back_inserter(gameObjects));
 	needToAdd.clear();
 }
 
-void Game::removeObjects() {
-	for (const auto& toRemove : needToRemove) {
-		for (auto it = gameObjects.begin(); it != gameObjects.end(); ++it) {
-			if (*it == toRemove) {
+void Game::removeObjects()
+{
+	for (const auto &toRemove : needToRemove)
+	{
+		for (auto it = gameObjects.begin(); it != gameObjects.end(); ++it)
+		{
+			if (*it == toRemove)
+			{
 				gameObjects.erase(it);
 				break;
 			}
@@ -576,12 +595,13 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 
 	// if the name starts with "dlg:", play the dialog,
 	// no need for a separate Lua file
-	if(actionName.substr(0, 4) == "dlg:")
+	if (actionName.substr(0, 4) == "dlg:")
 	{
 		const std::string dialogName = actionName.substr(4);
 		script = "PlayDialog(\"" + dialogName + "\", pass)";
 		errorMessage = "Failed to play dialog " + dialogName + "!\n";
-	}else if (actionName.substr(0, 5) == "anim:")
+	}
+	else if (actionName.substr(0, 5) == "anim:")
 	{
 		const std::string animName = actionName.substr(5);
 		script = "PlayAnimationOn(\"" + thisObject->getName() + "\", 0, \"" + animName + "\", false, pass)";
@@ -602,13 +622,14 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 		script = scriptstream.str();
 	}
 
-    auto result = lua_state->safe_script(script, sol::script_pass_on_error);
+	auto result = lua_state->safe_script(script, sol::script_pass_on_error);
 
-	if (!result.valid()) {
+	if (!result.valid())
+	{
 		const sol::error err = result;
 		std::cerr << errorMessage
-		          << err.what()
-		          << std::endl;
+				  << err.what()
+				  << std::endl;
 	}
 }
 
@@ -662,7 +683,7 @@ const std::string Game::cleanLuaString(std::string variable)
 	//  ==    ~=    <=    >=    <     >     =
 	//  (     )     {     }     [     ]
 	//  ;     :     ,     .     ..    ...
-	for (const char* const& invalidChar : {"+", "-", "*", "/", "%", "^", "#", "<", ">", "=", "(", ")", "{", "}", "[", "]", ";", ":", ",", "."})
+	for (const char *const &invalidChar : {"+", "-", "*", "/", "%", "^", "#", "<", ">", "=", "(", ")", "{", "}", "[", "]", ";", ":", ",", "."})
 	{
 		while (variable.find(invalidChar) != std::string::npos)
 		{
@@ -691,7 +712,15 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 			k = std::to_string(key.as<int>());
 		}
 
-		if (k != "_entry_node" && k != "_VERSION" && k.substr(0, 4) != "sol." && k != "_G" && k != "base" && k != "package" && k != "searches")
+		if (k != "_entry_node" &&
+			k != "_VERSION" &&
+			k.substr(0, 4) != "sol." &&
+			k != "_G" &&
+			k != "base" &&
+			k != "package" &&
+			k != "math" &&
+			k != "string" &&
+			k != "searches")
 		{
 			std::string v;
 			switch (value.get_type())

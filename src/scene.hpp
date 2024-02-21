@@ -20,10 +20,10 @@ class SceneExit
 class Scene
 {
 public:
-    explicit Scene(const std::string &fileName, std::shared_ptr<Game> game);
+    explicit Scene(const std::string &fileName, const std::shared_ptr<Game> &game);
 
     void playMusic();
-    std::shared_ptr<InteractableObject> createObject(const std::string &spine_file, std::string id, float scale);
+    std::shared_ptr<InteractableObject> createObject(const std::string &spine_file, const std::string &id, float scale);
     void loadObjects(YAML::Node objects);
 
     std::string getSceneName(){return fileName;};

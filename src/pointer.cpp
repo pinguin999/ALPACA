@@ -9,12 +9,11 @@
 #include <cassert>
 #include <spine/spine.h>
 
-Pointer::Pointer(std::shared_ptr<Game> game, const std::string &spine_file):
-    SpineObject(game, spine_file, "Pointer", .5),
-    GAMEPAD_SPEED_MULTIPLYER(game->config["gamepad_speed_multiplyer"].as<double>()),
-    max_speed(std::abs(game->config["pointer_max_speed"].as<float>())),
-    pointer_idle_animation(game->config["pointer_idle_animation"].as<std::string>()),
-    pointer_over_animation(game->config["pointer_over_animation"].as<std::string>())
+Pointer::Pointer(std::shared_ptr<Game> game, const std::string &spine_file) : SpineObject(game, spine_file, "Pointer", .5),
+                                                                              GAMEPAD_SPEED_MULTIPLYER(game->config["gamepad_speed_multiplyer"].as<double>()),
+                                                                              max_speed(std::abs(game->config["pointer_max_speed"].as<float>())),
+                                                                              pointer_idle_animation(game->config["pointer_idle_animation"].as<std::string>()),
+                                                                              pointer_over_animation(game->config["pointer_over_animation"].as<std::string>())
 {
     const auto controllers = jngl::getConnectedControllers();
     if (controllers.size() > pointerNr)
@@ -151,7 +150,7 @@ void Pointer::draw() const
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
-    skeleton->debugdraw = _game->enableDebugDraw;
+        skeleton->debugdraw = _game->enableDebugDraw;
     }
 #endif
 
@@ -249,7 +248,6 @@ bool Pointer::secondaryPressed()
 #endif
     return jngl::mousePressed(jngl::mouse::Right) || control->secondary();
 }
-
 
 void Pointer::setPrimaryHandled()
 {

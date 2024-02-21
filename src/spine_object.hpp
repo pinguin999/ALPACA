@@ -19,7 +19,7 @@ namespace spine
 class SpineObject : public std::enable_shared_from_this<SpineObject>
 {
 public:
-	SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, std::string id, float scale = 1);
+	SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, const std::string &id, float scale = 1);
 	virtual ~SpineObject()
 	{
 		spSkeletonBounds_dispose(bounds);
@@ -68,7 +68,7 @@ public:
 	void playAnimation(int trackIndex, const std::string &currentAnimation, bool loop, sol::function callback);
 	void addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, sol::function callback);
 	void onAnimationComplete(const std::string &key);
-	void setSkin(const std::string &skin);
+	void setSkin(const std::string &skin) const;
 	std::vector<std::string> getPointNames() const;
 	bool cross_scene = false;
 	bool abs_position = false;
@@ -77,7 +77,7 @@ public:
 	std::string collision_script = ""; // TODO protected
 	std::string getName() { return spine_name; };
 	std::string getId() { return id; };
-	double getZ();
+	double getZ() const;
 	int layer = 1;
 	void setDeleted() { deleted = true; };
 

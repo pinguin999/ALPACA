@@ -156,7 +156,7 @@ web:
 
 android:
   stage: build
-  image: registry.gitlab.com/jhasse/android-ndk-docker:r25
+  image: registry.gitlab.com/jhasse/android-ndk-docker:r26b
   script:
   - cd android
   - chmod +x gradlew

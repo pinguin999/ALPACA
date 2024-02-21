@@ -96,6 +96,7 @@ Example:
 The background of a scene is also a Spine file. It has the parameters like an item.
 
 To define the area where the player can walk, add a bounding box with the name `walkable_area` to the Spine file.
+A bounding box with the name `non_walkable_area` will create a hole into the `walkable_area`.
 
 ## Borders
 

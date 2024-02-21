@@ -60,7 +60,7 @@ public:
     std::shared_ptr<Pointer> pointer = nullptr;
 
     std::shared_ptr<DialogManager> getDialogManager();
-    AudioManager* getAudioManager();
+    AudioManager *getAudioManager();
     void addObjects();
     void removeObjects();
 
@@ -71,7 +71,6 @@ public:
     {
         inactivLayerBorder = layer;
         (*lua_state)["inactivLayerBorder"] = layer;
-
     };
     int getInactivLayerBorder() { return inactivLayerBorder; };
 
@@ -81,9 +80,10 @@ public:
     const std::string cleanLuaString(std::string variable);
     YAML::Node config;
     std::vector<std::shared_ptr<SpineObject>> gameObjects;
+
 private:
-	std::vector<std::shared_ptr<SpineObject>> needToAdd;
-	std::vector<std::shared_ptr<SpineObject>> needToRemove;
+    std::vector<std::shared_ptr<SpineObject>> needToAdd;
+    std::vector<std::shared_ptr<SpineObject>> needToRemove;
     std::string backupLuaTable(const sol::table table, const std::string &parent);
     jngl::Vec2 cameraPosition;
     jngl::Vec2 targetCameraPosition;
@@ -97,7 +97,7 @@ private:
     std::shared_ptr<GifAnim> gifAnimation;
     std::shared_ptr<GifWriter> gifWriter;
     bool recordingGif = false;
-    uint8_t* gifBuffer;
+    uint8_t *gifBuffer;
     int gifGameFrame;
     double gifTime;
     const int GIF_FRAME_SKIP = 10;
