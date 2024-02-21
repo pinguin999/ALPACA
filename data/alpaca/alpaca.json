@@ -1,6 +1,6 @@
 {
     "skeleton": {
-        "hash": "IyJlnNnuhH4",
+        "hash": "kMlXHaBsXbc",
         "spine": "4.1.24",
         "x": -270.5,
         "width": 541,
@@ -32,6 +32,11 @@
             "name": "default-mouth",
             "bone": "root",
             "attachment": "default/mouth-a"
+        },
+        {
+            "name": "non_walkable_area",
+            "bone": "root",
+            "attachment": "non_walkable_area"
         }
     ],
     "skins": [
@@ -118,6 +123,22 @@
                             1113.14,
                             194.49,
                             1460.86
+                        ]
+                    }
+                },
+                "non_walkable_area": {
+                    "non_walkable_area": {
+                        "type": "boundingbox",
+                        "vertexCount": 4,
+                        "vertices": [
+                            -323.4,
+                            214.46,
+                            -269.5,
+                            -80.55,
+                            190.04,
+                            -94.74,
+                            300.67,
+                            222.97
                         ]
                     }
                 }
