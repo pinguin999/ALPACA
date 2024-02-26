@@ -20,7 +20,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip pipenv
           pipenv install -d
-          pipenv install pywin32-ctypes
+          pipenv install pywin32-ctypes pefile
       - name: Build
         run: pipenv run pyinstaller --onefile .\prepare_assets.py
       - name: Upload build
