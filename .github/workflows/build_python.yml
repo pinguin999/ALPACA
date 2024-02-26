@@ -26,7 +26,7 @@ jobs:
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:
-          name: prepare_assets..exe
+          name: prepare_assets.exe
           path: prepare_assets.exe
         # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
