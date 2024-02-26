@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip pipenv
           pipenv install -d
       - name: Build
-        run: pyinstaller --onefile .\prepare_assets.py
+        run: pipenv run pyinstaller --onefile .\prepare_assets.py
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:
