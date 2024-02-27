@@ -31,6 +31,8 @@ public:
     std::deque<jngl::Vec2> getPathToTarget(jngl::Vec2 start, jngl::Vec2 target) const;
 
 private:
+    void stepSpineAndNavigation();
+
     std::vector<jngl::Vec2> corners;
     std::vector<std::vector<jngl::Vec2>> forbidden_corners;
 

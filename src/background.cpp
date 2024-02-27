@@ -8,18 +8,21 @@
 
 Background::Background(const std::shared_ptr<Game> &game, const std::string &spine_file) : SpineObject(game, spine_file, "Background")
 {
-    step();
+    stepSpineAndNavigation();
 }
 
-bool Background::step(bool force)
+void Background::stepSpineAndNavigation()
 {
     skeleton->step();
     spSkeleton_updateWorldTransform(skeleton->skeleton);
     spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
     corners = getCorners();
     forbidden_corners = getForbiddenCorners();
-    // corners.insert( corners.end(), forbidden_corners.begin(), forbidden_corners.end() );
+}
 
+bool Background::step(bool force)
+{
+    stepSpineAndNavigation();
     return stepClickableRegions(force) || deleted;
 }
 
