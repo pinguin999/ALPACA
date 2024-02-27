@@ -870,9 +870,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("Exit",
 							[]()
 							{
-#if (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0)
-								exit(EXIT_SUCCESS);
-#endif
+								jngl::quit();
 							});
 
 	/// Write a savegame
