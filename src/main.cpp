@@ -25,14 +25,10 @@ jngl::AppParameters jnglInit()
 	std::srand(std::time(nullptr));
 
 	std::optional<YAML::Node> config;
-	std::ifstream fin("config/game.json");
+	std::stringstream fin = jngl::readAsset("config/game.json");
 	if (fin)
 	{
-		std::ostringstream tmp;
-		tmp << fin.rdbuf();
-		tmp.str();
-
-		config = YAML::Load(tmp.str());
+		config = YAML::Load(fin.str());
 		params.displayName = (*config)["name"].as<std::string>();
 #ifndef NDEBUG
 		params.screenSize = {double((*config)["screenSize"]["x"].as<int>()), double((*config)["screenSize"]["y"].as<int>())};
