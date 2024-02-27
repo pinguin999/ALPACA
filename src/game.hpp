@@ -56,6 +56,7 @@ public:
     void remove(const std::shared_ptr<SpineObject> &obj);
     std::string language;
 
+    std::shared_ptr<sol::state> lua_state;
     std::shared_ptr<Player> player = nullptr;
     std::shared_ptr<Pointer> pointer = nullptr;
 
@@ -66,7 +67,6 @@ public:
 
     std::shared_ptr<Scene> currentScene = nullptr;
     bool reload = false;
-    std::shared_ptr<sol::state> lua_state;
     void setInactivLayerBorder(int layer)
     {
         inactivLayerBorder = layer;
