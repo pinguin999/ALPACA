@@ -19,7 +19,7 @@ public:
     explicit Game(const YAML::Node &config);
     ~Game() override;
     void init();
-    void loadLevel(const std::string &level);
+    void loadSceneWithFade(std::string level);
     void setupLuaFunctions();
     void saveLuaState(const std::string &savefile = "savegame");
     void loadLuaState(const std::string &savefile = "savegame");
@@ -82,6 +82,8 @@ public:
     std::vector<std::shared_ptr<SpineObject>> gameObjects;
 
 private:
+    void loadScene(const std::string& level);
+
     std::vector<std::shared_ptr<SpineObject>> needToAdd;
     std::vector<std::shared_ptr<SpineObject>> needToRemove;
     std::string backupLuaTable(const sol::table table, const std::string &parent);

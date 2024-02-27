@@ -11,6 +11,7 @@
 #include <spine/spine.h>
 #include "pointer.hpp"
 #include "interactable_object.hpp"
+#include "scene_fade.hpp"
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 #include "FileWatch.hpp"
@@ -127,10 +128,17 @@ void Game::init()
 	loadLuaState();
 }
 
-// TODO in LoadScene umbenennen
-void Game::loadLevel(const std::string &level)
+void Game::loadSceneWithFade(std::string level)
 {
-	std::string old_scene = "";
+	jngl::setWork<SceneFade>(jngl::getWork(), [this, level = std::move(level)]() {
+		loadScene(std::move(level));
+	});
+	pointer->setPrimaryHandled();
+}
+
+void Game::loadScene(const std::string& level)
+{
+	std::string old_scene;
 	if (currentScene)
 	{
 		old_scene = currentScene->getSceneName();
@@ -249,7 +257,7 @@ void Game::debugStep()
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		auto dialogFilePath = config["dialog"].as<std::string>();
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
-		loadLevel(currentScene->getSceneName());
+		loadScene(currentScene->getSceneName());
 		reload = false;
 	}
 
@@ -663,13 +671,13 @@ void Game::loadLuaState(const std::string &savefile)
 	{
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
 		const std::string scene = (*lua_state)["game"]["scene"];
-		loadLevel(scene);
+		loadScene(scene);
 	}
 	else
 	{
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, true);
 		const std::string startscene = config["start_scene"].as<std::string>();
-		loadLevel(startscene);
+		loadScene(startscene);
 	}
 	// TODO Error handling
 	jngl::debugLn("Loaded all globals");
