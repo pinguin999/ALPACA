@@ -51,12 +51,10 @@ elif sys.platform == "win32":
     SPINE = "C:\\Program Files\\Spine\\Spine.exe"
     if getattr(sys, "frozen", False):
         mod_path = Path(sys.executable).resolve().parent
-        RHUBARB = (mod_path + "\\windows_bin\\rhubarb.exe")
-        LUA = (mod_path + "\\windows_bin\\luac.exe")
     elif __file__:
         mod_path = Path(__file__).parent
-        RHUBARB = (mod_path / "windows_bin\\rhubarb.exe").resolve()
-        LUA = (mod_path / "windows_bin\\luac.exe").resolve()
+    RHUBARB = (mod_path / "windows_bin\\rhubarb.exe").resolve()
+    LUA = (mod_path / "windows_bin\\luac.exe").resolve()
     set_read_only = False
 
 
