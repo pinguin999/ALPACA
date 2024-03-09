@@ -435,10 +435,20 @@ void Scene::updateObjectPosition(const std::string &id, jngl::Vec2 position)
     auto objects = json["items"].size();
     for (std::size_t i = 0; i < objects; i++)
     {
+        if (json["items"][i]["id"].as<std::string>("") == id)
+        {
+            json["items"][i]["x"] = std::to_string(position.x);
+            json["items"][i]["y"] = std::to_string(position.y);
+            return;
+        }
+    }
+    for (std::size_t i = 0; i < objects; i++)
+    {
         if (json["items"][i]["spine"].as<std::string>() == id)
         {
             json["items"][i]["x"] = std::to_string(position.x);
             json["items"][i]["y"] = std::to_string(position.y);
+            return;
         }
     }
 }
