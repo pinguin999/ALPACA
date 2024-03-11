@@ -24,11 +24,14 @@ public:
 
 	void draw() const override;
 
+	void setAlpha(float);
+
 #ifndef NDEBUG
 	bool debugdraw = false;
 #endif
 
 private:
+	float alpha = 1.f;
 	bool ownsAnimationStateData;
 	float* worldVertices;
 	spFloatArray* tempUvs;

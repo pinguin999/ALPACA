@@ -16,6 +16,9 @@ void _spAtlasPage_createTexture(spAtlasPage* self, const char* path) {
 	jngl::Sprite* texture;
 	try
 	{
+#ifndef NDEBUG
+		jngl::unload(path);
+#endif
 		texture = new jngl::Sprite(path);
 	}catch(...)
 	{
@@ -104,6 +107,9 @@ void SkeletonDrawable::endAnimation(int trackIndex) const
 	spSkeleton_updateWorldTransform(skeleton);
 }
 
+void SkeletonDrawable::setAlpha(float alpha) {
+	this->alpha = alpha;
+}
 
 void SkeletonDrawable::draw() const {
 	unsigned short quadIndices[6] = { 0, 1, 2, 2, 3, 0 };
@@ -212,7 +218,7 @@ void SkeletonDrawable::draw() const {
 			}
 			if (texture)
 			{
-				jngl::setSpriteColor(r, g, b, a);
+				jngl::setSpriteColor(r, g, b, a * alpha);
 				texture->drawMesh(vertexArray);
 				jngl::setSpriteColor(255, 255, 255, 255);
 			}

@@ -127,6 +127,13 @@ bool Pointer::step(bool)
         skeleton->step();
     }
 
+    fade_out -= 0.03f;
+    if (boost::qvm::mag_sqr(last_position - position) > 1) {
+        last_position = position;
+        fade_out = 2.f;
+    }
+    skeleton->setAlpha(std::clamp(fade_out, 0.f, 1.f));
+
     return false;
 }
 

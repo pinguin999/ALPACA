@@ -53,4 +53,6 @@ private:
     jngl::Vec2 last_mouse_pose = jngl::Vec2(0, 0);
 
     size_t pointerNr = 0;
+    jngl::Vec2 last_position;
+    float fade_out = 2.f;
 };
