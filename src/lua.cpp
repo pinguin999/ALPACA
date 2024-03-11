@@ -51,7 +51,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("LoadScene",
 							[this](const LuaScene &scene)
 							{
-								loadSceneWithFade(scene);
+								loadScene(scene);
 							});
 
 	/// Prevent the player to skip a interaktion and walking somewere else
