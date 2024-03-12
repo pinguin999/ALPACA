@@ -80,6 +80,7 @@ public:
     const std::string cleanLuaString(std::string variable);
     YAML::Node config;
     std::vector<std::shared_ptr<SpineObject>> gameObjects;
+    bool enable_fade = true;
 
 private:
     void loadScene(const std::string& level);

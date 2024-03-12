@@ -130,10 +130,14 @@ void Game::init()
 
 void Game::loadSceneWithFade(std::string level)
 {
-	jngl::setWork<SceneFade>(jngl::getWork(), [this, level = std::move(level)]() {
-		loadScene(std::move(level));
-	});
-	pointer->setPrimaryHandled();
+	if(enable_fade){
+		jngl::setWork<SceneFade>(jngl::getWork(), [this, level = std::move(level)]() {
+			loadScene(std::move(level));
+		});
+		pointer->setPrimaryHandled();
+	}else{
+		loadScene(level);
+	}
 }
 
 void Game::loadScene(const std::string& level)

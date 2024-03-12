@@ -55,6 +55,7 @@ suite alpaca_test_suite = []
         auto game = std::make_shared<Game>(config);
 
         game->init();
+        game->enable_fade = false;
 
         std::vector<std::tuple<std::string, std::shared_ptr<SpineObject>>> actions;
 
