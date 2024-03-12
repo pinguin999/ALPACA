@@ -22,7 +22,7 @@ public:
     void loadSceneWithFade(std::string level);
     void setupLuaFunctions();
     void saveLuaState(const std::string &savefile = "savegame");
-    void loadLuaState(const std::string &savefile = "savegame");
+    void loadLuaState(const std::optional<std::string> &savefile = "savegame");
 
     void runAction(const std::string &actionName, std::shared_ptr<SpineObject> thisObject);
 

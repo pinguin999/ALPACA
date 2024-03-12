@@ -125,7 +125,12 @@ void Game::init()
 {
 	dialogManager = std::make_shared<DialogManager>(shared_from_this());
 	setupLuaFunctions();
-	loadLuaState();
+	if (config["auto_load_savegame"].as<bool>(true))
+	{
+		loadLuaState();
+	}else{
+		loadLuaState(std::nullopt);
+	}
 }
 
 void Game::loadSceneWithFade(std::string level)
@@ -656,18 +661,20 @@ void Game::saveLuaState(const std::string &savefile)
 	jngl::writeConfig(savefile, backup);
 }
 
-void Game::loadLuaState(const std::string &savefile)
+void Game::loadLuaState(const std::optional<std::string> &savefile)
 {
 	jngl::debugLn("Load all globals");
-	const std::string state = jngl::readConfig(savefile);
-	auto result = lua_state->safe_script(state, sol::script_pass_on_error);
+	if (savefile) {
+		const std::string state = jngl::readConfig(savefile.value());
+		auto result = lua_state->safe_script(state, sol::script_pass_on_error);
 
-	if (!result.valid())
-	{
-		const sol::error err = result;
-		std::cerr << "Failed to load savgame " + savefile + " \n"
-				  << err.what()
-				  << std::endl;
+		if (!result.valid())
+		{
+			const sol::error err = result;
+			std::cerr << "Failed to load savgame " + savefile.value() + " \n"
+					<< err.what()
+					<< std::endl;
+		}
 	}
 
 	const std::string dialogFilePath = config["dialog"].as<std::string>();
