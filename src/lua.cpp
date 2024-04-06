@@ -490,10 +490,10 @@ void Game::setupLuaFunctions()
 
 									if (obj && position)
 									{
-										obj->setPosition(position.value());
+										obj->setPosition(frm->getPosition() + position.value());
 										std::string lua_object = getLuaPath(object);
-										lua_state->script(lua_object + ".x = \"" + std::to_string(position->x) + "\"");
-										lua_state->script(lua_object + ".y = \"" + std::to_string(position->y) + "\"");
+										lua_state->script(lua_object + ".x = \"" + std::to_string(frm->getPosition().x + position->x) + "\"");
+										lua_state->script(lua_object + ".y = \"" + std::to_string(frm->getPosition().y + position->y) + "\"");
 									}
 								}
 							});
@@ -769,6 +769,8 @@ void Game::setupLuaFunctions()
 									"animation", config["spine_default_animation"].as<std::string>(),
 									"loop_animation", true,
 									"visible", true,
+									"cross_scene", false,
+									"abs_position", false,
 									"layer", 1,
 									"scale", scale);
 

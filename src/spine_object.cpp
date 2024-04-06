@@ -26,13 +26,13 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
                 if (std::equal(extension.rbegin(), extension.rend(), event_string.rbegin()))
                 {
                     // run lua script from file
+                     _game->runAction(event_string.erase(event_string.size() - 4), (*_game->lua_state)["this"]);
                 }
                 else
                 {
                     _game->lua_state->script(event_string);
                 }
             }
-            // if (event_string.ends_with(".lua"))
         }
     }
 
