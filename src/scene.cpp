@@ -382,7 +382,6 @@ void Scene::loadObjects(YAML::Node objects)
                     bool const abs_position = (*_game->lua_state)["scenes"][scene]["items"][id]["abs_position"];
 
                     interactable->setPosition(jngl::Vec2(std::stof(x), std::stof(y)));
-                    interactable->setLuaIndex(id);
                     interactable->setVisible(visible);
                     interactable->layer = static_cast<int>(layer);
                     interactable->cross_scene = cross_scene;

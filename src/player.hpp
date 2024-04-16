@@ -11,9 +11,9 @@ class Player : public SpineObject
 {
 public:
     explicit Player(const std::shared_ptr<Game> &game, const std::string &spine_file);
-    ~Player() = default;
+    ~Player() override = default;
 
-    bool step(bool force = false) override;
+    bool step(bool force) override;
 
     void draw() const override;
 
@@ -21,7 +21,7 @@ public:
     void addTargetPositionImmediately(jngl::Vec2 target, const sol::function &callback);
     void stop_walking();
 
-    float getMaxSpeed() { return max_speed; };
+    float getMaxSpeed() const { return max_speed; };
     void setMaxSpeed(float speed) { max_speed = speed; };
     jngl::Vec2 calcCamPos();
 

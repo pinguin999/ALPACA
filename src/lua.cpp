@@ -331,6 +331,7 @@ void Game::setupLuaFunctions()
 
 	/// See SetDeleted
 	/// SpineObject object: Objects ID that should be effected
+	/// Note: SetDeleted can not be called on the last frame of an animation via a Spine event.
 	lua_state->set_function("SetDeletedOn",
 							[this](const LuaSpineObject &object)
 							{

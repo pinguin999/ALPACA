@@ -140,7 +140,7 @@ void Player::stop_walking()
     setTargentPosition(position);
 }
 
-bool Player::step(bool)
+bool Player::step(bool /*force*/)
 {
     if (auto _game = game.lock())
     {
@@ -223,13 +223,17 @@ bool Player::step(bool)
         {
             const jngl::Vec2 click_position = _game->pointer->getPosition();
 
-            path.clear();
-            newPath = _game->currentScene->background->getPathToTarget(position, click_position);
-
-            path.insert(path.end(), newPath.begin(), newPath.end());
-            if (!path.empty())
+            jngl::debugLn(boost::qvm::mag_sqr(target_position - click_position));
+            if (boost::qvm::mag_sqr(target_position - click_position) > 5)
             {
-                setTargentPosition(path.front());
+                path.clear();
+                newPath = _game->currentScene->background->getPathToTarget(position, click_position);
+
+                path.insert(path.end(), newPath.begin(), newPath.end());
+                if (!path.empty())
+                {
+                    setTargentPosition(path.front());
+                }
             }
         }
 
@@ -248,7 +252,16 @@ bool Player::step(bool)
                 _game->runAction(collision_script, getptr());
             }
 
+            const double time = jngl::getTime();
+            auto click_distance = boost::qvm::dot(last_click_position - click_position, last_click_position - click_position);
             path.clear();
+
+            // Return if players current position is the target position
+            if (boost::qvm::mag_sqr(target_position - click_position) < 5 && (time - last_click_time >= DOUBLE_CLICK_TIME || click_distance >= MAX_CLICK_DISTANCE))
+            {
+                return false;
+            }
+
             newPath = _game->currentScene->background->getPathToTarget(position, click_position);
             walk_callback = (*_game->lua_state)["pass"];
 
@@ -259,8 +272,6 @@ bool Player::step(bool)
             }
 
             // Handle double click
-            const double time = jngl::getTime();
-            auto click_distance = boost::qvm::dot(last_click_position - click_position, last_click_position - click_position);
             if (max_speed > 0.0 && _game->currentScene->background->is_walkable(click_position) && time - last_click_time < DOUBLE_CLICK_TIME && click_distance < MAX_CLICK_DISTANCE)
             {
                 path.clear();
