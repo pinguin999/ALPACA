@@ -223,7 +223,6 @@ bool Player::step(bool /*force*/)
         {
             const jngl::Vec2 click_position = _game->pointer->getPosition();
 
-            jngl::debugLn(boost::qvm::mag_sqr(target_position - click_position));
             if (boost::qvm::mag_sqr(target_position - click_position) > 5)
             {
                 path.clear();
