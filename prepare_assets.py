@@ -556,6 +556,7 @@ class LuaDocsGen:
         result = result.replace("float ", "number ")
         result = result.replace("bool ", "boolean ")
         result = result.replace("sol::function ", "function ")
+        result = result.replace("std::optional<sol::function> ", "function ")
 
         return result.strip()
 
