@@ -110,8 +110,7 @@ Therefor ALPACA expects a Spine point near each door with next scenes name.
 After changing the scene, the player will be placed at the Spine point with last scenes name.
 
 ```lua
-function door()
+GoToPoint("scene_corridor_right", function ()
     LoadScene("scene_corridor_right")
-end
-GoToPoint("scene_corridor_right", door)
+end)
 ```

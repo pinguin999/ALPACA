@@ -122,7 +122,7 @@ print("bark")
 
 ```lua
 print("bark")
-PlayAnimation(0, "bark", false, pass)
+PlayAnimation(0, "bark", false)
 ```
 
 Now we will start with the **Lua scripting**, the way logic is defined in an ALPACA game. A full list of functions can be found in the [Lua API](lua.md) documentation. For the quick intro you want the player to go to the item and interact with it. To be able to go somewhere you have to define a [Point](http://esotericsoftware.com/spine-points) in Spine, so let's add the Point to our item and save it again. *I have named the Point in the example "game center" and will also use this name in this tutorial's script*.
@@ -132,16 +132,12 @@ Most Lua Function like `GoToPoint` have two versions: GoToPoint and GoToPointOn
 ```lua
 print("banana_clicked")
 
-function respawn()
-    print("respawn")
-    PlayAnimationOn("Player", 0, "idle", true, pass)
-end
-
-function play_death()
-    PlayAnimationOn("Player", 0, "death", false, respawn)
-end
-
-GoToPointOn("banana", "center", play_death)
+GoToPointOn("banana", "center", function ()
+    PlayAnimationOn("Player", 0, "death", false, function respawn()
+        print("respawn")
+        PlayAnimationOn("Player", 0, "idle", true)
+    end)
+end)
 ```
 
 For a full overview about all Lua functions see the [Lua documentation](lua.md)

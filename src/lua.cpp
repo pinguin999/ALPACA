@@ -76,10 +76,13 @@ void Game::setupLuaFunctions()
 	/// bool loop: Should the animation be looped at the end.
 	/// function callback: called on the end of the animation, also on looped animations.
 	lua_state->set_function("PlayAnimation",
-							[this](int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, sol::function callback)
+							[this](int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, std::optional<sol::function> callback)
 							{
+								if (!callback) {
+									callback = (*lua_state)["pass"];
+								}
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								obj->playAnimation(trackIndex, newAnimation, loop, callback);
+								obj->playAnimation(trackIndex, newAnimation, loop, callback.value());
 								std::string lua_object = getLuaPath(obj->getId());
 								lua_state->script(lua_object + ".animation = \"" + newAnimation + "\"");
 								if (loop)
@@ -98,10 +101,13 @@ void Game::setupLuaFunctions()
 	/// bool loop: Should the animation be looped at the end.
 	/// function callback: called on the end of the animation, also on looped animations.
 	lua_state->set_function("AddAnimation",
-							[this](int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, float delay, sol::function callback)
+							[this](int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, float delay, std::optional<sol::function> callback)
 							{
+								if (!callback) {
+									callback = (*lua_state)["pass"];
+								}
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								obj->addAnimation(trackIndex, newAnimation, loop, delay, callback);
+								obj->addAnimation(trackIndex, newAnimation, loop, delay, callback.value());
 								std::string lua_object = getLuaPath(obj->getId());
 								lua_state->script(lua_object + ".animation = \"" + newAnimation + "\"");
 								if (loop)
@@ -121,12 +127,15 @@ void Game::setupLuaFunctions()
 	/// bool loop: Should the animation be looped at the end.
 	/// function callback: called on the end of the animation, also on looped animations.
 	lua_state->set_function("PlayAnimationOn",
-							[this](const LuaSpineObject &object, int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, sol::function callback)
+							[this](const LuaSpineObject &object, int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, std::optional<sol::function> callback)
 							{
+								if (!callback) {
+									callback = (*lua_state)["pass"];
+								}
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
-									obj->playAnimation(trackIndex, newAnimation, loop, callback);
+									obj->playAnimation(trackIndex, newAnimation, loop, callback.value());
 									std::string lua_object = getLuaPath(obj->getId());
 									lua_state->script(lua_object + ".animation = \"" + newAnimation + "\"");
 									if (loop)
@@ -147,12 +156,15 @@ void Game::setupLuaFunctions()
 	/// bool loop: Should the animation be looped at the end.
 	/// function callback: called on the end of the animation, also on looped animations.
 	lua_state->set_function("AddAnimationOn",
-							[this](const LuaSpineObject &object, int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, float delay, sol::function callback)
+							[this](const LuaSpineObject &object, int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, float delay, std::optional<sol::function> callback)
 							{
+								if (!callback) {
+									callback = (*lua_state)["pass"];
+								}
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
-									obj->addAnimation(trackIndex, newAnimation, loop, delay, callback);
+									obj->addAnimation(trackIndex, newAnimation, loop, delay, callback.value());
 									std::string lua_object = getLuaPath(obj->getId());
 									lua_state->script(lua_object + ".animation = \"" + newAnimation + "\"");
 									if (loop)
@@ -196,8 +208,11 @@ void Game::setupLuaFunctions()
 	/// Plays a dialog by name
 	/// string dialogName: Name of the skin that will be set.
 	lua_state->set_function("PlayDialog",
-							[this](const LuaDialog &dialogName, sol::function callback)
+							[this](const LuaDialog &dialogName, std::optional<sol::function> callback)
 							{
+								if (!callback) {
+									callback = (*lua_state)["pass"];
+								}
 								float x = 0;
 								float y = 0;
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
@@ -208,7 +223,7 @@ void Game::setupLuaFunctions()
 									spPointAttachment *point = SUB_CAST(spPointAttachment, att);
 									spPointAttachment_computeWorldPosition(point, slot->bone, &x, &y);
 								}
-								getDialogManager()->play(dialogName, jngl::Vec2(x, -y) + obj->getPosition(), callback);
+								getDialogManager()->play(dialogName, jngl::Vec2(x, -y) + obj->getPosition(), callback.value());
 							});
 
 	/// Adds the current item to the inventory.
@@ -386,13 +401,16 @@ void Game::setupLuaFunctions()
 	/// string point_name: Name of the point the player should go to
 	/// function callback: Function that will becalled when the layer reaches the position
 	lua_state->set_function("GoToPoint",
-							[this](const LuaSpinePoint &point_name, sol::function callback)
+							[this](const LuaSpinePoint &point_name, std::optional<sol::function> callback)
 							{
+								if (!callback) {
+									callback = (*lua_state)["pass"];
+								}
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								auto position = obj->getPoint(point_name);
 								if (!position)
 									return;
-								std::static_pointer_cast<InteractableObject>(obj)->goToPosition(*position, callback);
+								std::static_pointer_cast<InteractableObject>(obj)->goToPosition(*position, callback.value());
 								// TODO Write Players position to Lua
 							});
 
@@ -401,15 +419,18 @@ void Game::setupLuaFunctions()
 	/// string point_name: Name of the point the player should go to
 	/// function callback: Function that will becalled when the layer reaches the position
 	lua_state->set_function("GoToPointOn",
-							[this](const LuaSpineObject &object, const LuaSpinePoint &point_name, sol::function callback)
+							[this](const LuaSpineObject &object, const LuaSpinePoint &point_name, std::optional<sol::function> callback)
 							{
+								if (!callback) {
+									callback = (*lua_state)["pass"];
+								}
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									auto position = obj->getPoint(point_name);
 									if (!position)
 										return;
-									std::static_pointer_cast<InteractableObject>(obj)->goToPosition(*position, callback);
+									std::static_pointer_cast<InteractableObject>(obj)->goToPosition(*position, callback.value());
 									// TODO Write Players position to Lua
 								}
 							});

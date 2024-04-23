@@ -6,21 +6,19 @@ Examples for start dialogs:
 
 ```lua
 -- Dialog without callback
-PlayDialog("armchair", pass)
+PlayDialog("armchair")
 ```
 
 ```lua
 -- Dialog with callback.
--- The takeBanana function is called after the dialog is played.
-function takeBanana()
-    PlayAudio("pick-up-item.ogg")
-    AddToInventory()
-    SetSkin("inventory")
-    SetHidden()
-end
-
+-- The second function is called after the dialog is played.
 function takeBananaDialog()
-    PlayDialog("banana", takeBanana)
+    PlayDialog("banana", function ()
+        PlayAudio("pick-up-item.ogg")
+        AddToInventory()
+        SetSkin("inventory")
+        SetHidden()
+    end)
 end
 ```
 
