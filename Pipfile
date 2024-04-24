@@ -19,6 +19,7 @@ mkdocs = "*"
 mkdocstrings = "*"
 mkdocstrings-python = "*"
 mkdocstrings-pac = "*"
+mkdocs-video = "*"
 pyinstaller = "*"
 
 [requires]
