@@ -23,7 +23,7 @@ and will use a pre-compiled version of ALPACA. Unfortunately, this only works on
 4. With `pac.exe` you can start the game.
 5. In the Schnack folder you can find the dialog editor.
 6. For Lua Scripting it's recommand to use [VS Code](https://code.visualstudio.com/) with a Lua extension like [LuaHelper](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper).
-7. [Start building your game.](#lets-start-your-own-game)
+7. [See what's in the demo and build your own game.](#whats-in-the-demo-game)
 8. If you need help setting up your first project or want to talk about your game.
 Book a time slot with the developers of ALPACA at [calendly](https://calendly.com/pinguin999/pac-indie-game-development) 🇩🇪🇬🇧, mail me at [kolja@portaldogs.com](mailto:kolja@portaldogs.com) 🇩🇪🇬🇧 or join [ALPACA on Discord](https://discord.gg/zWdnq6UJ79)
 

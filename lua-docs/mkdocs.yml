@@ -1,5 +1,6 @@
 site_name: ALPACA's documentation
 plugins:
+- mkdocs-video
 - mkdocstrings:
     handlers:
       pac_handler:
