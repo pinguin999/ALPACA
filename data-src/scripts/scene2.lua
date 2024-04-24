@@ -1,7 +1,5 @@
 print("scene2")
 
-function door()
+GoToPoint("test_chamber_two", function ()
     LoadScene("test_chamber_two")
-end
-
-GoToPoint("test_chamber_two", door)
+end)
