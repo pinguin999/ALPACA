@@ -91,7 +91,8 @@ void SkeletonDrawable::step() {
     const float deltaTime = 1.f / static_cast<float>(jngl::getStepsPerSecond());
     spAnimationState_update(state, deltaTime * timeScale);
 	spAnimationState_apply(state, skeleton);
-	spSkeleton_updateWorldTransform(skeleton);
+	spSkeleton_update(skeleton, deltaTime);
+	spSkeleton_updateWorldTransform(skeleton, SP_PHYSICS_NONE);
 }
 
 void SkeletonDrawable::endAnimation(int trackIndex) const
@@ -104,7 +105,8 @@ void SkeletonDrawable::endAnimation(int trackIndex) const
     float const deltaTime = spTrackEntry_getTrackComplete(animation);
     spAnimationState_update(state, deltaTime);
 	spAnimationState_apply(state, skeleton);
-	spSkeleton_updateWorldTransform(skeleton);
+	spSkeleton_update(skeleton, deltaTime);
+	spSkeleton_updateWorldTransform(skeleton, SP_PHYSICS_NONE);
 }
 
 void SkeletonDrawable::setAlpha(float alpha) {

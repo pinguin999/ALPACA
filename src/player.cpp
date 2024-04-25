@@ -152,7 +152,8 @@ bool Player::step(bool /*force*/)
 #endif
 
         skeleton->step();
-        spSkeleton_updateWorldTransform(skeleton->skeleton);
+        spSkeleton_update(skeleton->skeleton, 1.0/60.0);
+        spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_NONE);
         spSkeletonBounds_update(bounds, skeleton->skeleton, true);
 
         if (_game->getDialogManager()->isActive())
@@ -299,6 +300,8 @@ void Player::draw() const
     jngl::pushMatrix();
     jngl::translate(position);
     jngl::rotate(getRotation());
+
+    // jngl::scale(position.y / 500.0);
 
 #ifndef NDEBUG
     if (auto _game = game.lock())

@@ -18,7 +18,8 @@ bool InteractableObject::step(bool force)
     if (auto _game = game.lock())
     {
         skeleton->step();
-        spSkeleton_updateWorldTransform(skeleton->skeleton);
+        spSkeleton_update(skeleton->skeleton, 1.0/60.0);
+        spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_NONE);
         spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
 
 #ifndef NDEBUG
