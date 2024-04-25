@@ -389,6 +389,11 @@ def rehash_scenes(directorys: str) -> None:
                     with Path(src_path).open() as f:
                         data = f.read()
                         parsed = json.loads(data)
+
+                        for item in parsed["items"]:
+                            if "id" in item:
+                                spine_objects.update({item["id"]: file})
+
                         parsed["hash"] = ""
                         parsed["hash"] = hashlib.sha1(str(parsed).encode()).hexdigest()
                     with Path(src_path).open("w") as f:
