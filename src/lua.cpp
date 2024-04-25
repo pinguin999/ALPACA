@@ -351,21 +351,24 @@ void Game::setupLuaFunctions()
 							[this](const LuaSpineObject &object)
 							{
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
-								auto inter = std::static_pointer_cast<InteractableObject>(obj);
-								obj->setParent(nullptr);
-								for (auto it = pointer->attatchedObjects.begin(); it != pointer->attatchedObjects.end();)
+								if (obj)
 								{
-									if ((*it) == nullptr || (*it) == obj)
+									auto inter = std::static_pointer_cast<InteractableObject>(obj);
+									obj->setParent(nullptr);
+									for (auto it = pointer->attatchedObjects.begin(); it != pointer->attatchedObjects.end();)
 									{
-										it = pointer->attatchedObjects.erase(it);
+										if ((*it) == nullptr || (*it) == obj)
+										{
+											it = pointer->attatchedObjects.erase(it);
+										}
+										else
+										{
+											++it;
+										}
 									}
-									else
-									{
-										++it;
-									}
+									if (inter)
+										inter->registerToDelete();
 								}
-								if (inter)
-									inter->registerToDelete();
 							});
 
 	/// Get all Spine points from this Spine object
@@ -845,12 +848,15 @@ void Game::setupLuaFunctions()
 							[this](const LuaSpineObject &object, const LuaSpinePoint &point_name)
 							{
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
-								auto position = obj->getPoint(point_name);
-								if (position)
+								if (obj)
 								{
-									getDialogManager()->setSpeechBubblePosition(position.value());
-									(*lua_state)["speech_bubble_position_x"] = position->x;
-									(*lua_state)["speech_bubble_position_y"] = position->y;
+									auto position = obj->getPoint(point_name);
+									if (position)
+									{
+										getDialogManager()->setSpeechBubblePosition(position.value());
+										(*lua_state)["speech_bubble_position_x"] = position->x;
+										(*lua_state)["speech_bubble_position_y"] = position->y;
+									}
 								}
 							});
 
