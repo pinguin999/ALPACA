@@ -36,7 +36,8 @@ void DialogManager::play(std::string characterName, jngl::Vec2, sol::function ca
     if (currentDialog)
     {
         currentNode = currentDialog->getEntryNode();
-        continueCurrent();
+        if(currentNode->checkPrecondition(currentDialog))
+            continueCurrent();
         dialog_callback = callback;
     }else
     {
