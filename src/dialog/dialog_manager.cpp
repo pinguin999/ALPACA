@@ -229,7 +229,7 @@ void DialogManager::playCharacterVoice(const std::string &file)
     {
         jngl::play(file);
     }
-    catch(const std::exception)
+    catch(std::exception&)
     {
         jngl::debugLn("Audiofile does not exist: " + file);
     }
