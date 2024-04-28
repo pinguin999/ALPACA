@@ -2,21 +2,21 @@
 #include "../game.hpp"
 #include <filesystem>
 
-#define BOX_HEIGHT 90
+constexpr int BOX_HEIGHT = 90;
 
 DialogManager::DialogManager(std::shared_ptr<Game> game)
     : typewriterFont("fonts/BarcadeBrawlRegular-cc0.ttf", 30),
       dialogFont("fonts/ABeeZee-Regular.ttf", 25),
       currentTypewriterLine(typewriterFont, ""),
       currentNarratorText(""),
+      isNarratorTextVisible(false),
+      bubble(nullptr),
+      selected_index(-1),
       dialog_callback((*game->lua_state)["pass"]),
       game(game)
 {
-    isNarratorTextVisible = false;
     currentNarratorText.setFont(dialogFont);
     currentNarratorText.setAlign(jngl::Alignment::CENTER);
-    bubble = nullptr;
-    selected_index = -1;
 }
 
 void DialogManager::loadDialogsFromFile(std::string fileName, bool initializeVariables)
@@ -28,7 +28,7 @@ void DialogManager::loadDialogsFromFile(std::string fileName, bool initializeVar
     }
 }
 
-void DialogManager::play(std::string characterName, jngl::Vec2, sol::function callback)
+void DialogManager::play(const std::string &characterName, jngl::Vec2, const sol::function &callback)
 {
     cancelDialog();
 
@@ -73,12 +73,12 @@ void DialogManager::step()
             auto direction = _game->pointer->getMovementStep();
             if (direction == jngl::Vec2(0, 1))
             {
-                selected_index = std::max((int)selected_index - 1, 0);
+                selected_index = std::max(selected_index - 1, 0);
             }
 
             if (direction == jngl::Vec2(0, -1))
             {
-                selected_index = std::min((int)selected_index + 1, (int)choiceTexts.size() - 1);
+                selected_index = std::min(selected_index + 1, (int)choiceTexts.size() - 1);
             }
         }
 
@@ -218,7 +218,7 @@ void DialogManager::showCharacterText(std::string text, jngl::Vec2 pos)
     }
 }
 
-void DialogManager::playCharacterVoice(std::string file)
+void DialogManager::playCharacterVoice(const std::string &file)
 {
     if (last_played_audio != "" && jngl::isPlaying(last_played_audio))
     {
@@ -229,7 +229,7 @@ void DialogManager::playCharacterVoice(std::string file)
     {
         jngl::play(file);
     }
-    catch(const std::exception& e)
+    catch(const std::exception)
     {
         jngl::debugLn("Audiofile does not exist: " + file);
     }
@@ -237,7 +237,7 @@ void DialogManager::playCharacterVoice(std::string file)
     last_played_audio = file;
 }
 
-void DialogManager::playCharacterAnimation(std::string character, const std::string &id)
+void DialogManager::playCharacterAnimation(const std::string &character, const std::string &id)
 {
     if (auto _game = game.lock())
     {
@@ -338,7 +338,7 @@ void DialogManager::hideCharacterText()
 
 bool DialogManager::isSelectTextActive()
 {
-    return choiceTexts.size() != 0;
+    return !choiceTexts.empty();
 }
 
 bool DialogManager::isOverText(jngl::Vec2 mouse_pos)

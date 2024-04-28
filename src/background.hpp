@@ -10,7 +10,8 @@
 
 struct Node
 {
-    int G, H;
+    int G;
+    int H;
     jngl::Vec2 coordinates;
     Node *parent;
 
