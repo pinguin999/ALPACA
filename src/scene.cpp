@@ -371,6 +371,10 @@ void Scene::loadObjects(YAML::Node objects)
 
                 std::string id = key.as<std::string>();
 
+                if ((*_game->lua_state)["scenes"][scene]["items"][id]["object"].valid()){
+                    continue;
+                }
+
                 if ((*_game->lua_state)["scenes"][scene]["items"][id]["spine"].valid() &&
                     (*_game->lua_state)["scenes"][scene]["items"][id]["x"].valid() &&
                     (*_game->lua_state)["scenes"][scene]["items"][id]["y"].valid())
