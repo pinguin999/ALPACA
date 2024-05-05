@@ -301,8 +301,6 @@ void Player::draw() const
     jngl::translate(position);
     jngl::rotate(getRotation());
 
-    // jngl::scale(position.y / 500.0);
-
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
