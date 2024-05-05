@@ -236,6 +236,10 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
 
         std::string id = key.as<std::string>();
 
+        if ((*game->lua_state)["inventory_items"][id]["object"].valid()){
+            continue;
+        }
+
         if ((*game->lua_state)["inventory_items"][id]["spine"].valid() &&
             (*game->lua_state)["inventory_items"][id]["x"].valid() &&
             (*game->lua_state)["inventory_items"][id]["y"].valid())
@@ -366,6 +370,10 @@ void Scene::loadObjects(YAML::Node objects)
                 sol::object const value = key_value_pair.second;
 
                 std::string id = key.as<std::string>();
+
+                if ((*_game->lua_state)["scenes"][scene]["items"][id]["object"].valid()){
+                    continue;
+                }
 
                 if ((*_game->lua_state)["scenes"][scene]["items"][id]["spine"].valid() &&
                     (*_game->lua_state)["scenes"][scene]["items"][id]["x"].valid() &&

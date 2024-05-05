@@ -97,7 +97,7 @@ void Background::draw() const
                 }
 
                 jngl::setColor(0, 0, 0);
-                for (auto forbidden_area : forbidden_corners)
+                for (const auto &forbidden_area : forbidden_corners)
                 {
                     for (size_t i = 1; i < forbidden_area.size(); i++)
                     {
@@ -106,7 +106,7 @@ void Background::draw() const
                 }
 
                 jngl::setColor(0, 0, 255);
-                for (auto forbidden_area : forbidden_corners)
+                for (const auto &forbidden_area : forbidden_corners)
                 {
                     for (auto forbidden_corner : forbidden_area)
                     {
@@ -124,29 +124,6 @@ void Background::draw() const
                     jngl::drawLine(debugPath[i - 1], debugPath[i]);
                 }
             }
-
-            // for (auto corner : corners)
-            // {
-            //     for (auto forcorner : forbidden_corners)
-            //     {
-            //         if (hasPathTo(forcorner, corner))
-            //         {
-            //             jngl::drawLine(forcorner, corner);
-            //         }
-            //     }
-            // }
-
-            // jngl::setColor(255, 0, 0);
-            // for (auto corner : forbidden_corners)
-            // {
-            //     for (auto forcorner : forbidden_corners)
-            //     {
-            //         if (hasPathTo(forcorner, corner))
-            //         {
-            //             jngl::drawLine(forcorner, corner);
-            //         }
-            //     }
-            // }
 
             auto point_names = getPointNames();
             for (const auto &point_name : point_names)
@@ -214,15 +191,6 @@ int Node::getScore() const
 
 std::deque<jngl::Vec2> Background::getPathToTarget(jngl::Vec2 start, jngl::Vec2 target) const
 {
-    // Debug Positions
-    //     start = {
-    // -595.38133024921717,
-    // 264.28874734607211};
-    //     target = {
-    // 550.99726190217416,
-    // 511.59235668789813
-    //         };
-
     std::deque<jngl::Vec2> path;
 
     if (!is_walkable(target))
@@ -260,7 +228,7 @@ std::deque<jngl::Vec2> Background::getPathToTarget(jngl::Vec2 start, jngl::Vec2 
         openSet.erase(current_it);
 
         auto directions = corners;
-        for (auto forbidden_area : forbidden_corners)
+        for (const auto &forbidden_area : forbidden_corners)
         {
             directions.insert(directions.end(), forbidden_area.begin(), forbidden_area.end());
         }
@@ -361,6 +329,7 @@ bool Background::hasPathTo(jngl::Vec2 start, jngl::Vec2 target) const
             {
                 switch (lineIntersection(start, target, forbidden_corner.at(i), forbidden_corner.at(i + 1)))
                 {
+                using enum Result;
                 case Result::INTERSECTION:
                     return false;
                 case Result::NO_INTERSECTION:
@@ -439,7 +408,7 @@ std::vector<std::vector<jngl::Vec2>> Background::getForbiddenCorners() const
 
 bool Background::is_walkable(jngl::Vec2 position) const
 {
-    auto *walkableResult = spine::spSkeletonBounds_containsPointMatchingName(bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
+    const auto &walkableResult = spine::spSkeletonBounds_containsPointMatchingName(bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
     if (!walkableResult)
     {
         return false;
@@ -452,7 +421,6 @@ bool Background::is_walkable(jngl::Vec2 position) const
             auto *non_walkable = spine::spSkeletonBounds_containsPointMatchingName(obj->bounds, "non_walkable_area", static_cast<float>(position.x) - static_cast<float>(obj->getPosition().x), static_cast<float>(position.y) - static_cast<float>(obj->getPosition().y));
             if (non_walkable)
             {
-                jngl::debugLn("non walkable");
                 return false;
             }
         }
@@ -460,6 +428,6 @@ bool Background::is_walkable(jngl::Vec2 position) const
 
     // if there is an interactable region and a walkable spot,
     // just interact, don't walk there
-    auto *interactableResult = spine::spSkeletonBounds_containsPointNotMatchingName(bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
-    return interactableResult == nullptr;
+    return spine::spSkeletonBounds_containsPointNotMatchingName(
+               bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y)) == nullptr;
 }

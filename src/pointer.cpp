@@ -94,7 +94,8 @@ bool Pointer::step(bool)
                 if (obj->getVisible() &&
                     !(_game->getInactivLayerBorder() > obj->layer) &&
                     obj->bounds &&
-                    bool(spine::spSkeletonBounds_containsPointNotMatchingName(obj->bounds, "walkable_area", (float)position.x - (float)obj->getPosition().x, (float)position.y - (float)obj->getPosition().y)))
+                    bool(spine::spSkeletonBounds_containsPointNotMatchingName(obj->bounds, "walkable_area", (float)position.x - (float)obj->getPosition().x, (float)position.y - (float)obj->getPosition().y)) &&
+                    bool(spine::spSkeletonBounds_containsPointNotMatchingName(obj->bounds, "non_walkable_area", (float)position.x - (float)obj->getPosition().x, (float)position.y - (float)obj->getPosition().y)))
                 {
                     over = true;
                     vibrate();

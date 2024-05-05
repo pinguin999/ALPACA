@@ -28,7 +28,7 @@ public:
     bool isSelectTextActive();
     bool isOverText(jngl::Vec2 mouse_pos);
 
-    void play(std::string characterName, jngl::Vec2 pos, sol::function callback); // TODO: multiple positions for different characters
+    void play(const std::string &characterName, jngl::Vec2 pos, const sol::function &callback); // TODO: multiple positions for different characters
     void continueCurrent();
     void selectCurrentAnswer(int selected_index);
 
@@ -41,8 +41,8 @@ private:
     void showNarratorText(const std::string &text);
     void showChoices(std::shared_ptr<schnacker::AnswersStepResult> answers);
     void showCharacterText(std::string text, jngl::Vec2 pos);
-    void playCharacterVoice(std::string file);
-    void playCharacterAnimation(std::string character, const std::string &id);
+    void playCharacterVoice(const std::string &file);
+    void playCharacterAnimation(const std::string &character, const std::string &id);
     void hideChoices();
     void hideCharacterText();
 
