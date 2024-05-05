@@ -92,7 +92,7 @@ void SkeletonDrawable::step() {
     spAnimationState_update(state, deltaTime * timeScale);
 	spAnimationState_apply(state, skeleton);
 	spSkeleton_update(skeleton, deltaTime);
-	spSkeleton_updateWorldTransform(skeleton, SP_PHYSICS_NONE);
+	spSkeleton_updateWorldTransform(skeleton, SP_PHYSICS_UPDATE);
 }
 
 void SkeletonDrawable::endAnimation(int trackIndex) const
@@ -106,7 +106,7 @@ void SkeletonDrawable::endAnimation(int trackIndex) const
     spAnimationState_update(state, deltaTime);
 	spAnimationState_apply(state, skeleton);
 	spSkeleton_update(skeleton, deltaTime);
-	spSkeleton_updateWorldTransform(skeleton, SP_PHYSICS_NONE);
+	spSkeleton_updateWorldTransform(skeleton, SP_PHYSICS_UPDATE);
 }
 
 void SkeletonDrawable::setAlpha(float alpha) {

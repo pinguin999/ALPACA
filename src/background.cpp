@@ -15,7 +15,7 @@ void Background::stepSpineAndNavigation()
 {
     skeleton->step();
     spSkeleton_update(skeleton->skeleton, 1.0/60.0);
-    spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_NONE);
+    spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_UPDATE);
     spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
     corners = getCorners();
     forbidden_corners = getForbiddenCorners();
