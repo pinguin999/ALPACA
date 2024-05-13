@@ -55,7 +55,6 @@ public:
 		skeleton->skeleton->scaleY = scale;
 	}
 
-	void activate();
 	void setVisible(bool visible) { this->visible = visible; }
 	bool getVisible() { return visible; }
 
@@ -70,7 +69,6 @@ public:
 	void onAnimationComplete(const std::string &key);
 	void setSkin(const std::string &skin) const;
 	std::vector<std::string> getPointNames() const;
-	bool cross_scene = false;
 	bool abs_position = false;
 
 	static void animationStateListener(spAnimationState *state, spEventType type, spTrackEntry *entry, spEvent *event);
@@ -80,14 +78,19 @@ public:
 	double getZ() const;
 	int layer = 1;
 	void setDeleted() { deleted = true; };
+	void toLuaState();
+    bool getCrossScene() const {return cross_scene;};
+    void setCrossScene(bool cross_scene);
 
 protected:
 	std::string currentAnimation = "idle";
 	std::map<std::string, sol::function> animation_callback;
 	sol::function walk_callback;
 
+	bool cross_scene = false;
 	bool deleted = false;
 	bool visible = true;
+	std::string skin = "default";
 	jngl::Vec2 position;
 	float scale = 1.0;
 	float rotation = 0.0;

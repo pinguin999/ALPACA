@@ -52,7 +52,7 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
     }
 }
 
-SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, const std::string &id, float scale) : walk_callback((*game->lua_state)["pass"]), spine_name(spine_file), id(id), game(game)
+SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, const std::string &id, float scale) : walk_callback((*game->lua_state)["pass"]), scale(scale), spine_name(spine_file), id(id), game(game)
 {
     atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
     assert(atlas);
@@ -191,15 +191,40 @@ void SpineObject::setSkin(const std::string &skin) const
     }
 }
 
-void SpineObject::activate()
-{
-    if (auto _game = game.lock())
-    {
-        _game->runAction(collision_script, getptr());
-    }
-}
 
 double SpineObject::getZ() const
 {
     return position.y + layer * 2000.0;
+}
+
+
+void SpineObject::toLuaState()
+{
+    if (auto _game = game.lock()) {
+        std::string scene = (*_game->lua_state)["game"]["scene"];
+        if (cross_scene) {
+            scene = "cross_scene";
+        }
+
+        (*_game->lua_state)["scenes"][scene]["items"][id] =
+            _game->lua_state->create_table_with(
+                "spine", spine_name,
+                "object", shared_from_this(),
+                "x", position.x,
+                "y", position.y,
+                "animation", currentAnimation,
+                "loop_animation", true,
+                "visible", visible,
+                "cross_scene", cross_scene,
+                "abs_position", abs_position,
+                "layer", layer,
+                "skin", skin,
+                "scale", scale);
+    }
+}
+
+void SpineObject::setCrossScene(bool cross_scene)
+{
+    this->cross_scene = cross_scene;
+    // Verschieben des Objektes in je die Scene
 }
