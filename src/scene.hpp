@@ -24,6 +24,8 @@ public:
 
     void playMusic();
     std::shared_ptr<InteractableObject> createObject(const std::string &spine_file, const std::string &id, float scale);
+    void createObjectJSON(YAML::Node object);
+    void createObjectLua(std::string id, std::string scene);
     void loadObjects(YAML::Node objects);
 
     std::string getSceneName(){return fileName;};

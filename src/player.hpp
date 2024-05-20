@@ -26,6 +26,7 @@ public:
     jngl::Vec2 calcCamPos();
 
     bool interruptible = true;
+    void toLuaState();
 
 private:
     const double DOUBLE_CLICK_TIME;

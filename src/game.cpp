@@ -46,6 +46,7 @@ Game::Game(const YAML::Node &config) : config(config),
 		"Press c to save the game. \n"
 		"Press v to load the game. \n"
 		"Press s in editmode to save changes to a scene. \n"
+		"Press m to mute and unmute audio. \n"
 		"Press x to hide this text.");
 	debug_info.setPos(jngl::Vec2(-screensize.x / 2, -screensize.y / 2));
 #endif
@@ -157,12 +158,10 @@ void Game::loadScene(const std::string& level)
 	// Clear the level if there is already a level loaded
 	for (auto it = gameObjects.rbegin(); it != gameObjects.rend();)
 	{
-		if (!(*it)->cross_scene)
-		{
-			remove(*it);
-		}
+		remove(*it);
 		std::advance(it, 1);
 	}
+	player = nullptr;
 
 	auto newScene = std::make_shared<Scene>(level, shared_from_this());
 	if (!newScene->background)
@@ -179,7 +178,7 @@ void Game::loadScene(const std::string& level)
 	if (pointer == nullptr)
 	{
 		pointer = std::make_shared<Pointer>(shared_from_this(), config["pointer"].as<std::string>());
-		pointer->cross_scene = true;
+		pointer->setCrossScene(true);
 		pointer->setPosition(Vec2(0, 0));
 		add(pointer);
 	}
@@ -273,6 +272,17 @@ void Game::debugStep()
 	if (jngl::keyPressed(jngl::key::F10))
 	{
 		enableDebugDraw = !enableDebugDraw;
+	}
+	if (jngl::keyPressed('m'))
+	{
+		if (jngl::getVolume() > 0.0)
+	{
+		jngl::setVolume(0);
+		}
+		else
+		{
+			jngl::setVolume(100.0);
+		}
 	}
 	if (jngl::keyPressed(jngl::key::Tab))
 	{
@@ -788,9 +798,9 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 
 const std::shared_ptr<SpineObject> Game::getObjectById(std::string objectId)
 {
-	if (objectId == "Player")
+	if (objectId == "Player" || objectId == "player")
 	{
-		return player;
+		return (*this->lua_state)["scenes"]["cross_scene"]["items"]["player"]["object"];
 	}
 	if (objectId == "Background")
 	{
@@ -814,30 +824,41 @@ const std::shared_ptr<SpineObject> Game::getObjectById(std::string objectId)
 			obj = (*this->lua_state)["scenes"][scene]["items"][objectId]["object"];
 		}
 	}
+	if (obj == nullptr)
+	{
+		if ((*this->lua_state)["scenes"]["cross_scene"]["items"][objectId].valid())
+		{
+			obj = (*this->lua_state)["scenes"]["cross_scene"]["items"][objectId]["object"];
+		}
+	}
 	return obj;
 }
 
 const std::string Game::getLuaPath(std::string objectId)
 {
-	if (objectId == "Player")
+	if (objectId == "Player" || objectId == "player")
 	{
-		return "player";
+		return R"(scenes["cross_scene"]["items"]["player"])";
 	}
 
 	std::string scene = (*this->lua_state)["game"]["scene"];
-	if (objectId == "Background")
-	{
-		return "scenes[\"" + scene + "\"][\"background\"]";
+	if (objectId == "Background") {
+		return "scenes[\"" + scene + R"("]["background"])";
 	}
 
-	if ((*this->lua_state)["inventory_items"][objectId].valid())
+        if ((*this->lua_state)["inventory_items"][objectId].valid())
 	{
 		return "inventory_items[\"" + objectId + "\"]";
 	}
 
 	if ((*this->lua_state)["scenes"][scene]["items"][objectId].valid())
 	{
-		return "scenes[\"" + scene + "\"][\"items\"][\"" + objectId + "\"]";
+		return "scenes[\"" + scene + R"("]["items"][")" + objectId + "\"]";
+	}
+
+	if ((*this->lua_state)["scenes"]["cross_scene"]["items"][objectId].valid())
+	{
+		return R"(scenes["cross_scene"]["items"][")" + objectId + "\"]";
 	}
 	return "";
 }
