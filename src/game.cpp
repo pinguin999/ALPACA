@@ -46,6 +46,7 @@ Game::Game(const YAML::Node &config) : config(config),
 		"Press c to save the game. \n"
 		"Press v to load the game. \n"
 		"Press s in editmode to save changes to a scene. \n"
+		"Press m to mute and unmute audio. \n"
 		"Press x to hide this text.");
 	debug_info.setPos(jngl::Vec2(-screensize.x / 2, -screensize.y / 2));
 #endif
