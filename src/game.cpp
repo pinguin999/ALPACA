@@ -163,6 +163,7 @@ void Game::loadScene(const std::string& level)
 		// }
 		std::advance(it, 1);
 	}
+	player = nullptr;
 
 	auto newScene = std::make_shared<Scene>(level, shared_from_this());
 	if (!newScene->background)

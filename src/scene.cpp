@@ -194,6 +194,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
                 game->player->setMaxSpeed((*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["max_speed"]);
                 float const layer = (*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["layer"];
                 game->player->layer = static_cast<int>(layer);
+                game->player->setSkin((*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"]);
                 game->player->setCrossScene((*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["cross_scene"]);
                 if ((*game->lua_state)["game"].valid() && (*game->lua_state)["game"]["interruptible"].valid())
                 {
@@ -319,6 +320,10 @@ void Scene::createObjectJSON(YAML::Node object) {
 
 void Scene::createObjectLua(std::string id, std::string scene) {
     if (auto _game = game.lock()) {
+        if (id == "player")
+        {
+            return;
+        }
         if ((*_game->lua_state)["scenes"][scene]["items"][id]["spine"].valid() &&
             (*_game->lua_state)["scenes"][scene]["items"][id]["x"].valid() &&
             (*_game->lua_state)["scenes"][scene]["items"][id]["y"].valid()) {
@@ -332,7 +337,7 @@ void Scene::createObjectLua(std::string id, std::string scene) {
             float const layer = (*_game->lua_state)["scenes"][scene]["items"][id]["layer"];
             std::string animation = (*_game->lua_state)["scenes"][scene]["items"][id]["animation"];
             bool const cross_scene = (*_game->lua_state)["scenes"][scene]["items"][id]["cross_scene"];
-            bool const abs_position = (*_game->lua_state)["scenes"][scene]["items"][id]                                   ["abs_position"];
+            bool const abs_position = (*_game->lua_state)["scenes"][scene]["items"][id]["abs_position"];
 
             interactable->setPosition(jngl::Vec2(x, y));
             interactable->setVisible(visible);
