@@ -191,7 +191,7 @@ bool Player::step(bool /*force*/)
         }
         position += tmp_target_position;
 
-        spSkeleton_physicsTranslate(skeleton->skeleton, tmp_target_position.x * 50.0, tmp_target_position.y * 50.0);
+        spSkeleton_physicsTranslate(skeleton->skeleton, tmp_target_position.x * 2.0, tmp_target_position.y * 2.0);
         skeleton->step();
         spSkeleton_update(skeleton->skeleton, 1.0/60.0);
         spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_UPDATE);
