@@ -226,5 +226,4 @@ void SpineObject::toLuaState()
 void SpineObject::setCrossScene(bool cross_scene)
 {
     this->cross_scene = cross_scene;
-    // Verschieben des Objektes in je die Scene
 }

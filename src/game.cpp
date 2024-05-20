@@ -157,10 +157,7 @@ void Game::loadScene(const std::string& level)
 	// Clear the level if there is already a level loaded
 	for (auto it = gameObjects.rbegin(); it != gameObjects.rend();)
 	{
-		// if (!(*it)->cross_scene)
-		// {
 		remove(*it);
-		// }
 		std::advance(it, 1);
 	}
 	player = nullptr;
