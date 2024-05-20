@@ -221,10 +221,6 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
 
         std::string id = key.as<std::string>();
 
-        if ((*game->lua_state)["inventory_items"][id]["object"].valid()){
-            continue;
-        }
-
         if ((*game->lua_state)["inventory_items"][id]["spine"].valid() &&
             (*game->lua_state)["inventory_items"][id]["x"].valid() &&
             (*game->lua_state)["inventory_items"][id]["y"].valid())
