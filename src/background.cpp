@@ -83,6 +83,19 @@ void Background::draw() const
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
+        if (_game->enablezMapDebugDraw && _game->currentScene->zBufferMap)
+        {
+            auto sprite = jngl::Sprite{_game->currentScene->zBufferMap->pixels(),
+                                       static_cast<size_t>(_game->currentScene->zBufferMap->getWidth()),
+                                       static_cast<size_t>(_game->currentScene->zBufferMap->getHeight())};
+            sprite.draw();
+        }
+    }
+#endif
+
+#ifndef NDEBUG
+    if (auto _game = game.lock())
+    {
         if (_game->enableDebugDraw)
         {
             jngl::setColor(255, 0, 0);

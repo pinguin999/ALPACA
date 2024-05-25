@@ -141,7 +141,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
 
     if (json["zBufferMap"].IsDefined() && !json["zBufferMap"].IsNull())
     {
-        this->zBufferMap = std::make_unique<jngl::Sprite>(jngl::Sprite(json["zBufferMap"].as<std::string>()));
+        zBufferMap = jngl::ImageData::load(json["zBufferMap"].as<std::string>());
     }
 
     if (json["backgroundMusic"].IsDefined() && !json["backgroundMusic"].IsNull())
@@ -267,7 +267,7 @@ void Scene::playMusic()
     }
 }
 
-void Scene::createObjectJSON(YAML::Node object) {
+void Scene::createObjectJSON(const YAML::Node &object) {
     if (auto _game = game.lock()) {
         std::string scene = _game->cleanLuaString((*_game->lua_state)["game"]["scene"]);
 
@@ -446,3 +446,19 @@ void Scene::updateObjectPosition(const std::string &id, jngl::Vec2 position)
     }
 }
 #endif
+
+double Scene::getScale(jngl::Vec2 position)
+{
+    if (!zBufferMap)
+    {
+        return 1.0;
+    }
+    int x = static_cast<int>(position.x + zBufferMap->getWidth() / 2);
+    int y = static_cast<int>(position.y + zBufferMap->getHeight() / 2);
+    x = std::min(x, zBufferMap->getWidth()-1);
+    x = std::max(x, 0);
+    y = std::min(y, zBufferMap->getHeight()-1);
+    y = std::max(y, 0);
+    const int scale_value = zBufferMap->pixels()[x * 4 + y * zBufferMap->getWidth() * 4 + 3];
+    return scale_value / 255.0;
+}

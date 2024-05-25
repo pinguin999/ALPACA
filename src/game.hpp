@@ -33,6 +33,7 @@ public:
     void debugStep();
     bool editMode = false;
     bool enableDebugDraw = false;
+    bool enablezMapDebugDraw = false;
     bool show_debug_info = true;
 
     jngl::Text debug_info;

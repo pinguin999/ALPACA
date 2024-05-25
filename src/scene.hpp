@@ -24,11 +24,12 @@ public:
 
     void playMusic();
     std::shared_ptr<InteractableObject> createObject(const std::string &spine_file, const std::string &id, float scale);
-    void createObjectJSON(YAML::Node object);
+    void createObjectJSON(const YAML::Node &object);
     void createObjectLua(std::string id, std::string scene);
     void loadObjects(YAML::Node objects);
 
     std::string getSceneName(){return fileName;};
+    double getScale(jngl::Vec2 position);
 
     std::shared_ptr<Background> background;
     int left_border = INT_MIN;
@@ -36,6 +37,7 @@ public:
     int top_border = INT_MIN;
     int bottom_border = INT_MAX;
 
+    std::unique_ptr<jngl::ImageData> zBufferMap;
 #ifndef NDEBUG
     void writeToFile();
     void updateObjectPosition(const std::string &id, jngl::Vec2 position);
@@ -45,7 +47,6 @@ private:
     YAML::Node json;
 
     std::optional<std::string> backgroundMusic;
-    std::unique_ptr<jngl::Sprite> zBufferMap;
 
     const std::weak_ptr<Game> game;
 };

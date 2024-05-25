@@ -47,6 +47,7 @@ Game::Game(const YAML::Node &config) : config(config),
 		"Press v to load the game. \n"
 		"Press s in editmode to save changes to a scene. \n"
 		"Press m to mute and unmute audio. \n"
+		"Press z to toggle zBufferMap. \n"
 		"Press x to hide this text.");
 	debug_info.setPos(jngl::Vec2(-screensize.x / 2, -screensize.y / 2));
 #endif
@@ -283,6 +284,10 @@ void Game::debugStep()
 		{
 			jngl::setVolume(100.0);
 		}
+	}
+	if (jngl::keyPressed('z'))
+	{
+		enablezMapDebugDraw = !enablezMapDebugDraw;
 	}
 	if (jngl::keyPressed(jngl::key::Tab))
 	{

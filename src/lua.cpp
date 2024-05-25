@@ -917,4 +917,18 @@ void Game::setupLuaFunctions()
 							{
 								jngl::writeConfig("savegame", "");
 							});
+
+	/// Set the zBufferMap to a file
+	lua_state->set_function("SetzBufferMap",
+							[this](const std::string &file)
+							{
+								currentScene->zBufferMap = jngl::ImageData::load(file);
+							});
+
+	/// Remove the zBufferMap
+	lua_state->set_function("RemovezBufferMap",
+							[this]()
+							{
+								currentScene->zBufferMap = nullptr;
+							});
 }

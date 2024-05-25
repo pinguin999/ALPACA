@@ -296,6 +296,10 @@ void Player::draw() const
     jngl::pushMatrix();
     jngl::translate(position);
     jngl::rotate(getRotation());
+    if (auto _game = game.lock())
+    {
+        jngl::scale(_game->currentScene->getScale(position));
+    }
 
 #ifndef NDEBUG
     if (auto _game = game.lock())
