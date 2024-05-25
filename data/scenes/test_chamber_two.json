@@ -11,6 +11,10 @@
     "background": {
         "spine": "scene2"
     },
-    "zBufferMap": null,
-    "hash": "0c6afcfb1acb2a1ab15497d8d840fb7c9a6810be"
+    "zBufferMap": "background",
+    "left_border": 0,
+    "right_border": 0,
+    "top_border": 0,
+    "bottom_border": 0,
+    "hash": "a0274d39c86235b182b8b6cf5ad3b1c88d8268e8"
 }

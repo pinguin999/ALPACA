@@ -19,7 +19,7 @@ All informations are defined in a .json file. All scene files have to be in `dat
     "background": {
         "spine": "scene1"
     },
-    "zBufferMap": null,
+    "zBufferMap": "background",
     "left_border": -1500,
     "right_border": 1530,
     "top_border": -200,
@@ -29,7 +29,7 @@ All informations are defined in a .json file. All scene files have to be in `dat
 
 ## Items
 
-Here we can define our items in the scene. An item always has a Spine file and a x and y position.
+Here you can define our items in the scene. An item always has a Spine file and a x and y position.
 It can optionally have an id, scale , skin, layer, animation, cross_scene.
 
 ### spine
@@ -50,7 +50,7 @@ The y position of the item. For more information see x.
 
 ### id
 
-*Optional* The id is needed to refer to an item. Per default the spine file name is used as id. But if we have more instances of an item in a scene we have to set id to refer to the items.
+*Optional* The id is needed to refer to an item. Per default the spine file name is used as id. But if you have more instances of an item in a scene you have to set id to refer to the items.
 
 Example:
 
@@ -71,7 +71,7 @@ Example:
 
 ### layer
 
-*Optional* The normal draw order is based on the y position of an item. With layers we can bring items on top of others. Default layer is 1.
+*Optional* The normal draw order is based on the y position of an item. With layers you can bring items on top of others. Default layer is 1.
 
 ### animation
 
@@ -83,7 +83,7 @@ Example:
 
 ## BackgroundMusic
 
-We support one background music song per scene. If we move to another scene the music will stop and play this scene music. If boath scenes have the same background music, the music will continue playing and does not start from the beginning.
+ALPACA supports one background music song per scene. If you move to another scene the music will stop and play this scene music. If boath scenes have the same background music, the music will continue playing and does not start from the beginning.
 
 Example:
 
@@ -98,13 +98,22 @@ The background of a scene is also a Spine file. It has the parameters like an it
 To define the area where the player can walk, add a bounding box with the name `walkable_area` to the Spine file.
 A bounding box with the name `non_walkable_area` will create a hole into the `walkable_area`.
 
+## zBufferMap
+
+To scale the player depending on the position in the scene, you can provide an extra image file.
+The images alpha value will be multipyed with the players scale.
+No alpha means 1, so the player is not scaled.
+Full alpha mens the player is scaled to 0.
+
+The image has to be placed next to the scene background in a folder called `zBufferMap`.
+
 ## Borders
 
-With the 4 border vales we can limit the camera. This prevents that the black background is visible.
+With the 4 border vales you can limit the camera. This prevents that the black background is visible.
 
 ## Doors
 
-To connect two scenes we have the concept of doors. Normally we want the player to walk towards the door and than switch scenes.
+To connect two scenes ALPACA uses the concept of doors. Normally you want the player to walk towards the door and than switch scenes.
 In the new scene the player should be where the door is.
 Therefor ALPACA expects a Spine point near each door with next scenes name.
 After changing the scene, the player will be placed at the Spine point with last scenes name.
