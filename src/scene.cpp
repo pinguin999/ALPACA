@@ -110,6 +110,11 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
 
         background->playAnimation(0, animation, loop_animation, (*game->lua_state)["pass"]);
         game->add(background);
+
+        if ((*game->lua_state)["scenes"][scene]["zBufferMap"].valid())
+        {
+            zBufferMap = jngl::ImageData::load((*game->lua_state)["scenes"][scene]["zBufferMap"]);
+        }
     }
     else if (json["background"].IsDefined() && !json["background"].IsNull())
     {
@@ -137,11 +142,12 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
             background->setSkin(skin);
         }
         game->add(background);
-    }
 
-    if (json["zBufferMap"].IsDefined() && !json["zBufferMap"].IsNull())
-    {
-        zBufferMap = jngl::ImageData::load(json["zBufferMap"].as<std::string>());
+        if (json["zBufferMap"].IsDefined() && !json["zBufferMap"].IsNull())
+        {
+            zBufferMap = jngl::ImageData::load(json["zBufferMap"].as<std::string>());
+            (*game->lua_state)["scenes"][scene]["zBufferMap"] = json["zBufferMap"].as<std::string>();
+        }
     }
 
     if (json["backgroundMusic"].IsDefined() && !json["backgroundMusic"].IsNull())

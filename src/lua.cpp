@@ -923,6 +923,7 @@ void Game::setupLuaFunctions()
 							[this](const std::string &file)
 							{
 								currentScene->zBufferMap = jngl::ImageData::load(file);
+								(*lua_state)["scenes"][currentScene->getSceneName()]["zBufferMap"] = file;
 							});
 
 	/// Remove the zBufferMap
@@ -930,5 +931,9 @@ void Game::setupLuaFunctions()
 							[this]()
 							{
 								currentScene->zBufferMap = nullptr;
+								if ((*lua_state)["scenes"][currentScene->getSceneName()]["zBufferMap"].valid())
+								{
+									(*lua_state)["scenes"][currentScene->getSceneName()]["zBufferMap"] = sol::lua_nil;
+								}
 							});
 }
