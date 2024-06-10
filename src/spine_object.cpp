@@ -85,7 +85,7 @@ SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &s
     skeleton = std::make_unique<spine::SkeletonDrawable>(skeletonData, animationStateData);
     skeleton->state->userData = this;
     skeleton->state->listener = static_cast<spAnimationStateListener>(&this->animationStateListener);
-    playAnimation(0, game->config["spine_default_animation"].as<std::string>(), true, (*game->lua_state)["pass"]);
+    playAnimation(0, (*game->lua_state)["config"]["spine_default_animation"], true, (*game->lua_state)["pass"]);
     bounds = spSkeletonBounds_create();
 
     skeleton->step();
@@ -173,7 +173,8 @@ void SpineObject::onAnimationComplete(const std::string &key)
     {
         // Set animation back to default animation in Lua state
         const std::string lua_object = _game->getLuaPath(getId());
-        (*_game->lua_state).script(lua_object + ".animation = \"" + _game->config["spine_default_animation"].as<std::string>() + "\"");
+        std::string animation = (*_game->lua_state)["config"]["spine_default_animation"];
+        (*_game->lua_state).script(lua_object + ".animation = \"" + animation + "\"");
         (*_game->lua_state).script(lua_object + ".loop_animation = true");
 
         animation_callback[key]();

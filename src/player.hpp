@@ -21,30 +21,19 @@ public:
     void addTargetPositionImmediately(jngl::Vec2 target, const sol::function &callback);
     void stop_walking();
 
-    float getMaxSpeed() const { return max_speed; };
-    void setMaxSpeed(float speed) { max_speed = speed; };
+    float getMaxSpeed() const;
+    void setMaxSpeed(float speed);
     jngl::Vec2 calcCamPos();
 
     bool interruptible = true;
     void toLuaState();
 
 private:
-    const double DOUBLE_CLICK_TIME;
-    const int MAX_CLICK_DISTANCE;
-    const int NEAR_OBJECT;
-    const int X_BORDER;
-    const int Y_BORDER;
-    float max_speed;
     std::deque<jngl::Vec2> path;
     jngl::Vec2 target_position = jngl::Vec2(0, 0);
     void setTargentPosition(jngl::Vec2 position);
     jngl::Vec2 last_click_position = jngl::Vec2(0, 0);
-    std::string player_walk_animation;
-    std::string player_side_skin;
-    std::string player_up_skin;
-    std::string player_front_skin;
-    std::string player_beam_animation;
-    std::string player_idle_animation;
+
     double last_click_time = 0;
 
     void setDirection();

@@ -233,14 +233,14 @@ void Game::setupLuaFunctions()
 							[this]()
 							{
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								obj->setSkin(config["inventar_default_skin"].as<std::string>());
+								obj->setSkin((*lua_state)["config"]["inventar_default_skin"]);
 								obj->setCrossScene(true);
 								obj->setVisible(false);
-								lua_state->script("inventory_items[\"" + obj->getId() + "\"] = scenes[game.scene].items." + obj->getId());
-								lua_state->script("inventory_items[\"" + obj->getId() + "\"].skin = \"" + config["inventar_default_skin"].as<std::string>() + "\"");
-								lua_state->script("inventory_items[\"" + obj->getId() + "\"].cross_scene = true");
+								(*lua_state)["inventory_items"][obj->getId()] = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
+								(*lua_state)["inventory_items"][obj->getId()]["skin"] = (*lua_state)["config"]["inventar_default_skin"];
+								(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
-								lua_state->script("scenes[game.scene].items." + obj->getId() + " = nil");
+								(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
 							});
 
 	/// See AddToInventory
@@ -252,11 +252,11 @@ void Game::setupLuaFunctions()
 								obj->setSkin(skin);
 								obj->setCrossScene(true);
 								obj->setVisible(false);
-								lua_state->script("inventory_items[\"" + obj->getId() + "\"] = scenes[game.scene].items." + obj->getId());
-								lua_state->script("inventory_items[\"" + obj->getId() + "\"].skin = \"" + skin + "\"");
-								lua_state->script("inventory_items[\"" + obj->getId() + "\"].cross_scene = true");
+								(*lua_state)["inventory_items"][obj->getId()] = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
+								(*lua_state)["inventory_items"][obj->getId()]["skin"] = skin;
+								(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
-								lua_state->script("scenes[game.scene].items." + obj->getId() + " = nil");
+								(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
 							});
 
 	/// See AddToInventory
@@ -268,14 +268,14 @@ void Game::setupLuaFunctions()
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
-									obj->setSkin(config["inventar_default_skin"].as<std::string>());
+									obj->setSkin((*lua_state)["config"]["inventar_default_skin"]);
 									obj->setCrossScene(true);
 									obj->setVisible(false);
-									lua_state->script("inventory_items[\"" + object + "\"] = scenes[game.scene].items." + object);
-									lua_state->script("inventory_items[\"" + object + "\"].skin = \"" + config["inventar_default_skin"].as<std::string>() + "\"");
-									lua_state->script("inventory_items[\"" + object + "\"].cross_scene = true");
+									(*lua_state)["inventory_items"][obj->getId()] = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
+									(*lua_state)["inventory_items"][obj->getId()]["skin"] = (*lua_state)["config"]["inventar_default_skin"];
+									(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
-									lua_state->script("scenes[game.scene].items." + object + " = nil");
+									(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
 								}
 							});
 
@@ -289,14 +289,14 @@ void Game::setupLuaFunctions()
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
-									obj->setSkin(config[skin].as<std::string>());
+									obj->setSkin(skin);
 									obj->setCrossScene(true);
 									obj->setVisible(false);
-									lua_state->script("inventory_items[\"" + object + "\"] = scenes[game.scene].items." + object);
-									lua_state->script("inventory_items[\"" + object + "\"].skin = \"" + skin + "\"");
-									lua_state->script("inventory_items[\"" + object + "\"].cross_scene = true");
+									(*lua_state)["inventory_items"][obj->getId()] = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
+									(*lua_state)["inventory_items"][obj->getId()]["skin"] = skin;
+									(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
-									lua_state->script("scenes[game.scene].items." + object + " = nil");
+									(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
 								}
 							});
 
@@ -869,13 +869,13 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetLanguage",
 							[this](const LuaLanguage &language)
 							{
-								const YAML::Node languages = this->config["supportedLanguages"];
+								std::vector<std::string> languages =  (*lua_state)["config"]["supportedLanguages"];
 								for (auto supported_language : languages)
 								{
-									if (language == supported_language.as<std::string>())
+									if (language == supported_language)
 									{
 										this->language = language;
-										const std::string dialogFilePath = config["dialog"].as<std::string>();
+										const std::string dialogFilePath = (*lua_state)["config"]["dialog"];
 										getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
 										return;
 									}

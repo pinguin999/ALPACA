@@ -126,6 +126,8 @@ Game::Game(const YAML::Node &config) : config(config),
 void Game::init()
 {
 	dialogManager = std::make_shared<DialogManager>(shared_from_this());
+
+	configToLua();
 	setupLuaFunctions();
 	if (config["auto_load_savegame"].as<bool>(true))
 	{
@@ -133,6 +135,59 @@ void Game::init()
 	}else{
 		loadLuaState(std::nullopt);
 	}
+}
+
+void Game::configToLua()
+{
+	(*lua_state)["config"] = (*lua_state).create_table();
+	(*lua_state)["config"]["name"] = config["name"].as<std::string>();
+    (*lua_state)["config"]["screenSize"] = (*lua_state).create_table();
+    (*lua_state)["config"]["screenSize"]["x"] = config["screenSize"]["x"].as<int>();
+    (*lua_state)["config"]["screenSize"]["y"] = config["screenSize"]["y"].as<int>();
+    (*lua_state)["config"]["minAspectRatio"] = (*lua_state).create_table();
+    (*lua_state)["config"]["minAspectRatio"]["x"] = config["minAspectRatio"]["x"].as<int>();
+    (*lua_state)["config"]["minAspectRatio"]["y"] = config["minAspectRatio"]["y"].as<int>();
+    (*lua_state)["config"]["maxAspectRatio"] = (*lua_state).create_table();
+    (*lua_state)["config"]["maxAspectRatio"]["x"] = config["maxAspectRatio"]["x"].as<int>();
+    (*lua_state)["config"]["maxAspectRatio"]["y"] = config["maxAspectRatio"]["y"].as<int>();
+    (*lua_state)["config"]["default_font"] = config["default_font"].as<std::string>();
+    (*lua_state)["config"]["player"] = config["player"].as<std::string>("");
+    (*lua_state)["config"]["pointer"] = config["pointer"].as<std::string>();
+    (*lua_state)["config"]["dialog"] = config["dialog"].as<std::string>();
+    (*lua_state)["config"]["antiAliasing"] = config["antiAliasing"].as<bool>();
+    (*lua_state)["config"]["icon"] = config["icon"].as<std::string>();
+    (*lua_state)["config"]["start_scene"] = config["start_scene"].as<std::string>();
+    (*lua_state)["config"]["double_click_time"] = config["double_click_time"].as<float>();
+    (*lua_state)["config"]["max_click_distance"] = config["max_click_distance"].as<int>();
+#ifndef NDEBUG
+    (*lua_state)["config"]["debug_grap_distance"] = config["debug_grap_distance"].as<float>();
+#endif
+    (*lua_state)["config"]["gamepad_speed_multiplyer"] = config["gamepad_speed_multiplyer"].as<float>();
+    (*lua_state)["config"]["inventory"] = config["inventory"].as<std::string>();
+    (*lua_state)["config"]["inventar_default_skin"] = config["inventar_default_skin"].as<std::string>();
+    (*lua_state)["config"]["player_default_skin"] = config["player_default_skin"].as<std::string>();
+    (*lua_state)["config"]["player_side_skin"] = config["player_side_skin"].as<std::string>();
+    (*lua_state)["config"]["player_front_skin"] = config["player_front_skin"].as<std::string>();
+    (*lua_state)["config"]["player_up_skin"] = config["player_up_skin"].as<std::string>();
+    (*lua_state)["config"]["player_walk_animation"] = config["player_walk_animation"].as<std::string>();
+    (*lua_state)["config"]["player_beam_animation"] = config["player_beam_animation"].as<std::string>();
+    (*lua_state)["config"]["player_idle_animation"] = config["player_idle_animation"].as<std::string>();
+    (*lua_state)["config"]["player_start_animation"] = config["player_start_animation"].as<std::string>();
+    (*lua_state)["config"]["spine_default_animation"] = config["spine_default_animation"].as<std::string>();
+    (*lua_state)["config"]["pointer_idle_animation"] = config["pointer_idle_animation"].as<std::string>();
+    (*lua_state)["config"]["pointer_over_animation"] = config["pointer_over_animation"].as<std::string>();
+    (*lua_state)["config"]["background_default_animation"] = config["background_default_animation"].as<std::string>();
+    (*lua_state)["config"]["speechbubbleScaleX"] = config["speechbubbleScaleX"].as<float>();
+    (*lua_state)["config"]["speechbubbleScaleY"] = config["speechbubbleScaleY"].as<float>();
+    (*lua_state)["config"]["pointer_max_speed"] = config["pointer_max_speed"].as<float>();
+    (*lua_state)["config"]["player_max_speed"] = config["player_max_speed"].as<float>();
+    (*lua_state)["config"]["player_start_position"] = (*lua_state).create_table();
+    (*lua_state)["config"]["player_start_position"]["x"] = config["player_start_position"]["x"].as<int>();
+    (*lua_state)["config"]["player_start_position"]["y"] = config["player_start_position"]["y"].as<int>();
+    (*lua_state)["config"]["border"] = (*lua_state).create_table();
+    (*lua_state)["config"]["border"]["x"] = config["border"]["x"].as<int>();
+    (*lua_state)["config"]["border"]["y"] = config["border"]["y"].as<int>();
+	(*lua_state)["config"]["supportedLanguages"] = sol::as_table(config["supportedLanguages"].as<std::vector<std::string>>());
 }
 
 void Game::loadSceneWithFade(std::string level)
@@ -178,7 +233,7 @@ void Game::loadScene(const std::string& level)
 	// Pointer should be last in gameObjects so it's on top
 	if (pointer == nullptr)
 	{
-		pointer = std::make_shared<Pointer>(shared_from_this(), config["pointer"].as<std::string>());
+		pointer = std::make_shared<Pointer>(shared_from_this(), (*lua_state)["config"]["pointer"]);
 		pointer->setCrossScene(true);
 		pointer->setPosition(Vec2(0, 0));
 		add(pointer);
@@ -264,7 +319,7 @@ void Game::debugStep()
 	if (jngl::keyPressed("r") || reload)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		auto dialogFilePath = config["dialog"].as<std::string>();
+		auto dialogFilePath = (*lua_state)["config"]["dialog"];
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
 		loadScene(currentScene->getSceneName());
 		reload = false;
@@ -692,7 +747,7 @@ void Game::loadLuaState(const std::optional<std::string> &savefile)
 		}
 	}
 
-	const std::string dialogFilePath = config["dialog"].as<std::string>();
+	const std::string dialogFilePath = (*lua_state)["config"]["dialog"];
 	if ((*lua_state)["game"].valid() && (*lua_state)["game"]["scene"].valid())
 	{
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
@@ -702,7 +757,7 @@ void Game::loadLuaState(const std::optional<std::string> &savefile)
 	else
 	{
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, true);
-		const std::string startscene = config["start_scene"].as<std::string>();
+		const std::string startscene = (*lua_state)["config"]["start_scene"];
 		loadScene(startscene);
 	}
 	// TODO Error handling

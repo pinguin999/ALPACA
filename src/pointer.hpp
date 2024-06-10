@@ -43,10 +43,6 @@ public:
 private:
     bool primaryAlreadyHandled = false;
     bool secondaryAlreadyHandled = false;
-    const double GAMEPAD_SPEED_MULTIPLYER;
-    float max_speed;
-    std::string pointer_idle_animation;
-    std::string pointer_over_animation;
 
     std::unique_ptr<Control> control;
 

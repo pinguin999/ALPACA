@@ -121,7 +121,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
     }
     else if (json["background"].IsDefined() && !json["background"].IsNull())
     {
-        auto const animation = game->config["background_default_animation"].as<std::string>();
+        auto const animation = (*game->lua_state)["config"]["background_default_animation"];
         auto const spine = json["background"]["spine"].as<std::string>();
         if (!(*game->lua_state)["scenes"][scene]["background"].valid())
         {
@@ -175,19 +175,18 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         this->loadObjects(json["items"]);
     }
 
-
-    if (game->config["player"])
+    if ((*game->lua_state)["config"]["player"] != std::string(""))
     {
         if (!(*game->lua_state)["scenes"]["cross_scene"]["items"]["player"].valid())
         {
             // TODO der Player sollte hier nicht so eine extra behandlung bekommen.
-            auto const animation = game->config["player_start_animation"].as<std::string>();
+            auto const animation = (*game->lua_state)["config"]["player_start_animation"];
             if (game->player == nullptr)
             {
-                game->player = std::make_shared<Player>(game, game->config["player"].as<std::string>());
+                game->player = std::make_shared<Player>(game, (*game->lua_state)["config"]["player"]);
                 game->player->setCrossScene(true);
-                game->player->setPosition(jngl::Vec2{game->config["player_start_position"]["x"].as<double>(), game->config["player_start_position"]["y"].as<double>()});
-                game->player->setSkin(game->config["player_default_skin"].as<std::string>());
+                game->player->setPosition(jngl::Vec2{(*game->lua_state)["config"]["player_start_position"]["x"], (*game->lua_state)["config"]["player_start_position"]["y"]});
+                game->player->setSkin((*game->lua_state)["config"]["player_default_skin"]);
                 game->player->playAnimation(0, animation, true, (*game->lua_state)["pass"]);
 
                 game->player->toLuaState();
@@ -304,7 +303,7 @@ void Scene::createObjectJSON(const YAML::Node &object) {
         if (!animation.empty()) {
             interactable->playAnimation(0, animation, true, (*_game->lua_state)["pass"]);
         } else {
-            animation = _game->config["spine_default_animation"].as<std::string>();
+            animation = (*_game->lua_state)["config"]["spine_default_animation"];
         }
 
         interactable->setPosition(jngl::Vec2((object)["x"].as<float>(), (object)["y"].as<float>()));
@@ -354,7 +353,7 @@ void Scene::createObjectLua(std::string id, std::string scene) {
             interactable->abs_position = abs_position;
 
             if (animation.empty()) {
-                animation = _game->config["spine_default_animation"].as<std::string>();
+                animation = (*_game->lua_state)["config"]["spine_default_animation"];
             }
             interactable->playAnimation(0, animation, true,
                                         (*_game->lua_state)["pass"]);

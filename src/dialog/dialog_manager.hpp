@@ -34,7 +34,7 @@ public:
 
     void setSpeechBubblePosition(jngl::Vec2 position);
 #ifndef NDEBUG
-    int getChoiceTextsSize(){return choiceTexts.size();};
+    int getChoiceTextsSize(){return int(choiceTexts.size());};
 #endif
 private:
     void showTypewriterAnimation(const std::string &text);

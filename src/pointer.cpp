@@ -9,11 +9,7 @@
 #include <cassert>
 #include <spine/spine.h>
 
-Pointer::Pointer(std::shared_ptr<Game> game, const std::string &spine_file) : SpineObject(game, spine_file, "Pointer", .5),
-                                                                              GAMEPAD_SPEED_MULTIPLYER(game->config["gamepad_speed_multiplyer"].as<double>()),
-                                                                              max_speed(std::abs(game->config["pointer_max_speed"].as<float>())),
-                                                                              pointer_idle_animation(game->config["pointer_idle_animation"].as<std::string>()),
-                                                                              pointer_over_animation(game->config["pointer_over_animation"].as<std::string>())
+Pointer::Pointer(std::shared_ptr<Game> game, const std::string &spine_file) : SpineObject(game, spine_file, "Pointer", .5)
 {
     const auto controllers = jngl::getConnectedControllers();
     if (controllers.size() > pointerNr)
@@ -47,7 +43,8 @@ bool Pointer::step(bool)
         auto cam_pos = _game->getCameraPosition() - (screensize / 2.0);
         mouse_pose = (mouse_pose + cam_pos) / _game->getCameraZoom();
 
-        auto move = control->getMovement() * GAMEPAD_SPEED_MULTIPLYER;
+        float gamepad_speed_multiplyer = (*_game->lua_state)["config"]["gamepad_speed_multiplyer"];
+        auto move = control->getMovement() * gamepad_speed_multiplyer;
         auto movesec = control->getSecondaryMovement();
         if (move != jngl::Vec2(0, 0))
         {
@@ -73,6 +70,7 @@ bool Pointer::step(bool)
         {
             jngl::Vec2 tmp_target_position = target_position - position;
             auto magnitude = std::sqrt(boost::qvm::dot(tmp_target_position, tmp_target_position));
+            float max_speed = (*_game->lua_state)["config"]["pointer_max_speed"];
             if (magnitude != 0 && magnitude > max_speed)
             {
                 tmp_target_position *= max_speed / magnitude;
@@ -106,18 +104,18 @@ bool Pointer::step(bool)
 
         if (over)
         {
-            if (currentAnimation != pointer_over_animation)
+            if (currentAnimation != (*_game->lua_state)["config"]["pointer_over_animation"])
             {
-                currentAnimation = pointer_over_animation;
+                currentAnimation = (*_game->lua_state)["config"]["pointer_over_animation"];
                 playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
                 this->setSkin("active");
             }
         }
         else
         {
-            if (currentAnimation != pointer_idle_animation)
+            if (currentAnimation != (*_game->lua_state)["config"]["pointer_idle_animation"])
             {
-                currentAnimation = pointer_idle_animation;
+                currentAnimation = (*_game->lua_state)["config"]["pointer_idle_animation"];
                 playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
                 this->setSkin("inactive");
             }

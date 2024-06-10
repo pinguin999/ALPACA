@@ -24,7 +24,6 @@ public:
 private:
     std::string luaIndex;
 #ifndef NDEBUG
-    const float DEBUG_GRAP_DISTANCE;
     jngl::Vec2 dragposition = jngl::Vec2(0, 0);
 #endif
 };

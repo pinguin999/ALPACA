@@ -516,7 +516,7 @@ def on_data_src_modified(event) -> None:
 
 
 def fill_all_dialogs(path: Path, file: str) -> None:
-    with Path.open(path) as f:
+    with Path.open(path, encoding='utf-8') as f:
         dialogs = json.load(f)
         for dialog in dialogs["dialogs"]:
             if dialog["name"] in all_dialogs:

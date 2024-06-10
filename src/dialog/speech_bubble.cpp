@@ -13,8 +13,11 @@ SpeechBubble::SpeechBubble(std::shared_ptr<Game> game, const std::string &spine_
 
     auto textSize = text.getSize();
 
-    middlebone->scaleX = textSize.y / game->config["speechbubbleScaleX"].as<double>();
-    middlebone->scaleY = textSize.x / game->config["speechbubbleScaleY"].as<double>();
+    double speechbubbleScaleX = (*game->lua_state)["config"]["speechbubbleScaleX"];
+    double speechbubbleScaleY = (*game->lua_state)["config"]["speechbubbleScaleY"];
+
+    middlebone->scaleX = textSize.y / speechbubbleScaleX;
+    middlebone->scaleY = textSize.x / speechbubbleScaleY;
 
     if (position.x - textSize.x / 2.0 < -1920 / 2)
         position.x = std::max(position.x, -860.0 + textSize.x / 2.0);

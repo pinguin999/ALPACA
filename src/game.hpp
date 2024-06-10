@@ -21,6 +21,7 @@ public:
     void init();
     void loadSceneWithFade(std::string level);
     void setupLuaFunctions();
+    void configToLua();
     void saveLuaState(const std::string &savefile = "savegame");
     void loadLuaState(const std::optional<std::string> &savefile = "savegame");
 
@@ -79,11 +80,11 @@ public:
     const std::string getLuaPath(std::string objectId);
 
     const std::string cleanLuaString(std::string variable);
-    YAML::Node config;
     std::vector<std::shared_ptr<SpineObject>> gameObjects;
     bool enable_fade = true;
 
 private:
+    YAML::Node config;
     void loadScene(const std::string& level);
 
     std::vector<std::shared_ptr<SpineObject>> needToAdd;

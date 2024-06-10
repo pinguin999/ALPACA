@@ -21,7 +21,6 @@
     "start_scene": "test_chamber_one",
     "double_click_time": 0.3,
     "max_click_distance": 1000,
-    "near_object": 20,
     "debug_grap_distance": 40.0,
     "gamepad_speed_multiplyer": 11.0,
     "inventory": "inventory",
@@ -42,7 +41,6 @@
     "speechbubbleScaleY": 100.0,
     "pointer_max_speed": 4.0,
     "player_max_speed": 4.0,
-    "player_scale": 0.6,
     "player_start_position": {
         "x": 0,
         "y": 256
@@ -51,5 +49,5 @@
         "x": 250,
         "y": 100
     },
-    "supportedLanguages": ["de", "en"],
+    "supportedLanguages": ["de", "en"]
 }

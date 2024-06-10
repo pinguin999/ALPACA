@@ -6,10 +6,6 @@
 #include <cmath>
 
 InteractableObject::InteractableObject(const std::shared_ptr<Game> &game, const std::string &spine_file, const std::string &id, float scale) : SpineObject(game, spine_file, id, scale), luaIndex(id)
-#ifndef NDEBUG
-                                                                                                                                               ,
-                                                                                                                                               DEBUG_GRAP_DISTANCE(game->config["debug_grap_distance"].as<float>())
-#endif
 {
 }
 
@@ -31,6 +27,7 @@ bool InteractableObject::step(bool force)
         {
             auto mouse_pose = jngl::getMousePos();
 
+            double DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
             if (std::sqrt((mouse_pose.x - position.x) * (mouse_pose.x - position.x) + (mouse_pose.y - position.y) * (mouse_pose.y - position.y)) < DEBUG_GRAP_DISTANCE)
             {
                 position += (jngl::getMousePos() - dragposition) / _game->getCameraZoom();
@@ -138,6 +135,7 @@ void InteractableObject::draw() const
     {
         if (_game->editMode)
         {
+            float DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
             jngl::drawCircle(jngl::Vec2(0, 0), DEBUG_GRAP_DISTANCE);
             jngl::Text pposition;
             pposition.setText("x: " + std::to_string(position.x) + "\ny: " + std::to_string(position.y));
