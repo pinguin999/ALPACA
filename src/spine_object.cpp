@@ -103,11 +103,12 @@ std::optional<jngl::Vec2> SpineObject::getPoint(const std::string &point_name) c
     spPointAttachment *point = SUB_CAST(spPointAttachment, att);
     float x = 0;
     float y = 0;
-    if (point)
+    if (point && point->super.type == SP_ATTACHMENT_POINT)
     {
         spPointAttachment_computeWorldPosition(point, slot->bone, &x, &y);
+        return jngl::Vec2(x, y);
     }
-    return jngl::Vec2(x, y);
+    return std::nullopt;
 }
 
 std::vector<std::string> SpineObject::getPointNames() const

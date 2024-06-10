@@ -801,6 +801,11 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 			k = std::to_string(key.as<int>());
 		}
 
+		if (!parent.empty())
+		{
+			k = "[\"" + k + "\"]";
+		}
+
 		if (k != "_entry_node" &&
 			k != "_VERSION" &&
 			k.substr(0, 4) != "sol." &&
@@ -829,7 +834,12 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 				result += parent + k + " = \"" + v + "\"\n";
 				break;
 			case sol::type::number:
+				if (value.is<int>())
+				{
+					v = std::to_string(value.as<int>());
+				}else{
 				v = std::to_string(value.as<double>());
+				}
 				result += parent + k + " = " + v + "\n";
 				break;
 			case sol::type::boolean:
@@ -847,7 +857,7 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 				break;
 			case sol::type::table:
 				result += parent + k + " = {}\n";
-				result += backupLuaTable(value.as<sol::table>(), parent + k + ".");
+				result += backupLuaTable(value.as<sol::table>(), parent + k);
 				break;
 			}
 		}
