@@ -30,7 +30,9 @@ public:
     void draw() const override;
 
     std::deque<jngl::Vec2> getPathToTarget(jngl::Vec2 start, jngl::Vec2 target) const;
-
+#ifndef NDEBUG
+    std::unique_ptr<jngl::Sprite> sprite;
+#endif
 private:
     void stepSpineAndNavigation();
 

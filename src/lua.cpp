@@ -923,6 +923,9 @@ void Game::setupLuaFunctions()
 							[this](const std::string &file)
 							{
 								currentScene->zBufferMap = jngl::ImageData::load(file);
+#ifndef NDEBUG
+								currentScene->background->sprite = std::make_unique<jngl::Sprite>(*currentScene->zBufferMap, jngl::getScaleFactor());
+#endif
 								(*lua_state)["scenes"][currentScene->getSceneName()]["zBufferMap"] = file;
 							});
 
@@ -931,6 +934,9 @@ void Game::setupLuaFunctions()
 							[this]()
 							{
 								currentScene->zBufferMap = nullptr;
+#ifndef NDEBUG
+								currentScene->background->sprite = nullptr;
+#endif
 								if ((*lua_state)["scenes"][currentScene->getSceneName()]["zBufferMap"].valid())
 								{
 									(*lua_state)["scenes"][currentScene->getSceneName()]["zBufferMap"] = sol::lua_nil;

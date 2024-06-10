@@ -14,17 +14,11 @@ _SP_ARRAY_IMPLEMENT_TYPE(spColorArray, spColor)
 
 void _spAtlasPage_createTexture(spAtlasPage* self, const char* path) {
 	jngl::Sprite* texture;
-	try
-	{
+
 #ifndef NDEBUG
-		jngl::unload(path);
+	jngl::unload(path);
 #endif
-		texture = new jngl::Sprite(path);
-	}catch(...)
-	{
-		unsigned char color[] = {255, 255, 0, 255};
-		texture = new jngl::Sprite(color, 1, 1);
-	}
+	texture = new jngl::Sprite(path);
 
 	texture->setPos(0, 0);
 	// if (!texture->loadFromFile(path)) return;

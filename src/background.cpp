@@ -83,12 +83,9 @@ void Background::draw() const
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
-        if (_game->enablezMapDebugDraw && _game->currentScene->zBufferMap)
+        if (_game->enablezMapDebugDraw && sprite)
         {
-            auto sprite = jngl::Sprite{_game->currentScene->zBufferMap->pixels(),
-                                       static_cast<size_t>(_game->currentScene->zBufferMap->getWidth()),
-                                       static_cast<size_t>(_game->currentScene->zBufferMap->getHeight())};
-            sprite.draw();
+            sprite->draw();
         }
     }
 #endif
@@ -294,7 +291,7 @@ void Background::releaseNodes(std::vector<Node *> &nodes_)
 
 Node *Background::findNodeOnList(const std::vector<Node *> &nodes_, jngl::Vec2 coordinates_)
 {
-    for (auto *node : nodes_)
+    for (const auto node : nodes_)
     {
         if (node->coordinates == coordinates_)
         {
@@ -421,7 +418,7 @@ std::vector<std::vector<jngl::Vec2>> Background::getForbiddenCorners() const
 
 bool Background::is_walkable(jngl::Vec2 position) const
 {
-    const auto &walkableResult = spine::spSkeletonBounds_containsPointMatchingName(bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
+    const auto walkableResult = spine::spSkeletonBounds_containsPointMatchingName(bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
     if (!walkableResult)
     {
         return false;

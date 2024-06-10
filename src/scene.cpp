@@ -114,6 +114,9 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         if ((*game->lua_state)["scenes"][scene]["zBufferMap"].valid())
         {
             zBufferMap = jngl::ImageData::load((*game->lua_state)["scenes"][scene]["zBufferMap"]);
+#ifndef NDEBUG
+            background->sprite = std::make_unique<jngl::Sprite>(*zBufferMap, jngl::getScaleFactor());
+#endif
         }
     }
     else if (json["background"].IsDefined() && !json["background"].IsNull())
@@ -147,6 +150,9 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         {
             zBufferMap = jngl::ImageData::load(json["zBufferMap"].as<std::string>());
             (*game->lua_state)["scenes"][scene]["zBufferMap"] = json["zBufferMap"].as<std::string>();
+#ifndef NDEBUG
+            background->sprite = std::make_unique<jngl::Sprite>(*zBufferMap, jngl::getScaleFactor());
+#endif
         }
     }
 
