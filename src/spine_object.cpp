@@ -181,8 +181,9 @@ void SpineObject::onAnimationComplete(const std::string &key)
     }
 }
 
-void SpineObject::setSkin(const std::string &skin) const
+void SpineObject::setSkin(const std::string &skin)
 {
+    this->skin = skin;
     const int resault = spSkeleton_setSkinByName(skeleton->skeleton, skin.c_str());
     spSkeleton_setSlotsToSetupPose(skeleton->skeleton);
     if (!resault)
