@@ -1,8 +1,8 @@
 # Scenes
 
-An ALPACA game exists off at least one scene. A scene (Other engines may name this room or view) is the container for everything you have on screen.
+An ALPACA game consists of at least one scene. A scene (other engines may call it a room or view) is the container for everything you have on the screen.
 
-All informations are defined in a .json file. All scene files have to be in `data-src/scenes`. Here is our example `data-src/scenes/test_chamber_one.json`.
+All the information is defined in a .json file. All scene files must be in `data-src/scenes`. Here is our example `data-src/scenes/test_chamber_one.json`.
 
 ```json
 {
@@ -30,27 +30,27 @@ All informations are defined in a .json file. All scene files have to be in `dat
 ## Items
 
 Here you can define our items in the scene. An item always has a Spine file and a x and y position.
-It can optionally have an id, scale , skin, layer, animation, cross_scene.
+It can optionally have an id, scale, skin, layer, animation, cross_scene.
 
 ### spine
 
 The name of the Spine file. The file must exist in the data folder in a subfolder with the same name.
-Example: `"spine": "banana"` accepts an exported spine file at `data/banana/banana.json`.
+Example: `"spine": "banana"` will accept an exported spine file in `data/banana/banana.json`.
 
 ### x
 
-The x position of the item. The 0;0 point is in the center of the screen.
-**EditMode** In a debug build of ALPACA you can press <kbd>Tab</kbd> to go into the edit mode. There you can move items around and see their new location.
+The x position of the item. The 0;0 point is the center of the screen.
+**EditMode** In a debug build of ALPACA you can press <kbd>Tab</kbd> to stich to into edit mode. There you can move items around and see their new position.
 
 ![Move Item](move-item.gif)
 
 ### y
 
-The y position of the item. For more information see x.
+The y-position of the item. See x for more information.
 
 ### id
 
-*Optional* The id is needed to refer to an item. Per default the spine file name is used as id. But if you have more instances of an item in a scene you have to set id to refer to the items.
+*Optional* The id is needed to refer to an item. By default, the spine filename is used as the id. However if you have multiple instances of an item in a scene, you need to set the id to refer to the items.
 
 Example:
 
@@ -71,19 +71,19 @@ Example:
 
 ### layer
 
-*Optional* The normal draw order is based on the y position of an item. With layers you can bring items on top of others. Default layer is 1.
+*Optional* The normal drawing order is based on the y-position of an item. Layers allow you to place elements on top of each other. The default layer is 1.
 
 ### animation
 
-*Optional* Items play the default Spine animation `animation`. If you want another animation you can define it here. The animation will be played in a loop.
+*Optional* Items play the default Spine `animation`. If you want a different animation, you can specify it here. The animation will be played in a loop.
 
 ### cross_scene
 
-*Optional* Items are loaded with the scene and are destroyed when leaving the scene. If you want an item that moves to other scenes as well that you can set cross_scene to true.
+*Optional* Items are loaded with the scene and destroyed when you leave the scene. If you want an item to move to other scenes, you can set cross_scene to true.
 
 ## BackgroundMusic
 
-ALPACA supports one background music song per scene. If you move to another scene the music will stop and play this scene music. If boath scenes have the same background music, the music will continue playing and does not start from the beginning.
+ALPACA supports one background music song per scene. When you move to another scene, the music stops and the scene music is played. If several scenes have the same background music, the music will continue to play instead of starting from the beginning.
 
 Example:
 
@@ -93,30 +93,30 @@ Example:
 
 ## Background
 
-The background of a scene is also a Spine file. It has the parameters like an item.
+The background of a scene is also a Spine file. It has the same parameters as an item.
 
-To define the area where the player can walk, add a bounding box with the name `walkable_area` to the Spine file.
-A bounding box with the name `non_walkable_area` will create a hole into the `walkable_area`.
+To define the area where the player can walk, add a bounding box named `walkable_area` to the Spine file.
+A bounding box named `non_walkable_area` will create a hole in the `walkable_area`.
 
 ## zBufferMap
 
-To scale the player depending on the position in the scene, you can provide an extra image file.
-The images alpha value will be multipyed with the players scale.
+To scale the player depending on its position in the scene, you can provide an additional image file.
+The alpha value of the image will be multiplied with the scale of the player.
 No alpha means 1, so the player is not scaled.
-Full alpha mens the player is scaled to 0.
+Full alpha means the player is scaled to 0.
 
-The image has to be placed next to the scene background in a folder called `zBufferMap`.
+The image must be placed next to the scene background in a folder named `zBufferMap`.
 
 ## Borders
 
-With the 4 border vales you can limit the camera. This prevents that the black background is visible.
+With the 4 border values you can limit the camera. This prevents the black background from being visible.
 
 ## Doors
 
-To connect two scenes ALPACA uses the concept of doors. Normally you want the player to walk towards the door and than switch scenes.
+To connect two scenes ALPACA uses the concept of doors. Normally you want the player to go to the door and then switch scenes.
 In the new scene the player should be where the door is.
-Therefor ALPACA expects a Spine point near each door with next scenes name.
-After changing the scene, the player will be placed at the Spine point with last scenes name.
+Therefore ALPACA expects a Spine point near each door with the name of the next scene.
+After the scene change the player is placed at the Spine point with the name of the last scene.
 
 ```lua
 GoToPoint("scene_corridor_right", function ()

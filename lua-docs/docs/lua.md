@@ -1,4 +1,4 @@
-# Documentation for PAC's Lua functions
+# Documentation for ALPACA's Lua functions
 
 ::: lua.cpp
     handler: pac_handler

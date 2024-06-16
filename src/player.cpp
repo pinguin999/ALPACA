@@ -196,13 +196,13 @@ bool Player::step(bool /*force*/)
 
         if (_game->pointer->secondaryPressed())
         {
-            // Maybe Lua's DeattatchAllFromPointer here?
-            for (const auto &obj : _game->pointer->attatchedObjects)
+            // Maybe Lua's DeattachAllFromPointer here?
+            for (const auto &obj : _game->pointer->attachedObjects)
             {
                 obj->setParent(nullptr);
                 obj->setVisible(false);
             }
-            _game->pointer->attatchedObjects.clear();
+            _game->pointer->attachedObjects.clear();
         }
 
         if (_game->pointer->primaryDown() && !path.empty() && interruptible && !_game->pointer->isPrimaryAlreadyHandled())

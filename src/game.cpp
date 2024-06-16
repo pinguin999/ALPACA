@@ -162,9 +162,8 @@ void Game::configToLua()
 #ifndef NDEBUG
     (*lua_state)["config"]["debug_grap_distance"] = config["debug_grap_distance"].as<float>();
 #endif
-    (*lua_state)["config"]["gamepad_speed_multiplyer"] = config["gamepad_speed_multiplyer"].as<float>();
-    (*lua_state)["config"]["inventory"] = config["inventory"].as<std::string>();
-    (*lua_state)["config"]["inventar_default_skin"] = config["inventar_default_skin"].as<std::string>();
+    (*lua_state)["config"]["gamepad_speed_multiplier"] = config["gamepad_speed_multiplier"].as<float>();
+    (*lua_state)["config"]["inventory_default_skin"] = config["inventory_default_skin"].as<std::string>();
     (*lua_state)["config"]["player_default_skin"] = config["player_default_skin"].as<std::string>();
     (*lua_state)["config"]["player_side_skin"] = config["player_side_skin"].as<std::string>();
     (*lua_state)["config"]["player_front_skin"] = config["player_front_skin"].as<std::string>();

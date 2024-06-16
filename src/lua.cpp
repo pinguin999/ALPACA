@@ -32,29 +32,29 @@ std::optional<jngl::Vec2> getPointPosition(std::shared_ptr<Game> game, const std
 
 void Game::setupLuaFunctions()
 {
-	/// pass is a function doing nothing
-	/// You can use it for testing or for not needed callbacks
+	/// pass is a function that does nothing.
+	/// You can use it for testing or for unnecessary callbacks.
 	lua_state->set_function("pass",
 							[]()
 							{
 								// Just do nothing
 							});
 
-	/// Loads a new Scene/Room
+	/// Loads a new scene.
 	///
-	/// Door Example expects a Spine point object near the door:
+	/// This door example expects a Spine point object near the door:
 	///
-	/// function door()
-	///	LoadScene("cockpit")
-	/// end
-	/// GoToPoint("cockpit", door)
+	///	GoToPoint("cockpit", function ()
+	///		LoadScene("cockpit")
+	///	end)
+	///
 	lua_state->set_function("LoadScene",
 							[this](const LuaScene &scene)
 							{
 								loadSceneWithFade(scene);
 							});
 
-	/// Prevent the player to skip a interaktion and walking somewere else
+	/// Prevent the player from skipping an interaction or walking somewere else
 	lua_state->set_function("InterruptibleOff",
 							[this]()
 							{
@@ -70,11 +70,11 @@ void Game::setupLuaFunctions()
 								lua_state->script("game.interruptible = true");
 							});
 
-	/// Plays immediately an animation on the calling Spine object
-	/// int trackIndex: Spines animation track.
-	/// string newAnimation: Animation name that will be played.
-	/// bool loop: Should the animation be looped at the end.
-	/// function callback: called on the end of the animation, also on looped animations.
+	/// Play an animation on the calling Spine object
+	/// int trackIndex: Spine animation track.
+	/// string newAnimation: Name of the animation to play.
+	/// bool loop: Whether to loop the animation at the end.
+	/// function callback: Function to be called at the end of the animation, also for looped animations.
 	lua_state->set_function("PlayAnimation",
 							[this](int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, std::optional<sol::function> callback)
 							{
@@ -95,11 +95,11 @@ void Game::setupLuaFunctions()
 								}
 							});
 
-	/// Adds an animation on the calling Spine object that will be played after the current animation ends
-	/// int trackIndex: Spines animation track.
-	/// string newAnimation: Animation name that will be played.
-	/// bool loop: Should the animation be looped at the end.
-	/// function callback: called on the end of the animation, also on looped animations.
+	/// Adds an animation to the calling Spine object that will be played after the current animation ends.
+	/// int trackIndex: Spine animation track.
+	/// string newAnimation: Name of the animation to play.
+	/// bool loop: Whether to loop the animation at the end.
+	/// function callback: Function to be called at the end of the animation, also for looped animations.
 	lua_state->set_function("AddAnimation",
 							[this](int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, float delay, std::optional<sol::function> callback)
 							{
@@ -121,11 +121,11 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See PlayAnimation
-	/// SpineObject object: Objects ID that should be effected
-	/// int trackIndex: Spines animation track.
-	/// string newAnimation: Animation name that will be played.
-	/// bool loop: Should the animation be looped at the end.
-	/// function callback: called on the end of the animation, also on looped animations.
+	/// SpineObject object: ID of the object to affect
+	/// int trackIndex: Spine animation track.
+	/// string newAnimation: Name of the animation to play.
+	/// bool loop: Whether to loop the animation at the end.
+	/// function callback: Function to be called at the end of the animation, also for looped animations.
 	lua_state->set_function("PlayAnimationOn",
 							[this](const LuaSpineObject &object, int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, std::optional<sol::function> callback)
 							{
@@ -150,11 +150,11 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See AddAnimation
-	/// SpineObject object: Objects ID that should be effected
-	/// int trackIndex: Spines animation track.
-	/// string newAnimation: Animation name that will be played.
-	/// bool loop: Should the animation be looped at the end.
-	/// function callback: called on the end of the animation, also on looped animations.
+	/// SpineObject object: ID of the object to affect
+	/// int trackIndex: Spine animation track.
+	/// string newAnimation: Name of the animation to play.
+	/// bool loop: Whether to loop the animation at the end.
+	/// function callback: Function to be called at the end of the animation, also for looped animations.
 	lua_state->set_function("AddAnimationOn",
 							[this](const LuaSpineObject &object, int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, float delay, std::optional<sol::function> callback)
 							{
@@ -178,8 +178,8 @@ void Game::setupLuaFunctions()
 								}
 							});
 
-	/// Set Spine skin on an Spine object
-	/// string skin: Spines Skin name
+	/// Set a skin on a Spine object
+	/// string skin: The name of the Spine skin
 	lua_state->set_function("SetSkin",
 							[this](const LuaSpineSkin &skin)
 							{
@@ -191,8 +191,8 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See SetSkin
-	/// SpineObject object: Objects ID that should be effected
-	/// string skin: Spines Skin name
+	/// SpineObject object: ID of the object to affect
+	/// string skin: The name of the Spine skin
 	lua_state->set_function("SetSkinOn",
 							[this](const LuaSpineObject &object, const LuaSpineSkin &skin)
 							{
@@ -205,8 +205,8 @@ void Game::setupLuaFunctions()
 								}
 							});
 
-	/// Plays a dialog by name
-	/// string dialogName: Name of the skin that will be set.
+	/// Play a dialog by name
+	/// string dialogName: The dialog to play.
 	lua_state->set_function("PlayDialog",
 							[this](const LuaDialog &dialogName, std::optional<sol::function> callback)
 							{
@@ -226,25 +226,25 @@ void Game::setupLuaFunctions()
 								getDialogManager()->play(dialogName, jngl::Vec2(x, -y) + obj->getPosition(), callback.value());
 							});
 
-	/// Adds the current item to the inventory.
-	/// The items skin will be set to inventar_default_skin
-	/// The item will be moved from the scene to inventory_items
+	/// Add the current item to the inventory.
+	/// Sets the skin of the item of the item to inventory_default_skin
+	/// Move the item from the scene to inventory_items.
 	lua_state->set_function("AddToInventory",
 							[this]()
 							{
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								obj->setSkin((*lua_state)["config"]["inventar_default_skin"]);
+								obj->setSkin((*lua_state)["config"]["inventory_default_skin"]);
 								obj->setCrossScene(true);
 								obj->setVisible(false);
 								(*lua_state)["inventory_items"][obj->getId()] = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
-								(*lua_state)["inventory_items"][obj->getId()]["skin"] = (*lua_state)["config"]["inventar_default_skin"];
+								(*lua_state)["inventory_items"][obj->getId()]["skin"] = (*lua_state)["config"]["inventory_default_skin"];
 								(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
 								(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
 							});
 
 	/// See AddToInventory
-	/// string skin: A skin that will be set insted of inventar_default_skin
+	/// string skin: The name of the Spine skin
 	lua_state->set_function("AddToInventoryWithSkin",
 							[this](const LuaSpineSkin &skin)
 							{
@@ -260,19 +260,19 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See AddToInventory
-	/// SpineObject object: Objects ID that should be effected
-	/// Note: The object has to be in the scene, this function does not create new objects. The object can be placed outside of the scenes view.
+	/// SpineObject object: ID of the object to affect
+	/// Note: The object must be in the scene, this function does not create new objects. The object can be placed outside the scene view.
 	lua_state->set_function("AddToInventoryOn",
 							[this](const LuaSpineObject &object)
 							{
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
-									obj->setSkin((*lua_state)["config"]["inventar_default_skin"]);
+									obj->setSkin((*lua_state)["config"]["inventory_default_skin"]);
 									obj->setCrossScene(true);
 									obj->setVisible(false);
 									(*lua_state)["inventory_items"][obj->getId()] = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
-									(*lua_state)["inventory_items"][obj->getId()]["skin"] = (*lua_state)["config"]["inventar_default_skin"];
+									(*lua_state)["inventory_items"][obj->getId()]["skin"] = (*lua_state)["config"]["inventory_default_skin"];
 									(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
 									(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
@@ -280,9 +280,9 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See AddToInventory
-	/// SpineObject object: Objects ID that should be effected
-	/// string skin: A skin that will be set insted of inventar_default_skin
-	/// Note: See AddToInventoryOn's note.
+	/// SpineObject object: ID of the object to affect
+	/// string skin: The name of the Spine skin
+	/// Note: See the AddToInventoryOn note.
 	lua_state->set_function("AddToInventoryWithSkinOn",
 							[this](const LuaSpineObject &object, const LuaSpineSkin &skin)
 							{
@@ -322,18 +322,18 @@ void Game::setupLuaFunctions()
 							});
 
 	/// Set deleted in the current object.
-	/// Objects get only deleted at the end of the frame.
+	/// Objects are only deleted at the end of the frame.
 	lua_state->set_function("SetDeleted",
 							[this]()
 							{
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								auto inter = std::static_pointer_cast<InteractableObject>(obj);
 								obj->setParent(nullptr);
-								for (auto it = pointer->attatchedObjects.begin(); it != pointer->attatchedObjects.end();)
+								for (auto it = pointer->attachedObjects.begin(); it != pointer->attachedObjects.end();)
 								{
 									if ((*it) == nullptr || (*it) == obj)
 									{
-										it = pointer->attatchedObjects.erase(it);
+										it = pointer->attachedObjects.erase(it);
 									}
 									else
 									{
@@ -345,8 +345,8 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See SetDeleted
-	/// SpineObject object: Objects ID that should be effected
-	/// Note: SetDeleted can not be called on the last frame of an animation via a Spine event.
+	/// SpineObject object: ID of the object to affect
+	/// Note: SetDeleted cannot be called on the last frame of an animation via a Spine event.
 	lua_state->set_function("SetDeletedOn",
 							[this](const LuaSpineObject &object)
 							{
@@ -355,11 +355,11 @@ void Game::setupLuaFunctions()
 								{
 									auto inter = std::static_pointer_cast<InteractableObject>(obj);
 									obj->setParent(nullptr);
-									for (auto it = pointer->attatchedObjects.begin(); it != pointer->attatchedObjects.end();)
+									for (auto it = pointer->attachedObjects.begin(); it != pointer->attachedObjects.end();)
 									{
 										if ((*it) == nullptr || (*it) == obj)
 										{
-											it = pointer->attatchedObjects.erase(it);
+											it = pointer->attachedObjects.erase(it);
 										}
 										else
 										{
@@ -372,7 +372,7 @@ void Game::setupLuaFunctions()
 							});
 
 	/// Get all Spine points from this Spine object
-	/// returns: a list of positions
+	/// returns: a list of points
 	lua_state->set_function("GetPointNames",
 							[this]()
 							{
@@ -387,7 +387,7 @@ void Game::setupLuaFunctions()
 	/// for i = 1, #points do
 	///    print(i, points[i])
 	/// end
-	/// SpineObject object: Objects ID that should be effected
+	/// SpineObject object: ID of the object to affect
 	/// returns: a list of positions
 	lua_state->set_function("GetPointNamesOn",
 							[this](const LuaSpineObject &object)
@@ -400,9 +400,9 @@ void Game::setupLuaFunctions()
 								throw std::runtime_error("No object " + object);
 							});
 
-	/// Send the player to a point's position of this Spine object.
-	/// string point_name: Name of the point the player should go to
-	/// function callback: Function that will becalled when the layer reaches the position
+	/// Send the player to the position of a point of this Spine object.
+	/// string point_name: Name of the Spine point the player should go to
+	/// function callback: Function to be called when the layer reaches the position
 	lua_state->set_function("GoToPoint",
 							[this](const LuaSpinePoint &point_name, std::optional<sol::function> callback)
 							{
@@ -418,9 +418,9 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See GoToPoint
-	/// SpineObject object: Objects ID that should be effected
-	/// string point_name: Name of the point the player should go to
-	/// function callback: Function that will becalled when the layer reaches the position
+	/// SpineObject object: ID of the object to affect
+	/// string point_name: Name of the Spine point the player should go to
+	/// function callback: Function to be called when the layer reaches the position
 	lua_state->set_function("GoToPointOn",
 							[this](const LuaSpineObject &object, const LuaSpinePoint &point_name, std::optional<sol::function> callback)
 							{
@@ -438,7 +438,7 @@ void Game::setupLuaFunctions()
 								}
 							});
 
-	/// Stop player in position
+	/// Stop the player at this position.
 	lua_state->set_function("StopWalking",
 							[this]()
 							{
@@ -446,7 +446,7 @@ void Game::setupLuaFunctions()
 							});
 
 	/// Debug function to get the position of a Spine point.
-	/// string point_name: Spine point name
+	/// string point_name: Name of the Spine point
 	/// returns: Tupe(x, y)
 	lua_state->set_function("GetPointPosition",
 							[this](const LuaSpinePoint &point_name)
@@ -458,8 +458,8 @@ void Game::setupLuaFunctions()
 								return std::tuple(0.0, 0.0);
 							});
 
-	/// Set's an objects position to a Spine point
-	/// string point_name: Spine point name
+	/// Set the position of an object to a Spine point.
+	/// string point_name: Name of the Spine point
 	lua_state->set_function("SetPositionToPoint",
 							[this](const LuaSpinePoint &point_name)
 							{
@@ -476,8 +476,8 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See SetPositionToPoint
-	/// SpineObject object: Objects ID that should be effected
-	/// string point_name: Spine point name
+	/// SpineObject object: ID of the object to affect
+	/// string point_name: Name of the Spine point
 	lua_state->set_function("SetPositionToPointOn",
 							[this](const LuaSpineObject &object, const LuaSpinePoint &point_name)
 							{
@@ -497,9 +497,9 @@ void Game::setupLuaFunctions()
 							});
 
 	// See SetPositionToPoint
-	/// SpineObject object: Objects ID that should be effected
+	/// SpineObject object: ID of the object to affect
 	/// string from: Objects ID that provides the point
-	/// string point_name: Spine point name
+	/// string point_name: Name of the Spine point
 	lua_state->set_function("SetOnToPointFrom",
 							[this](const LuaSpineObject &object, const LuaSpineObject &from, const LuaSpinePoint &point_name)
 							{
@@ -523,7 +523,7 @@ void Game::setupLuaFunctions()
 								}
 							});
 
-	/// Hides a Spine object.
+	/// Hide a Spine object.
 	lua_state->set_function("SetHidden",
 							[this]()
 							{
@@ -534,7 +534,7 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See SetHidden
-	/// SpineObject object: Objects ID that should be effected
+	/// SpineObject object: ID of the object to affect
 	lua_state->set_function("SetHiddenOn",
 							[this](const LuaSpineObject &object)
 							{
@@ -547,7 +547,7 @@ void Game::setupLuaFunctions()
 								}
 							});
 
-	/// Unhides a Spine object.
+	/// Make a Spine object visible.
 	lua_state->set_function("SetVisible",
 							[this]()
 							{
@@ -558,7 +558,7 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See SetVisible
-	/// SpineObject object: Objects ID that should be effected
+	/// SpineObject object: ID of the object to affect
 	lua_state->set_function("SetVisibleOn",
 							[this](const LuaSpineObject &object)
 							{
@@ -571,8 +571,9 @@ void Game::setupLuaFunctions()
 								}
 							});
 
-	/// Sets the render layer of an Object. Via layers it's also able to make objects under a specific laxer not interactable.
-	/// int layer: Layer number
+	/// Set the render layer of an Object.
+	/// It's also possible to make objects non-interactive below a certain layer.
+	/// int layer: Number of the layer
 	lua_state->set_function("SetLayer",
 							[this](int layer)
 							{
@@ -583,7 +584,7 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See SetLayer
-	/// SpineObject object: Objects ID that should be effected
+	/// SpineObject object: ID of the object to affect
 	lua_state->set_function("SetLayerOn",
 							[this](const LuaSpineObject &object, int layer)
 							{
@@ -596,60 +597,60 @@ void Game::setupLuaFunctions()
 								}
 							});
 
-	/// Set all objects with a lower layer this value not interactable. Usefull for a menu, inventory or an intro playing ontop of a scene.
-	/// int layer: Layer [default: 0]
+	/// Make all objects with a layer below this value non-interactive. Useful for a menu, inventory or intro that plays over a scene.
+	/// int layer: The layer number [default: 0].
 	lua_state->set_function("SetInactivLayerBorder",
 							[this](int layer)
 							{
 								setInactivLayerBorder(layer);
 							});
 
-	/// Attatch the spine object to the mouse pointer
-	lua_state->set_function("AttatchToPointer",
+	/// Attach the Spine object to the mouse pointer.
+	lua_state->set_function("AttachToPointer",
 							[this]()
 							{
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->setParent(pointer);
-								pointer->attatchedObjects.push_back(obj);
+								pointer->attachedObjects.push_back(obj);
 							});
 
-	/// See AttatchToPointer
-	/// SpineObject object: Objects ID that should be effected
-	lua_state->set_function("AttatchToPointerOn",
+	/// See AttachToPointer
+	/// SpineObject object: ID of the object to affect
+	lua_state->set_function("AttachToPointerOn",
 							[this](const LuaSpineObject &object)
 							{
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									obj->setParent(pointer);
-									pointer->attatchedObjects.push_back(obj);
+									pointer->attachedObjects.push_back(obj);
 								}
 							});
 
-	/// TODO not implemented jet
-	lua_state->set_function("DeattatchAllFromPointer",
+	/// Deatatch all Spine object from the pointer
+	lua_state->set_function("DeattachAllFromPointer",
 							[this]()
 							{
-								for (auto &obj : pointer->attatchedObjects)
+								for (auto &obj : pointer->attachedObjects)
 								{
 									obj->setParent(nullptr);
 									obj->setVisible(false);
 								}
-								pointer->attatchedObjects.clear();
+								pointer->attachedObjects.clear();
 							});
 
 	/// Deatatch the Spine object from the pointer
-	lua_state->set_function("DeattatchFromPointer",
+	lua_state->set_function("DeattachFromPointer",
 							[this]()
 							{
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->setParent(nullptr);
 
-								for (auto it = pointer->attatchedObjects.begin(); it != pointer->attatchedObjects.end();)
+								for (auto it = pointer->attachedObjects.begin(); it != pointer->attachedObjects.end();)
 								{
 									if ((*it) == nullptr || (*it) == obj)
 									{
-										it = pointer->attatchedObjects.erase(it);
+										it = pointer->attachedObjects.erase(it);
 									}
 									else
 									{
@@ -658,9 +659,9 @@ void Game::setupLuaFunctions()
 								}
 							});
 
-	/// See DeattatchFromPointer
-	/// SpineObject object: Objects ID that should be effected
-	lua_state->set_function("DeattatchFromPointerOn",
+	/// See DeattachFromPointer
+	/// SpineObject object: ID of the object to affect
+	lua_state->set_function("DeattachFromPointerOn",
 							[this](const LuaSpineObject &object)
 							{
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
@@ -668,11 +669,11 @@ void Game::setupLuaFunctions()
 								{
 									obj->setParent(nullptr);
 
-									for (auto it = pointer->attatchedObjects.begin(); it != pointer->attatchedObjects.end();)
+									for (auto it = pointer->attachedObjects.begin(); it != pointer->attachedObjects.end();)
 									{
 										if ((*it) == nullptr || (*it) == obj)
 										{
-											it = pointer->attatchedObjects.erase(it);
+											it = pointer->attachedObjects.erase(it);
 										}
 										else
 										{
@@ -682,9 +683,9 @@ void Game::setupLuaFunctions()
 								}
 							});
 
-	/// Is the attatched spine object to the mouse pointer
+	/// Is the Spine object attached to the mouse pointer
 	/// returns: bool
-	lua_state->set_function("IsAttatchedToPointer",
+	lua_state->set_function("IsAttachedToPointer",
 							[this]()
 							{
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
@@ -692,10 +693,10 @@ void Game::setupLuaFunctions()
 								return parent != nullptr;
 							});
 
-	/// See IsAttatchedToPointer
-	/// SpineObject object: Objects ID that should be effected
+	/// See IsAttachedToPointer
+	/// SpineObject object: ID of the object to affect
 	/// returns: bool
-	lua_state->set_function("IsAttatchedToPointerOn",
+	lua_state->set_function("IsAttachedToPointerOn",
 							[this](const LuaSpineObject &object)
 							{
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
@@ -707,12 +708,12 @@ void Game::setupLuaFunctions()
 								return false;
 							});
 
-	/// Is something attatched to the mouse pointer
+	/// Is something attached to the mouse pointer
 	/// returns: bool
-	lua_state->set_function("IsSomethingAttatchedToPointer",
+	lua_state->set_function("IsSomethingAttachedToPointer",
 							[this]()
 							{
-								return pointer->attatchedObjects.size() != 0;
+								return pointer->attachedObjects.size() != 0;
 							});
 
 	/// Rote a Spine object
@@ -725,7 +726,7 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See SetRotation
-	/// SpineObject object: Objects ID that should be effected
+	/// SpineObject object: ID of the object to affect
 	/// float rotation: A number between 0.0 and 365.0
 	lua_state->set_function("SetRotationOn",
 							[this](const LuaSpineObject &object, const float rotation)
@@ -738,7 +739,7 @@ void Game::setupLuaFunctions()
 							});
 
 	/// Scale a Spine object
-	/// float: Scale
+	/// float: The scale
 	lua_state->set_function("SetScale",
 							[this](const float scale)
 							{
@@ -747,8 +748,8 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See SetScale
-	/// SpineObject object: Objects ID that should be effected
-	/// float: Scale
+	/// SpineObject object: ID of the object to affect
+	/// float: The scale
 	lua_state->set_function("SetScaleOn",
 							[this](const LuaSpineObject &object, const float scale)
 							{
@@ -759,7 +760,7 @@ void Game::setupLuaFunctions()
 								}
 							});
 
-	/// Get time in secunds since the start of the game
+	/// Returns the time in seconds since the game started.
 	/// returns: Number
 	lua_state->set_function("GetTime",
 							[]()
@@ -767,8 +768,9 @@ void Game::setupLuaFunctions()
 								return jngl::getTime();
 							});
 
-	/// Set players max walking speed. Can be set to 0 if the player should not be able to walk.
-	/// float speed: Max speed value
+	/// Set the maximum speed of the player.
+	/// Can be set to 0 if the player should not be able to walk.
+	/// float speed: value of the maximum speed
 	lua_state->set_function("SetPlayerMaxSpeed",
 							[this](float max_speed)
 							{
@@ -776,7 +778,7 @@ void Game::setupLuaFunctions()
 								(*lua_state)["scenes"]["cross_scene"]["items"]["player"]["max_speed"] = max_speed;
 							});
 
-	/// Creates a game object from a Spine file
+	/// Create a game object from a Spine file
 	/// string spine_file
 	/// string id
 	/// float scale
@@ -789,7 +791,8 @@ void Game::setupLuaFunctions()
 								add(std::static_pointer_cast<SpineObject>(interactable));
 							});
 
-	/// Play a audio file via script. It's much better to use Spine events to trigger sound to get them in sync with the animation
+	/// Playing an audio file.
+	/// It's much better to use Spine events to trigger the sound to keep it in sync with the animation
 	/// string file: The audio file
 	lua_state->set_function("PlayAudio",
 							[](const LuaAudio &file)
@@ -797,7 +800,7 @@ void Game::setupLuaFunctions()
 								jngl::play("audio/" + file);
 							});
 
-	/// Stop a audio file via script.
+	/// Stop an audio file.
 	/// string file: The audio file
 	lua_state->set_function("StopAudio",
 							[](const LuaAudio &file)
@@ -805,7 +808,7 @@ void Game::setupLuaFunctions()
 								jngl::stop("audio/" + file);
 							});
 
-	/// Checks if a audio file is playing.
+	/// Checks if an audio file is playing.
 	/// string file: The audio file
 	/// returns:a bool indication if the audio is playing
 	lua_state->set_function("isAudioPlaying",
@@ -814,7 +817,7 @@ void Game::setupLuaFunctions()
 								return jngl::isPlaying("audio/" + file);
 							});
 
-	/// Set SpeechBubble to a Spine point
+	/// Set a speech bubble to a Spine point.
 	/// string point_name: Spine point name
 	lua_state->set_function("SetSpeechBubbleToPoint",
 							[this](const LuaSpinePoint &point_name)
@@ -829,7 +832,7 @@ void Game::setupLuaFunctions()
 							});
 
 	/// See SetSpeechBubbleToPoint
-	/// SpineObject object: Objects ID that should be effected
+	/// SpineObject object: ID of the object to affect
 	/// string point_name: Spine point name
 	lua_state->set_function("SetSpeechBubbleToPointOn",
 							[this](const LuaSpineObject &object, const LuaSpinePoint &point_name)
@@ -856,16 +859,16 @@ void Game::setupLuaFunctions()
 								return obj->getId();
 							});
 
-	/// Set the players scale
-	/// float: Scale
+	/// Set the player's x-scale
+	/// float: The scale
 	lua_state->set_function("SetPlayerScaleX",
 							[this](const float scale)
 							{
 								player->skeleton->skeleton->scaleX = scale;
 							});
 
-	/// Set language
-	/// string: example 'de' or 'en'
+	/// Set the language
+	/// string: Example 'de' or 'en'
 	lua_state->set_function("SetLanguage",
 							[this](const LuaLanguage &language)
 							{
@@ -911,7 +914,7 @@ void Game::setupLuaFunctions()
 								init();
 							});
 
-	/// Clears the savegame file
+	/// Delete the savegame file
 	lua_state->set_function("DeleteSaveGame",
 							[]()
 							{

@@ -38,7 +38,7 @@ public:
     bool primary() const;
     bool secondary() const;
 
-    std::vector<std::shared_ptr<SpineObject>> attatchedObjects;
+    std::vector<std::shared_ptr<SpineObject>> attachedObjects;
 
 private:
     bool primaryAlreadyHandled = false;

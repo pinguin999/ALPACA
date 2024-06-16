@@ -43,8 +43,8 @@ bool Pointer::step(bool)
         auto cam_pos = _game->getCameraPosition() - (screensize / 2.0);
         mouse_pose = (mouse_pose + cam_pos) / _game->getCameraZoom();
 
-        float gamepad_speed_multiplyer = (*_game->lua_state)["config"]["gamepad_speed_multiplyer"];
-        auto move = control->getMovement() * gamepad_speed_multiplyer;
+        float gamepad_speed_multiplier = (*_game->lua_state)["config"]["gamepad_speed_multiplier"];
+        auto move = control->getMovement() * gamepad_speed_multiplier;
         auto movesec = control->getSecondaryMovement();
         if (move != jngl::Vec2(0, 0))
         {

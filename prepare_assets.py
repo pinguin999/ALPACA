@@ -303,16 +303,16 @@ def parse_spine_json(spine_file: str) -> None:
                 if "attachments" not in spine_object["skins"][i]:
                     continue
 
-                attatchment_obj = spine_object["skins"][i]["attachments"]
-                for attachment in attatchment_obj:
-                    for subattachment in attatchment_obj[attachment]:
-                        if "name" in attatchment_obj[attachment][subattachment]:
-                            bbname = attatchment_obj[attachment][subattachment]["name"]
+                attachment_obj = spine_object["skins"][i]["attachments"]
+                for attachment in attachment_obj:
+                    for subattachment in attachment_obj[attachment]:
+                        if "name" in attachment_obj[attachment][subattachment]:
+                            bbname = attachment_obj[attachment][subattachment]["name"]
                         else:
                             bbname = subattachment
 
-                        if "type" in attatchment_obj[attachment][subattachment] \
-                                and attatchment_obj[attachment][subattachment]["type"] == "boundingbox":
+                        if "type" in attachment_obj[attachment][subattachment] \
+                                and attachment_obj[attachment][subattachment]["type"] == "boundingbox":
                             if bbname == "walkable_area" or bbname == "non_walkable_area":  # No scripts for navmeshes
                                 continue
                             if (not bbname.startswith("dlg:") and not bbname.startswith("anim:") and
