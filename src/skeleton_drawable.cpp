@@ -122,6 +122,7 @@ void SkeletonDrawable::draw() const {
         }
 
         float* vertices = worldVertices;
+		int verticesCount = 0;
 		float* uvs = nullptr;
 		unsigned short* indices = nullptr;
 		int indicesCount = 0;
@@ -130,6 +131,7 @@ void SkeletonDrawable::draw() const {
 		if (attachment->type == SP_ATTACHMENT_REGION) {
             auto *regionAttachment = reinterpret_cast<spRegionAttachment *>(attachment);
             spRegionAttachment_computeWorldVertices(regionAttachment, slot, vertices, 0, 2);
+			verticesCount = 4;
 			uvs = regionAttachment->uvs;
 			indices = quadIndices;
 			indicesCount = 6;
@@ -146,6 +148,7 @@ void SkeletonDrawable::draw() const {
             texture = static_cast<jngl::Sprite *>((static_cast<spAtlasRegion *>(mesh->rendererObject))->page->rendererObject);
             spVertexAttachment_computeWorldVertices(
 			    SUPER(mesh), slot, 0, mesh->super.worldVerticesLength, worldVertices, 0, 2);
+			verticesCount = mesh->super.worldVerticesLength >> 1;
 			uvs = mesh->uvs;
 			indices = mesh->triangles;
 			indicesCount = mesh->trianglesCount;
@@ -186,19 +189,23 @@ void SkeletonDrawable::draw() const {
             continue;
         }
 
-         if (attachmentColor == nullptr)
-		 {
-		 	attachmentColor = blancColor;
-		 }
-		 const auto r =
-		 	static_cast<uint8_t>(skeleton->color.r * slot->color.r * attachmentColor->r * 255);
-		 const auto g =
-		 	static_cast<uint8_t>(skeleton->color.g * slot->color.g * attachmentColor->g * 255);
-		 const auto b =
-		 	static_cast<uint8_t>(skeleton->color.b * slot->color.b * attachmentColor->b * 255);
-		 const auto a =
-		 	static_cast<uint8_t>(skeleton->color.a * slot->color.a * attachmentColor->a * 255);
+		if (attachmentColor == nullptr)
+		{
+			attachmentColor = blancColor;
+		}
+		const auto r = static_cast<uint8_t>(skeleton->color.r * slot->color.r * attachmentColor->r * 255);
+		const auto g = static_cast<uint8_t>(skeleton->color.g * slot->color.g * attachmentColor->g * 255);
+		const auto b = static_cast<uint8_t>(skeleton->color.b * slot->color.b * attachmentColor->b * 255);
+		const auto a = static_cast<uint8_t>(skeleton->color.a * slot->color.a * attachmentColor->a * 255);
 
+		if (spSkeletonClipping_isClipping(clipper)) {
+			spSkeletonClipping_clipTriangles(clipper, vertices, verticesCount << 1, indices, indicesCount, uvs, 2);
+			vertices = clipper->clippedVertices->items;
+			verticesCount = clipper->clippedVertices->size >> 1;
+			uvs = clipper->clippedUVs->items;
+			indices = clipper->clippedTriangles->items;
+			indicesCount = clipper->clippedTriangles->size;
+		}
 
 			std::vector<jngl::Vertex> vertexArray;
 			for (int i = 0; i < indicesCount; ++i) {
