@@ -414,6 +414,7 @@ void Game::setupLuaFunctions()
 								if (!position)
 									return;
 								std::static_pointer_cast<InteractableObject>(obj)->goToPosition(*position, callback.value());
+								pointer->setPrimaryHandled();
 								// TODO Write Players position to Lua
 							});
 
@@ -434,6 +435,7 @@ void Game::setupLuaFunctions()
 									if (!position)
 										return;
 									std::static_pointer_cast<InteractableObject>(obj)->goToPosition(*position, callback.value());
+									pointer->setPrimaryHandled();
 									// TODO Write Players position to Lua
 								}
 							});

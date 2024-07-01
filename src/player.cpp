@@ -205,7 +205,7 @@ bool Player::step(bool /*force*/)
             _game->pointer->attachedObjects.clear();
         }
 
-        if (_game->pointer->primaryDown() && !path.empty() && interruptible && !_game->pointer->isPrimaryAlreadyHandled())
+        if (_game->pointer->primaryDown() && !path.empty() && interruptible && !_game->pointer->isPrimaryAlreadyHandled() && walk_callback == (*_game->lua_state)["pass"] )
         {
             const jngl::Vec2 click_position = _game->pointer->getPosition();
 
