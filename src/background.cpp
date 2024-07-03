@@ -141,7 +141,7 @@ void Background::draw() const
                 auto pos = getPoint(point_name);
                 if (pos)
                 {
-                    jngl::drawPoint(pos->x, pos->y);
+                    jngl::drawCircle(jngl::modelview().translate(jngl::Vec2(pos->x, pos->y)), 1);
                     jngl::Text bbname;
                     bbname.setText(point_name);
                     bbname.setAlign(jngl::Alignment::CENTER);
