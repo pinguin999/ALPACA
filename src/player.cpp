@@ -360,6 +360,7 @@ float Player::getMaxSpeed() const
     if (auto _game = game.lock()) {
         return (*_game->lua_state)["config"]["player_max_speed"];
     }
+    throw std::runtime_error("Couldn't lock game.");
 }
 
 void Player::setMaxSpeed(float speed)
