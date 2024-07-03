@@ -102,7 +102,7 @@ private:
     std::shared_ptr<GifAnim> gifAnimation;
     std::shared_ptr<GifWriter> gifWriter;
     bool recordingGif = false;
-    uint8_t *gifBuffer;
+    std::unique_ptr<uint8_t[]> gifBuffer;
     int gifGameFrame;
     double gifTime;
     const int GIF_FRAME_SKIP = 10;

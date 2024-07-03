@@ -80,7 +80,7 @@ Game::Game(const YAML::Node &config) : config(config),
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 	gifAnimation = std::make_shared<GifAnim>();
 	gifWriter = std::make_shared<GifWriter>();
-	gifBuffer = new uint8_t[(jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR * (jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR)) * 4];
+	gifBuffer = std::make_unique<uint8_t[]>((jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR * (jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR)) * 4);
 #endif
 
 	// open some common libraries
@@ -258,9 +258,6 @@ Game::~Game()
 	gameObjects.clear();
 	needToAdd.clear();
 	needToRemove.clear();
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
-	delete[] gifBuffer;
-#endif
 }
 
 void Game::step()
@@ -454,7 +451,7 @@ void Game::debugStep()
 			auto timeDiff = currentTime - gifTime;
 
 			gifAnimation->GifWriteFrame(gifWriter.get(),
-										gifBuffer,
+										gifBuffer.get(),
 										jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR,
 										jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR,
 										(uint32_t)timeDiff,
