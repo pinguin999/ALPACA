@@ -46,11 +46,11 @@ private:
     void hideChoices();
     void hideCharacterText();
 
-    std::shared_ptr<schnacker::AnswersStepResult> currentAnswers = nullptr;
+    std::shared_ptr<schnacker::AnswersStepResult> currentAnswers;
 
-    std::shared_ptr<schnacker::SchnackFile> schnackFile = nullptr;
-    std::shared_ptr<schnacker::Dialog> currentDialog = nullptr;
-    std::shared_ptr<schnacker::Node> currentNode = nullptr;
+    std::shared_ptr<schnacker::SchnackFile> schnackFile;
+    std::shared_ptr<schnacker::Dialog> currentDialog;
+    std::shared_ptr<schnacker::Node> currentNode;
 
     jngl::Font typewriterFont;
     jngl::Font dialogFont;
@@ -63,7 +63,7 @@ private:
     std::shared_ptr<SpeechBubble> bubble;
     jngl::Vec2 bubble_pos = {0, 0};
     int selected_index;
-    std::string last_played_audio = "";
+    std::string last_played_audio;
     bool wasActiveLastFrame = false;
     sol::function dialog_callback;
 	const std::weak_ptr<Game> game;
