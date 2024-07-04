@@ -3,6 +3,13 @@
 
 #include <fstream>
 
+#ifndef NDEBUG
+void pac_unload_file(const char* path)
+{
+	jngl::unload(path);
+}
+#endif
+
 class QuitWithEscape : public jngl::Job
 {
 public:

@@ -472,8 +472,8 @@ void Game::setupLuaFunctions()
 								{
 									obj->setPosition(position.value());
 									std::string lua_object = getLuaPath(obj->getId());
-									lua_state->script(lua_object + ".x = \"" + std::to_string(position->x) + "\"");
-									lua_state->script(lua_object + ".y = \"" + std::to_string(position->y) + "\"");
+									lua_state->script(lua_object + ".x = " + std::to_string(position->x) + "");
+									lua_state->script(lua_object + ".y = " + std::to_string(position->y) + "");
 								}
 							});
 
@@ -492,8 +492,8 @@ void Game::setupLuaFunctions()
 									{
 										obj->setPosition(position.value());
 										std::string lua_object = getLuaPath(obj->getId());
-										lua_state->script(lua_object + ".x = \"" + std::to_string(position->x) + "\"");
-										lua_state->script(lua_object + ".y = \"" + std::to_string(position->y) + "\"");
+										lua_state->script(lua_object + ".x = " + std::to_string(position->x) + "");
+										lua_state->script(lua_object + ".y = " + std::to_string(position->y) + "");
 									}
 								}
 							});
@@ -519,8 +519,8 @@ void Game::setupLuaFunctions()
 									{
 										obj->setPosition(frm->getPosition() + position.value());
 										std::string lua_object = getLuaPath(obj->getId());
-										lua_state->script(lua_object + ".x = \"" + std::to_string(frm->getPosition().x + position->x) + "\"");
-										lua_state->script(lua_object + ".y = \"" + std::to_string(frm->getPosition().y + position->y) + "\"");
+										lua_state->script(lua_object + ".x = " + std::to_string(frm->getPosition().x + position->x) + "");
+										lua_state->script(lua_object + ".y = " + std::to_string(frm->getPosition().y + position->y) + "");
 									}
 								}
 							});
@@ -878,7 +878,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetLanguage",
 							[this](const LuaLanguage &language)
 							{
-								std::vector<std::string> languages =  (*lua_state)["config"]["supportedLanguages"];
+								std::vector<std::string> languages =  (*lua_state)["config"]["supportedLanguages"].get<std::vector<std::string>>();
 								for (auto supported_language : languages)
 								{
 									if (language == supported_language)

@@ -12,11 +12,16 @@ bool operator==(const spColor& lhs, const spColor& rhs)
 
 _SP_ARRAY_IMPLEMENT_TYPE(spColorArray, spColor)
 
+#ifndef NDEBUG
+void pac_unload_file(const char* path);
+
+#endif
+
 void _spAtlasPage_createTexture(spAtlasPage* self, const char* path) {
 	jngl::Sprite* texture;
 
 #ifndef NDEBUG
-	jngl::unload(path);
+	pac_unload_file(path);
 #endif
 	texture = new jngl::Sprite(path);
 

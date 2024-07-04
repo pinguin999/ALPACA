@@ -238,14 +238,14 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         {
             auto interactable = std::make_shared<InteractableObject>(game, (*game->lua_state)["inventory_items"][id]["spine"], id, (*game->lua_state)["inventory_items"][id]["scale"]);
 
-            std::string const x = (*game->lua_state)["inventory_items"][id]["x"];
-            std::string const y = (*game->lua_state)["inventory_items"][id]["y"];
+            float const x = (*game->lua_state)["inventory_items"][id]["x"].get<float>();
+            float const y = (*game->lua_state)["inventory_items"][id]["y"].get<float>();
 
             std::string const animation = (*game->lua_state)["inventory_items"][id]["animation"];
             bool const loop_animation = (*game->lua_state)["inventory_items"][id]["loop_animation"];
 
             interactable->playAnimation(0, animation, loop_animation, (*game->lua_state)["pass"]);
-            interactable->setPosition(jngl::Vec2(std::stof(x), std::stof(y)));
+            interactable->setPosition(jngl::Vec2(x, y));
             interactable->setVisible(false);
             interactable->setCrossScene(true);
             interactable->setLuaIndex(id);

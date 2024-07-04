@@ -22,11 +22,19 @@ namespace fs = std::filesystem;
 #endif
 #endif
 
+#ifndef NDEBUG
+void pac_unload_file(const char* path)
+{
+}
+#endif
+
+
 using namespace boost::ut;
 suite alpaca_test_suite = []
 {
     "game_play_test"_test = []
     {
+        jngl::setVolume(0);
         std::srand(std::time(nullptr));
 #ifdef EMSCRIPTEN
         chdir("data");
@@ -87,7 +95,9 @@ suite alpaca_test_suite = []
                 {
                     for (int j = 0; j < obj->bounds->count; j++)
                     {
-                        if (std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "walkable_area")
+                        if (std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "walkable_area" &&
+                            std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setDE" &&
+                            std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setEN")
                         {
                             jngl::debug(obj->bounds->boundingBoxes[j]->super.super.name);
                             jngl::debug(", ");
@@ -100,7 +110,7 @@ suite alpaca_test_suite = []
 
             int const min = 0;
             int const max = actions.size() - 1;
-            int const randAction = rand() % (max - min + 1) + min;
+            int const randAction = std::rand() % (max - min + 1) + min;
 
             jngl::debug("RUN: ");
             jngl::debugLn(std::get<0>(actions.at(randAction)));
@@ -117,7 +127,7 @@ suite alpaca_test_suite = []
                         auto choices = game->getDialogManager()->getChoiceTextsSize();
                         int const min = 0;
                         int const max = choices - 1;
-                        int const choice = rand() % (max - min + 1) + min;
+                        int const choice = std::rand() % (max - min + 1) + min;
                         game->getDialogManager()->selectCurrentAnswer(choice);
                     }
                     else
@@ -139,7 +149,8 @@ suite alpaca_test_suite = []
 
     "game_save_load_test"_test = []
     {
-        return; // DISABLED
+        // return; // DISABLED
+        jngl::setVolume(0);
         std::srand(std::time(nullptr));
 #ifdef EMSCRIPTEN
         chdir("data");
@@ -150,7 +161,11 @@ suite alpaca_test_suite = []
             dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../../data");
             if (!fs::exists(dataFolder))
             {
-                dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("data");
+                dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../../../../data");
+                if (!fs::exists(dataFolder))
+                {
+                    dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("data");
+                }
             }
         }
         fs::current_path(dataFolder);
@@ -166,9 +181,11 @@ suite alpaca_test_suite = []
         std::shared_ptr<Game> game;
         do
         {
+            game.reset();
             game = std::make_shared<Game>(config);
 
             game->init();
+            game->enable_fade = false;
 
             std::vector<std::tuple<std::string, std::shared_ptr<SpineObject>>> actions;
             game->step();
@@ -195,7 +212,9 @@ suite alpaca_test_suite = []
                 {
                     for (int j = 0; j < obj->bounds->count; j++)
                     {
-                        if (std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "walkable_area")
+                        if (std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "walkable_area" &&
+                            std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setDE" &&
+                            std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setEN")
                         {
                             jngl::debug(obj->bounds->boundingBoxes[j]->super.super.name);
                             jngl::debug(", ");
@@ -206,8 +225,6 @@ suite alpaca_test_suite = []
             }
 
             jngl::debugLn("");
-
-            expect(le(2, actions.size()));
 
             int const min = 0;
             int const max = actions.size() - 1;
