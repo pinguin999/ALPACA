@@ -39,20 +39,21 @@ suite alpaca_test_suite = []
 #ifdef EMSCRIPTEN
         chdir("data");
 #elif !defined(ANDROID)
-        auto dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../data");
+        auto dataFolder = fs::path("../data");
         if (!fs::exists(dataFolder))
         {
-            dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../../data");
+            dataFolder = fs::path("../../data");
             if (!fs::exists(dataFolder))
             {
-                dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../../../../data");
+                dataFolder = fs::path("../../../../data");
                 if (!fs::exists(dataFolder))
                 {
-                    dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("data");
+                    dataFolder = fs::path("data");
                 }
             }
         }
         fs::current_path(dataFolder);
+        jngl::debugLn(fs::current_path());
 #endif
         jngl::showWindow("Test", 800, 600, 0, {16, 9}, {16, 9});
         jngl::setAntiAliasing(true);
@@ -155,16 +156,16 @@ suite alpaca_test_suite = []
 #ifdef EMSCRIPTEN
         chdir("data");
 #elif !defined(ANDROID)
-        auto dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../data");
+        auto dataFolder = fs::path("../data");
         if (!fs::exists(dataFolder))
         {
-            dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../../data");
+            dataFolder = fs::path("../../data");
             if (!fs::exists(dataFolder))
             {
-                dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("../../../../data");
+                dataFolder = fs::path("../../../../data");
                 if (!fs::exists(dataFolder))
                 {
-                    dataFolder = fs::path(jngl::getBinaryPath()) / fs::path("data");
+                    dataFolder = fs::path("data");
                 }
             }
         }
