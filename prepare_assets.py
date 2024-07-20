@@ -564,7 +564,7 @@ class LuaDocsGen:
         result = result.replace("float ", "number ")
         result = result.replace("bool ", "boolean ")
         result = result.replace("sol::function ", "function ")
-        result = result.replace("std::optional<sol::function> ", "function ")
+        result = result.replace("std::optional<sol::function> ", "function? ")
 
         return result.strip()
 
@@ -573,6 +573,7 @@ class LuaDocsGen:
         result = result.replace("string ", "")
         result = result.replace("number ", "")
         result = result.replace("function ", "")
+        result = result.replace("function? ", "")
         result = result.replace("boolean ", "")
         result = result.replace("LuaSpineObject ", "")
         result = result.replace("LuaSpineAnimation ", "")
@@ -676,6 +677,9 @@ class LuaDocsGen:
                     if parameter_striped == "":
                         continue
                     parameter_striped = parameter_striped.split(" ")
+                    if parameter_striped[0] == "function?":
+                        parameter_striped[0] = "function"
+                        parameter_striped[1] = parameter_striped[1] + "?"
                     docs += f"\n---@param {parameter_striped[1]} {parameter_striped[0]}"
                 output.write(f"""
 {docs}
