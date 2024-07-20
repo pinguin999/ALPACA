@@ -338,9 +338,6 @@ def spine_export(file: str) -> tuple[list[str], dict[Any, Any], Literal[""]] | t
         errors.append("spine executable '" + SPINE + "' could not be found!")
         return errors, {}, ""
 
-    if (Path(file).parent / Path("zBufferMap")).exists():
-        copy_folder(str(Path(file).parent / Path("zBufferMap")), "./data/")
-
     name = Path(file).stem
     command: list[str] = [SPINE, "-i", file, "-m", "-o",
                           f"./data/{name}/", "-e", "./data-src/spine_export_template.export.json"]
@@ -360,6 +357,9 @@ def spine_export(file: str) -> tuple[list[str], dict[Any, Any], Literal[""]] | t
             f"Spine export of {name} failed. No file ./data/{name}/{name}.json was created. \n"
             f"Is the sceleton of {name}.spine named {name}?")
         return errors, {}, ""
+
+    if (Path(file).parent / Path("zBufferMap")).exists():
+        copy_folder(str(Path(file).parent / Path("zBufferMap")), f"./data/{name}/")
 
     if set_read_only:
         with contextlib.suppress(Exception):
