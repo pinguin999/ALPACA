@@ -113,7 +113,27 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
 
         if ((*game->lua_state)["scenes"][scene]["zBufferMap"].valid())
         {
-            zBufferMap = jngl::ImageData::load((*game->lua_state)["scenes"][scene]["zBufferMap"]);
+#ifndef NDEBUG
+    while (true)
+    {
+        try {
+#endif
+    zBufferMap = jngl::ImageData::load((*game->lua_state)["scenes"][scene]["zBufferMap"]);
+
+#ifndef NDEBUG
+        } catch (std::exception e) {
+        }
+
+        if (!zBufferMap)
+        {
+            jngl::debugLn("Fatal Error loading " + std::string((*game->lua_state)["scenes"][scene]["zBufferMap"]));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+        break;
+    }
+#endif
+
 #ifndef NDEBUG
             background->sprite = std::make_unique<jngl::Sprite>(*zBufferMap, jngl::getScaleFactor());
 #endif
