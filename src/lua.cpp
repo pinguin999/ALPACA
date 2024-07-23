@@ -470,6 +470,11 @@ void Game::setupLuaFunctions()
 
 								if (position)
 								{
+									if (std::shared_ptr<Player> p = std::dynamic_pointer_cast<Player>(obj); p != nullptr)
+									{
+										p->setPosition(position.value());
+										p->addTargetPositionImmediately(position.value(), (*lua_state)["pass"]);
+									}
 									obj->setPosition(position.value());
 									std::string lua_object = getLuaPath(obj->getId());
 									lua_state->script(lua_object + ".x = " + std::to_string(position->x) + "");
@@ -490,6 +495,13 @@ void Game::setupLuaFunctions()
 									auto position = getPointPosition(shared_from_this(), point_name);
 									if (position)
 									{
+
+										if (std::shared_ptr<Player> p = std::dynamic_pointer_cast<Player>(obj); p != nullptr)
+										{
+											p->setPosition(position.value());
+											p->stop_walking();
+											p->addTargetPositionImmediately(position.value(), (*lua_state)["pass"]);
+										}
 										obj->setPosition(position.value());
 										std::string lua_object = getLuaPath(obj->getId());
 										lua_state->script(lua_object + ".x = " + std::to_string(position->x) + "");
