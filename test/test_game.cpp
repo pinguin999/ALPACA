@@ -8,6 +8,7 @@
 #include <jngl/message.hpp>
 #include <jngl/input.hpp>
 #include <jngl/job.hpp>
+#include <random>
 
 #include "../src/game.hpp"
 #include "../src/interactable_object.hpp"
@@ -28,6 +29,9 @@ void pac_unload_file(const char* path)
 }
 #endif
 
+const int SEED = 0;
+const int MAX_STEPS = 3000;
+
 
 using namespace boost::ut;
 suite alpaca_test_suite = []
@@ -35,7 +39,7 @@ suite alpaca_test_suite = []
     "game_play_test"_test = []
     {
         jngl::setVolume(0);
-        std::srand(std::time(nullptr));
+        std::mt19937 gen = std::mt19937(SEED);
 #ifdef EMSCRIPTEN
         chdir("data");
 #elif !defined(ANDROID)
@@ -75,7 +79,7 @@ suite alpaca_test_suite = []
 
         int i = 0;
 
-        while (!(*game->lua_state)["game_finished"] && i < 3000)
+        while (!(*game->lua_state)["game_finished"] && i < MAX_STEPS)
         {
             i++;
             actions.clear();
@@ -111,7 +115,7 @@ suite alpaca_test_suite = []
 
             int const min = 0;
             int const max = actions.size() - 1;
-            int const randAction = std::rand() % (max - min + 1) + min;
+            int const randAction = std::abs(int(gen())) % (max - min + 1) + min;
 
             jngl::debug("RUN: ");
             jngl::debugLn(std::get<0>(actions.at(randAction)));
@@ -128,7 +132,7 @@ suite alpaca_test_suite = []
                         auto choices = game->getDialogManager()->getChoiceTextsSize();
                         int const min = 0;
                         int const max = choices - 1;
-                        int const choice = std::rand() % (max - min + 1) + min;
+                        int const choice = std::abs(int(gen())) % (max - min + 1) + min;
                         game->getDialogManager()->selectCurrentAnswer(choice);
                     }
                     else
@@ -145,14 +149,14 @@ suite alpaca_test_suite = []
 
         jngl::hideWindow();
 
-        expect(neq(i, 3000));
+        expect(neq(i, MAX_STEPS));
     };
 
     "game_save_load_test"_test = []
     {
-        // return; // DISABLED
+        return; // DISABLED
         jngl::setVolume(0);
-        std::srand(std::time(nullptr));
+        std::mt19937 gen = std::mt19937(SEED);
 #ifdef EMSCRIPTEN
         chdir("data");
 #elif !defined(ANDROID)
@@ -229,7 +233,7 @@ suite alpaca_test_suite = []
 
             int const min = 0;
             int const max = actions.size() - 1;
-            int const randAction = rand() % (max - min + 1) + min;
+            int const randAction = std::abs(int(gen())) % (max - min + 1) + min;
 
             jngl::debug("RUN: ");
             jngl::debugLn(std::get<0>(actions.at(randAction)));
@@ -246,7 +250,7 @@ suite alpaca_test_suite = []
                         auto choices = game->getDialogManager()->getChoiceTextsSize();
                         int const min = 0;
                         int const max = choices - 1;
-                        int const choice = rand() % (max - min + 1) + min;
+                        int const choice = std::abs(int(gen())) % (max - min + 1) + min;
                         game->getDialogManager()->selectCurrentAnswer(choice);
                     }
                     else
@@ -257,7 +261,7 @@ suite alpaca_test_suite = []
             }
 
             game->saveLuaState();
-        } while (!(*game->lua_state)["game_finished"] && i < 3000);
+        } while (!(*game->lua_state)["game_finished"] && i < MAX_STEPS);
 
         // expect(eq(game->getInactivLayerBorder(), 2));
         jngl::debug("Took: ");
@@ -266,6 +270,6 @@ suite alpaca_test_suite = []
 
         jngl::hideWindow();
 
-        expect(neq(i, 3000));
+        expect(neq(i, MAX_STEPS));
     };
 };
