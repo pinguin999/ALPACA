@@ -40,7 +40,7 @@ private:
     void showTypewriterAnimation(const std::string &text);
     void showNarratorText(const std::string &text);
     void showChoices(std::shared_ptr<schnacker::AnswersStepResult> answers);
-    void showCharacterText(std::string text, jngl::Vec2 pos);
+    void showCharacterText(std::shared_ptr<schnacker::TextStepResult> text, jngl::Vec2 pos);
     void playCharacterVoice(const std::string &file);
     void playCharacterAnimation(const std::string &character, const std::string &id);
     void hideChoices();

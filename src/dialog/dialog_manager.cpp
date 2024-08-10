@@ -206,15 +206,38 @@ void DialogManager::showChoices(std::shared_ptr<schnacker::AnswersStepResult> an
     currentAnswers = answers;
 }
 
-void DialogManager::showCharacterText(std::string text, jngl::Vec2 pos)
+void DialogManager::showCharacterText(std::shared_ptr<schnacker::TextStepResult> text, jngl::Vec2 pos)
 {
     // TODO: use player pos in order to determine direction preference for bubble
-    auto bubbleText = jngl::Text(text);
+    auto bubbleText = jngl::Text(text->text);
     bubbleText.setFont(dialogFont);
+    auto textColor = 0xffffff_rgb;
+
+    if (text->character->color.size() == 7)
+    {
+        unsigned int r;
+        unsigned int g;
+        unsigned int b;
+
+        std::stringstream ssr;
+        ssr << std::hex << text->character->color.substr(1, 2);
+        ssr >> r;
+
+        std::stringstream ssg;
+        ssg << std::hex << text->character->color.substr(3, 2);
+        ssg >> g;
+
+        std::stringstream ssb;
+        ssb << std::hex << text->character->color.substr(5, 2);
+        ssb >> b;
+
+        textColor = jngl::Color(r, g, b);
+    }
+
     if (auto _game = game.lock())
     {
         bubble = std::make_shared<SpeechBubble>(_game, "speechbubble",
-                                                bubbleText, pos);
+                                                bubbleText, textColor, pos);
     }
 }
 
@@ -281,7 +304,7 @@ void DialogManager::continueCurrent()
                 if(optionalpos)
                     bubble_pos = spine_character->getPosition() + optionalpos.value();
             }
-            showCharacterText(textResult->text, bubble_pos);
+            showCharacterText(textResult, bubble_pos);
             std::string fileName = textResult->nodeId;
             auto fullFileName = "audio/" + _game->language + "_" + std::string(n_zero - std::min(n_zero, fileName.length()), '0') + fileName  + ".ogg";
             playCharacterAnimation(character, fileName);
@@ -350,5 +373,7 @@ void DialogManager::setSpeechBubblePosition(jngl::Vec2 position)
 {
     bubble_pos = position;
     if (bubble)
+    {
         bubble->setPosition(position);
+    }
 }
