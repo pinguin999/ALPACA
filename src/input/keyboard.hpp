@@ -5,7 +5,7 @@
 class Keyboard : public Control
 {
 public:
-	explicit Keyboard();
+	explicit Keyboard() = default;
 
 	jngl::Vec2 getMovement() const override;
 	jngl::Vec2 getMovementStep() const override;

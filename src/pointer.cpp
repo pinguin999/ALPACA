@@ -22,10 +22,6 @@ Pointer::Pointer(std::shared_ptr<Game> game, const std::string &spine_file) : Sp
     }
 }
 
-Pointer::~Pointer()
-{
-}
-
 bool Pointer::step(bool)
 {
     const auto controllers = jngl::getConnectedControllers();

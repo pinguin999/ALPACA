@@ -412,7 +412,10 @@ void Game::setupLuaFunctions()
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								auto position = obj->getPoint(point_name);
 								if (!position)
+								{
+									jngl::debugLn("Point " + point_name + " not found.");
 									return;
+								}
 								std::static_pointer_cast<InteractableObject>(obj)->goToPosition(*position, callback.value());
 								pointer->setPrimaryHandled();
 								// TODO Write Players position to Lua
@@ -433,7 +436,10 @@ void Game::setupLuaFunctions()
 								{
 									auto position = obj->getPoint(point_name);
 									if (!position)
+									{
+										jngl::debugLn("Point " + point_name + " not found.");
 										return;
+									}
 									std::static_pointer_cast<InteractableObject>(obj)->goToPosition(*position, callback.value());
 									pointer->setPrimaryHandled();
 									// TODO Write Players position to Lua

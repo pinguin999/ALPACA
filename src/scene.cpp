@@ -121,7 +121,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
     zBufferMap = jngl::ImageData::load((*game->lua_state)["scenes"][scene]["zBufferMap"]);
 
 #ifndef NDEBUG
-        } catch (std::exception e) {
+        } catch (std::exception &e) {
         }
 
         if (!zBufferMap)

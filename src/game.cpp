@@ -781,13 +781,13 @@ const std::string Game::cleanLuaString(std::string variable)
 
 std::string Game::backupLuaTable(const sol::table table, const std::string &parent)
 {
-	std::string result = "";
+	std::string result;
 	for (const auto &key_value_pair : table)
 	{
 		const sol::object key = key_value_pair.first;
 		const sol::object value = key_value_pair.second;
 
-		std::string k = "";
+		std::string k;
 		if (key.get_type() == sol::type::string)
 		{
 			k = key.as<std::string>();
