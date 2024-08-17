@@ -687,7 +687,7 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 	else if (actionName.substr(0, 5) == "anim:")
 	{
 		const std::string animName = actionName.substr(5);
-		script = "PlayAnimationOn(\"" + thisObject->getName() + "\", 0, \"" + animName + "\", false, pass)";
+		script = "PlayAnimationOn(\"" + thisObject->getId() + "\", 0, \"" + animName + "\", false, pass)";
 		errorMessage = "Failed to play animation " + animName + "!\n";
 	}
 	// if there is no specific prefix, just load the according Lua file
