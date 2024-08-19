@@ -202,7 +202,7 @@ docs:
   script:
     - microdnf install -y python3-devel
     - pip install pipenv
-    - pipenv install -d --python 3.11
+    - pipenv install -d --python 3.12
     - cd lua-docs
     - pipenv run mkdocs build
   artifacts:
