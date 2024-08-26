@@ -333,7 +333,7 @@ void Game::debugStep()
 		}
 		else
 		{
-			jngl::setVolume(100.0);
+			jngl::setVolume(1.0);
 		}
 	}
 	if (jngl::keyPressed('z'))
