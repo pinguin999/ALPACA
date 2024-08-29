@@ -72,10 +72,12 @@ bool InteractableObject::step(bool force)
             if (collision)
             {
                 collision_script = collision->super.super.name;
-                jngl::debug("clicked interactable item ");
-                jngl::debugLn(collision_script);
-                _game->pointer->setPrimaryHandled();
-                _game->runAction(collision_script, getptr());
+                if (collision_script != "non_walkable_area") {
+                    jngl::debug("clicked interactable item ");
+                    jngl::debugLn(collision_script);
+                    _game->pointer->setPrimaryHandled();
+                    _game->runAction(collision_script, getptr());
+                }
             }
         }
 
