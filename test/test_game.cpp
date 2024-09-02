@@ -59,12 +59,12 @@ suite alpaca_test_suite = []
         fs::current_path(dataFolder);
         jngl::debugLn(fs::current_path());
 #endif
-        jngl::showWindow("Test", 800, 600, 0, {16, 9}, {16, 9});
+        YAML::Node const config = YAML::Load(jngl::readAsset("config/game.json").str());
+        jngl::showWindow((config)["name"].as<std::string>(), 800, 600, 0, {16, 9}, {16, 9});
         jngl::setAntiAliasing(true);
 
         jngl::writeConfig("savegame", "");
 
-        YAML::Node const config = YAML::Load(jngl::readAsset("config/game.json").str());
         auto game = std::make_shared<Game>(config);
 
         game->init();

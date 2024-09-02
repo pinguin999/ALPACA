@@ -37,18 +37,8 @@ Game::Game(const YAML::Node &config) : config(config),
 	cameraZoom = 1.0 / std::max(zoomx, zoomy);
 
 #ifndef NDEBUG
-	debug_info.setText(
-		"Press Tab to enter editmode. \n"
-		"Press F10 to show debug draw. \n"
-		"Press F12 to start/end gif recording. \n"
-		"Press r to reload the scene. \n"
-		"Press l start the game from the beginning. \n"
-		"Press c to save the game. \n"
-		"Press v to load the game. \n"
-		"Press s in editmode to save changes to a scene. \n"
-		"Press m to mute and unmute audio. \n"
-		"Press z to toggle zBufferMap. \n"
-		"Press x to hide this text.");
+	debug_info.setText(debug_text);
+
 	debug_info.setPos(jngl::Vec2(-screensize.x / 2, -screensize.y / 2));
 #endif
 
@@ -199,6 +189,14 @@ void Game::loadSceneWithFade(std::string level)
 	}else{
 		loadScene(level);
 	}
+#ifndef NDEBUG
+	// Run tests to get a savegame at the start of each scene
+	auto old_savegame = jngl::readConfig(level);
+	if(old_savegame.empty())
+	{
+		saveLuaState(level);
+	}
+#endif
 }
 
 void Game::loadScene(const std::string& level)
@@ -255,9 +253,18 @@ void Game::loadScene(const std::string& level)
 Game::~Game()
 {
 	saveLuaState();
+	reset();
+}
+
+void Game::reset()
+{
 	gameObjects.clear();
 	needToAdd.clear();
 	needToRemove.clear();
+	lua_state = {};
+	currentScene = nullptr;
+	player = nullptr;
+	pointer = nullptr;
 }
 
 void Game::step()
@@ -363,11 +370,7 @@ void Game::debugStep()
 	// Quick Load
 	if (jngl::keyPressed("v"))
 	{
-		gameObjects.clear();
-		lua_state = {};
-		currentScene = nullptr;
-		player = nullptr;
-		pointer = nullptr;
+		reset();
 		lua_state = std::make_shared<sol::state>();
 		lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 		init();
@@ -377,55 +380,98 @@ void Game::debugStep()
 	if (jngl::keyPressed("l"))
 	{
 		jngl::writeConfig("savegame", "");
-		gameObjects.clear();
-		lua_state = {};
-		currentScene = nullptr;
-		player = nullptr;
-		pointer = nullptr;
+		reset();
 		lua_state = std::make_shared<sol::state>();
 		lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 		init();
 	}
 
-	// Save with Control + 1-9 and Load with 1-9
-	for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
-	{
-		if (jngl::keyDown(jngl::key::ControlL) && jngl::keyPressed(number))
+	if (!room_select_mode)
 		{
-			jngl::debugLn("Save to Save " + std::string(number));
-			saveLuaState("savegame" + std::string(number));
-		}
-		else if (jngl::keyPressed(number))
+		// Save with Control + 1-9 and Load with 1-9
+		for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
 		{
-			gameObjects.clear();
-			lua_state = {};
-			currentScene = nullptr;
-			player = nullptr;
-			pointer = nullptr;
-			lua_state = std::make_shared<sol::state>();
-			lua_state->open_libraries(sol::lib::base, sol::lib::package);
-			dialogManager = std::make_shared<DialogManager>(shared_from_this());
-			setupLuaFunctions();
-			loadLuaState("savegame" + std::string(number));
+			if (jngl::keyDown(jngl::key::ControlL) && jngl::keyPressed(number))
+			{
+				jngl::debugLn("Save to Save " + std::string(number));
+				saveLuaState("savegame" + std::string(number));
+			}
+			else if (jngl::keyPressed(number))
+			{
+				reset();
+				lua_state = std::make_shared<sol::state>();
+				lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+				dialogManager = std::make_shared<DialogManager>(shared_from_this());
+
+				configToLua();
+				setupLuaFunctions();
+				loadLuaState("savegame" + std::string(number));
+			}
 		}
 	}
 
-	// if(jngl::keyPressed(jngl::key::Space)) {
-	//     dialogManager.showTypewriterAnimation("Freitag, 13. September 2080");
-	// }
-	// if(jngl::keyPressed(jngl::key::Delete)) {
-	//     std::list<std::string> choises;
-	//     choises.push_front("Hallo Carsten");
-	//     choises.push_front("Hallo Kolja");
-	//     choises.push_front("Willkommen zum Hobby Spieleprogrammierer Podcast!");
-	//     dialogManager.showChoices(choises);
 
-	//    // dialogManager.showNarratorText("Wir schreiben das Jahr 2080.\nDie Menschheit ist auf der Suche nach außerirdischem Leben Dose");
-	//}
+	for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
+	{
+		int x = static_cast<int>(number[0]) - static_cast<int>('0');
+		if (room_select_mode && jngl::keyPressed(number) && tens.has_value())
+		{
+			const std::string path = jngl::internal::getConfigPath();
+			const int target = tens.value() * 10 + x;
 
-	// if(jngl::keyPressed(jngl::key::BackSpace)) {
-	//     dialogManager.showCharacterText("Wir schreiben das Jahr 2080.\nDie Menschheit ist auf der Suche nach außerirdischem Leben", jngl::Vec2(0,0));
-	// }
+			int i = 0;
+			for (const auto & entry : std::filesystem::directory_iterator(path))
+			{
+				i++;
+			}
+			if (target < i) {
+				reset();
+				lua_state = std::make_shared<sol::state>();
+				lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+				dialogManager = std::make_shared<DialogManager>(shared_from_this());
+
+				configToLua();
+				setupLuaFunctions();
+
+				i = 0;
+				for (const auto & entry : std::filesystem::directory_iterator(path))
+				{
+					if (i == target) {
+						loadLuaState(entry.path().filename());
+					}
+					i++;
+				}
+				room_select_mode = false;
+				tens.reset();
+				debug_info.setText(debug_text);
+			}else {
+				room_select_mode = false;
+				tens.reset();
+				debug_info.setText(debug_text);
+			}
+		}
+		else if (room_select_mode && jngl::keyPressed(number) && !tens.has_value())
+		{
+			tens = x;
+		}
+	}
+
+	// Jump to a room
+	if (jngl::keyPressed("j"))
+	{
+		int i = 0;
+		std::string files;
+
+		const std::string path = jngl::internal::getConfigPath();
+		for (const auto & entry : std::filesystem::directory_iterator(path))
+		{
+			files += std::to_string(i) + " " + (std::string(entry.path().filename()) + "\n");
+			i++;
+		}
+
+		debug_info.setText(files);
+		room_select_mode = true;
+	}
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 	if (recordingGif)
@@ -440,9 +486,9 @@ void Game::debugStep()
 			{
 				for (int x = 0; x < w; x++)
 				{
-					gifBuffer[((w * y) + x) * 4] = (uint8_t)(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3] * 255);
-					gifBuffer[((w * y) + x) * 4 + 1] = (uint8_t)(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3 + 1] * 255);
-					gifBuffer[((w * y) + x) * 4 + 2] = (uint8_t)(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3 + 2] * 255);
+					gifBuffer[((w * y) + x) * 4] = static_cast<uint8_t>(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3] * 255);
+					gifBuffer[((w * y) + x) * 4 + 1] = static_cast<uint8_t>(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3 + 1] * 255);
+					gifBuffer[((w * y) + x) * 4 + 2] = static_cast<uint8_t>(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3 + 2] * 255);
 					gifBuffer[((w * y) + x) * 4 + 3] = 255;
 				}
 			}
@@ -454,7 +500,7 @@ void Game::debugStep()
 										gifBuffer.get(),
 										jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR,
 										jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR,
-										(uint32_t)timeDiff,
+										static_cast<uint32_t>(timeDiff),
 										8,
 										false,
 										nullptr);

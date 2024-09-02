@@ -137,7 +137,7 @@ void InteractableObject::draw() const
     {
         if (_game->editMode)
         {
-            float DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
+            const float DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
             jngl::drawCircle(jngl::Vec2(0, 0), DEBUG_GRAP_DISTANCE);
             jngl::Text pposition;
             pposition.setText("x: " + std::to_string(position.x) + "\ny: " + std::to_string(position.y));

@@ -19,6 +19,7 @@ public:
     explicit Game(const YAML::Node &config);
     ~Game() override;
     void init();
+    void reset();
     void loadSceneWithFade(std::string level);
     void setupLuaFunctions();
     void configToLua();
@@ -36,8 +37,22 @@ public:
     bool enableDebugDraw = false;
     bool enablezMapDebugDraw = false;
     bool show_debug_info = true;
+    bool room_select_mode = false;
+    std::optional<int> tens;
 
     jngl::Text debug_info;
+    std::string debug_text = ("Press Tab to enter editmode. \n"
+		"Press F10 to show debug draw. \n"
+		"Press F12 to start/end gif recording. \n"
+		"Press r to reload the scene. \n"
+		"Press l start the game from the beginning. \n"
+		"Press c to save the game. \n"
+		"Press v to load the game. \n"
+		"Press j to jump to a savegame. \n"
+		"Press s in editmode to save changes to a scene. \n"
+		"Press m to mute and unmute audio. \n"
+		"Press z to toggle zBufferMap. \n"
+		"Press x to hide this text.");
 #endif
 
     /// Wendet die Kamera auf JNGLs globale ModelView-Matrix an
