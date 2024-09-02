@@ -438,7 +438,9 @@ void Game::debugStep()
 				{
 					if (i == target) {
 #ifdef _WIN32
-						loadLuaState(std::wstring(entry.path().filename()));
+						std::wstring wide = std::wstring(entry.path().filename());
+						std::string str( wide.begin(), wide.end() );
+						loadLuaState(str);
 #else
 						loadLuaState(std::string(entry.path().filename()));
 #endif
@@ -470,9 +472,11 @@ void Game::debugStep()
 		for (const auto & entry : std::filesystem::directory_iterator(path))
 		{
 #ifdef _WIN32
-			files += std::to_string(i) + " " + (std::wstring(entry.path().filename()) + "\n");
-#esle
-			files += std::to_string(i) + " " + (std::string(entry.path().filename()) + "\n");
+			std::wstring wide = std::wstring(entry.path().filename());
+			std::string str( wide.begin(), wide.end() );
+			files += std::to_string(i) + " " + str + "\n";
+#else
+			files += std::to_string(i) + " " + std::string(entry.path().filename()) + "\n";
 #endif
 			i++;
 		}
