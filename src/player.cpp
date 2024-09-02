@@ -96,7 +96,7 @@ void Player::addTargetPositionImmediately(jngl::Vec2 target, const sol::function
 {
     if (auto _game = game.lock())
     {
-        if (target_position == target)
+        if (boost::qvm::mag_sqr(target_position - target) < 5)
         {
             position = target;
         }
