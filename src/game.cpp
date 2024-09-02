@@ -437,7 +437,11 @@ void Game::debugStep()
 				for (const auto & entry : std::filesystem::directory_iterator(path))
 				{
 					if (i == target) {
-						loadLuaState(entry.path().filename());
+#ifdef _WIN32
+						loadLuaState(std::wstring(entry.path().filename()));
+#else
+						loadLuaState(std::string(entry.path().filename()));
+#endif
 					}
 					i++;
 				}
@@ -465,7 +469,11 @@ void Game::debugStep()
 		const std::string path = jngl::internal::getConfigPath();
 		for (const auto & entry : std::filesystem::directory_iterator(path))
 		{
+#ifdef _WIN32
+			files += std::to_string(i) + " " + (std::wstring(entry.path().filename()) + "\n");
+#esle
 			files += std::to_string(i) + " " + (std::string(entry.path().filename()) + "\n");
+#endif
 			i++;
 		}
 
