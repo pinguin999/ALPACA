@@ -410,7 +410,7 @@ void Game::debugStep()
 		}
 	}
 
-
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 	for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
 	{
 		int x = static_cast<int>(number[0]) - static_cast<int>('0');
@@ -473,7 +473,6 @@ void Game::debugStep()
 		room_select_mode = true;
 	}
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 	if (recordingGif)
 	{
 		if (gifGameFrame % GIF_FRAME_SKIP == 0)
