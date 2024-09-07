@@ -8,17 +8,17 @@ class AudioManager
 {
 public:
     AudioManager();
-    void loopMusic(std::string filePath);
+    void loopMusic(const std::string &filePath);
     void stopMusic();
-    std::shared_ptr<jngl::SoundFile> loadSound(std::string filePath);
+    std::shared_ptr<jngl::SoundFile> loadSound(const std::string &filePath);
 
     void setSoundVolume(float volume);
     void setVoiceVolume(float volume);
     void setMusicVolume(float volume);
 
-    float getSoundVolume();
-    float getVoiceVolume();
-    float getMusicVolume();
+    float getSoundVolume() const;
+    float getVoiceVolume() const;
+    float getMusicVolume() const;
 
 private:
     std::shared_ptr<jngl::SoundFile> currentMusic = {};

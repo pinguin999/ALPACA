@@ -1,6 +1,15 @@
 #include <jngl/init.hpp>
 #include "game.hpp"
 
+#include <fstream>
+
+#ifndef NDEBUG
+void pac_unload_file(const char* path)
+{
+	jngl::unload(path);
+}
+#endif
+
 class QuitWithEscape : public jngl::Job
 {
 public:
@@ -22,16 +31,26 @@ jngl::AppParameters jnglInit()
 	jngl::AppParameters params;
 	std::srand(std::time(nullptr));
 
-    YAML::Node config = YAML::Load(jngl::readAsset("config/game.json").str());
-	params.displayName = config["name"].as<std::string>();
-#ifndef NDEBUG
-	params.screenSize = {double(config["screenSize"]["x"].as<int>()), double(config["screenSize"]["y"].as<int>())};
-#endif
-	params.minAspectRatio = {double(config["minAspectRatio"]["x"].as<int>()), double(config["minAspectRatio"]["y"].as<int>())};
-	params.maxAspectRatio = {double(config["maxAspectRatio"]["x"].as<int>()), double(config["maxAspectRatio"]["y"].as<int>())};
-
-	params.start = [config]()
+	std::optional<YAML::Node> config;
+	std::stringstream fin = jngl::readAsset("config/game.json");
+	if (fin)
 	{
+		config = YAML::Load(fin.str());
+		params.displayName = (*config)["name"].as<std::string>();
+#ifndef NDEBUG
+		params.screenSize = {double((*config)["screenSize"]["x"].as<int>()), double((*config)["screenSize"]["y"].as<int>())};
+#endif
+		params.minAspectRatio = {double((*config)["minAspectRatio"]["x"].as<int>()), double((*config)["minAspectRatio"]["y"].as<int>())};
+		params.maxAspectRatio = {double((*config)["maxAspectRatio"]["x"].as<int>()), double((*config)["maxAspectRatio"]["y"].as<int>())};
+	}
+
+	params.start = [tmp = std::move(config)]() mutable
+	{
+		if (!tmp)
+		{
+			tmp = YAML::Load(jngl::readAsset("config/game.json").str());
+		}
+		YAML::Node &config = *tmp;
 #ifndef NDEBUG
 		jngl::addJob(std::make_shared<QuitWithEscape>());
 #endif

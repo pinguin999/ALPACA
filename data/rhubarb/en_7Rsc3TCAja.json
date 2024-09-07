@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "soundFile": "/Users/pinguin/workspace/2080/subprojects/ALPACA/data/audio/en_7Rsc3TCAja.ogg",
+    "duration": 1.98
+  },
+  "mouthCues": [
+    { "start": 0.00, "end": 0.25, "value": "X" },
+    { "start": 0.25, "end": 0.29, "value": "B" },
+    { "start": 0.29, "end": 0.33, "value": "F" },
+    { "start": 0.33, "end": 0.61, "value": "C" },
+    { "start": 0.61, "end": 0.68, "value": "B" },
+    { "start": 0.68, "end": 0.82, "value": "C" },
+    { "start": 0.82, "end": 1.03, "value": "B" },
+    { "start": 1.03, "end": 1.17, "value": "C" },
+    { "start": 1.17, "end": 1.31, "value": "B" },
+    { "start": 1.31, "end": 1.38, "value": "E" },
+    { "start": 1.38, "end": 1.66, "value": "F" },
+    { "start": 1.66, "end": 1.80, "value": "B" },
+    { "start": 1.80, "end": 1.98, "value": "X" }
+  ]
+}

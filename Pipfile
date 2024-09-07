@@ -6,16 +6,20 @@ name = "pypi"
 [packages]
 watchdog = "*"
 termcolor = "*"
+requests = "*"
+google-cloud-texttospeech = "*"
 
 [dev-packages]
 mypy = "*"
 flake8 = "*"
 autopep8 = "*"
 types-termcolor = "*"
+types-requests = "*"
 mkdocs = "*"
 mkdocstrings = "*"
 mkdocstrings-python = "*"
 mkdocstrings-pac = "*"
+mkdocs-video = "*"
 pyinstaller = "*"
 
 [requires]

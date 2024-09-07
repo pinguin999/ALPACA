@@ -1,29 +1,32 @@
 #include "audio_manager.hpp"
-#include "game.hpp"
 
-AudioManager::AudioManager()
-{
-}
+AudioManager::AudioManager() = default;
 
 void AudioManager::stopMusic()
 {
-    if(currentMusic != nullptr)
+    if (currentMusic != nullptr)
+    {
         currentMusic->stop();
+    }
 
     currentMusic = nullptr;
 }
 
 // TODO: implement crossfade using an additional volume factor
-void AudioManager::loopMusic(const std::string filePath)
+void AudioManager::loopMusic(const std::string &filePath)
 {
     auto sound = loadSound(filePath);
     // if the music is the same as already playing, do nothing
-    if(sound == currentMusic)
+    if (sound == currentMusic)
+    {
         return;
+    }
 
     // if we need to change the music, stop the old one first
-    if(currentMusic != nullptr)
+    if (currentMusic != nullptr)
+    {
         currentMusic->stop();
+    }
 
     // now start the new music
     currentMusic = sound;
@@ -47,24 +50,24 @@ void AudioManager::setMusicVolume(float volume)
     currentMusic->setVolume(musicVolume);
 }
 
-float AudioManager::getSoundVolume()
+float AudioManager::getSoundVolume() const
 {
     return soundVolume;
 }
 
-float AudioManager::getVoiceVolume()
+float AudioManager::getVoiceVolume() const
 {
     return voiceVolume;
 }
 
-float AudioManager::getMusicVolume()
+float AudioManager::getMusicVolume() const
 {
     return musicVolume;
 }
 
-std::shared_ptr<jngl::SoundFile> AudioManager::loadSound(std::string filePath)
+std::shared_ptr<jngl::SoundFile> AudioManager::loadSound(const std::string &filePath)
 {
-    if(loadedSounds.count(filePath))
+    if (loadedSounds.contains(filePath))
     {
         return loadedSounds[filePath];
     }

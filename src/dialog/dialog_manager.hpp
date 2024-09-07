@@ -28,27 +28,29 @@ public:
     bool isSelectTextActive();
     bool isOverText(jngl::Vec2 mouse_pos);
 
-    void play(std::string characterName, jngl::Vec2 pos, sol::function callback); // TODO: multiple positions for different characters
+    void play(const std::string &characterName, jngl::Vec2 pos, const sol::function &callback); // TODO: multiple positions for different characters
     void continueCurrent();
-    void selectCurrentAnswer();
+    void selectCurrentAnswer(int selected_index);
 
     void setSpeechBubblePosition(jngl::Vec2 position);
-
+#ifndef NDEBUG
+    int getChoiceTextsSize(){return int(choiceTexts.size());};
+#endif
 private:
     void showTypewriterAnimation(const std::string &text);
     void showNarratorText(const std::string &text);
     void showChoices(std::shared_ptr<schnacker::AnswersStepResult> answers);
-    void showCharacterText(std::string text, jngl::Vec2 pos);
-    void playCharacterVoice(std::string file);
-    void playCharacterAnimation(std::string character, const std::string id);
+    void showCharacterText(std::shared_ptr<schnacker::TextStepResult> text, jngl::Vec2 pos);
+    void playCharacterVoice(const std::string &file);
+    void playCharacterAnimation(const std::string &character, const std::string &id);
     void hideChoices();
     void hideCharacterText();
 
-    std::shared_ptr<schnacker::AnswersStepResult> currentAnswers = nullptr;
+    std::shared_ptr<schnacker::AnswersStepResult> currentAnswers;
 
-    std::shared_ptr<schnacker::SchnackFile> schnackFile = nullptr;
-    std::shared_ptr<schnacker::Dialog> currentDialog = nullptr;
-    std::shared_ptr<schnacker::Node> currentNode = nullptr;
+    std::shared_ptr<schnacker::SchnackFile> schnackFile;
+    std::shared_ptr<schnacker::Dialog> currentDialog;
+    std::shared_ptr<schnacker::Node> currentNode;
 
     jngl::Font typewriterFont;
     jngl::Font dialogFont;
@@ -61,7 +63,7 @@ private:
     std::shared_ptr<SpeechBubble> bubble;
     jngl::Vec2 bubble_pos = {0, 0};
     int selected_index;
-    std::string last_played_audio = "";
+    std::string last_played_audio;
     bool wasActiveLastFrame = false;
     sol::function dialog_callback;
 	const std::weak_ptr<Game> game;

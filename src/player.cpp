@@ -5,93 +5,84 @@
 
 #include <cmath>
 
-Player::Player(std::shared_ptr<Game> game, const std::string &spine_file) : SpineObject(game, spine_file, "Player", game->config["player_scale"].as<float>()),
-                                                                            DOUBLE_CLICK_TIME(game->config["double_click_time"].as<double>()),
-                                                                            MAX_CLICK_DISTANCE(game->config["max_click_distance"].as<int>()),
-                                                                            NEAR_OBJECT(game->config["near_object"].as<int>()),
-                                                                            X_BORDER(game->config["border"]["x"].as<int>()),
-                                                                            Y_BORDER(game->config["border"]["y"].as<int>()),
-                                                                            max_speed(std::abs(game->config["player_max_speed"].as<float>())),
-                                                                            player_walk_animation(game->config["player_walk_animation"].as<std::string>()),
-                                                                            player_side_skin(game->config["player_side_skin"].as<std::string>()),
-                                                                            player_up_skin(game->config["player_up_skin"].as<std::string>()),
-                                                                            player_front_skin(game->config["player_front_skin"].as<std::string>()),
-                                                                            player_beam_animation(game->config["player_beam_animation"].as<std::string>()),
-                                                                            player_idle_animation(game->config["player_idle_animation"].as<std::string>())
+Player::Player(const std::shared_ptr<Game> &game, const std::string &spine_file) : SpineObject(game, spine_file, "player"),
+                                                                                   last_click_time(std::numeric_limits<double>::min())
 {
-    last_click_time = std::numeric_limits<double>::min();
-    target_position = jngl::Vec2((*game->lua_state)["player"]["x"], (*game->lua_state)["player"]["y"]);
-    position = target_position;
-    path.push_back(target_position);
-    SpineObject::id = "Player";
 
-    setSkin((*game->lua_state)["player"]["skin"]);
 }
 
-Player::~Player()
+void Player::setDirection()
 {
-}
-
-void Player::setDirection(jngl::Vec2 target_position)
-{
-    if (max_speed == 0.0)
-    {
-        return;
-    }
-
     if (auto _game = game.lock())
     {
-        currentAnimation = player_walk_animation;
-        (*_game->lua_state)["player"]["animation"] = currentAnimation;
-        (*_game->lua_state)["player"]["loop_animation"] = true;
-        playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
-
-        double angle = std::atan2(target_position.y - position.y, target_position.x - position.x)*180/M_PI;
-
-        if( angle < 45 && angle > -45)
+        if ((*_game->lua_state)["config"]["player_max_speed"] == 0.0)
         {
-                // jngl::debugLn("right");
-                setSkin(player_side_skin);
+            return;
+        }
 
-                skeleton->skeleton->scaleX = 1;
-                auto slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
-                if (slot)
-                    slot->color.a = 0;
+        if (currentAnimation != (*_game->lua_state)["config"]["player_walk_animation"])
+        {
+            currentAnimation = (*_game->lua_state)["config"]["player_walk_animation"];
+            (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["animation"] = currentAnimation;
+            (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["loop_animation"] = true;
+            playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
+        }
 
-                (*_game->lua_state)["player"]["skin"] = player_side_skin;
+        const double angle = std::atan2(target_position.y - position.y, target_position.x - position.x) * 180 / M_PI;
+
+        if (angle < 45 && angle > -45)
+        {
+            // jngl::debugLn("right");
+            setSkin((*_game->lua_state)["config"]["player_side_skin"]);
+
+            if (skeleton->skeleton->scaleX < 0)
+            {
+                skeleton->skeleton->scaleX *= -1.0;
+            }
+            auto *slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
+            if (slot)
+            {
+                slot->color.a = 0;
+            }
+
+            (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"] = (*_game->lua_state)["config"]["player_side_skin"];
         }
         else if (angle < -45 && angle > -135)
         {
             // jngl::debugLn("up");
-            setSkin(player_up_skin);
-            (*_game->lua_state)["player"]["skin"] = player_up_skin;
+            setSkin((*_game->lua_state)["config"]["player_up_skin"]);
+            (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"] = (*_game->lua_state)["config"]["player_up_skin"];
         }
         else if (angle < 135 && angle > 45)
         {
             // jngl::debugLn("down");
-            setSkin(player_front_skin);
+            setSkin((*_game->lua_state)["config"]["player_front_skin"]);
 
-            auto slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
+            auto *slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
             if (slot)
+            {
                 slot->color.a = 1;
+            }
 
-            (*_game->lua_state)["player"]["skin"] = player_front_skin;
+            (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"] = (*_game->lua_state)["config"]["player_front_skin"];
         }
         else if (angle < -135 || angle > 135)
         {
             // jngl::debugLn("left");
-            setSkin(player_side_skin);
+            setSkin((*_game->lua_state)["config"]["player_side_skin"]);
 
-            if (target_position.y != position.y)
+            if (target_position.y != position.y && skeleton->skeleton->scaleX > 0)
             {
-                skeleton->skeleton->scaleX = -1;
+                skeleton->skeleton->scaleX *= -1.0;
             }
 
-            auto slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
-            if(slot)
+            auto *slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
+            if (slot)
+            {
                 slot->color.a = 0;
+            }
 
-            (*_game->lua_state)["player"]["skin"] = player_side_skin;
+            (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"] = (*_game->lua_state)["config"]["player_side_skin"];
         }
     }
 }
@@ -101,10 +92,14 @@ void Player::addTargetPosition(jngl::Vec2 target)
     path.push_back(target);
 }
 
-void Player::addTargetPositionImmediately(jngl::Vec2 target, sol::function callback)
+void Player::addTargetPositionImmediately(jngl::Vec2 target, const sol::function &callback)
 {
     if (auto _game = game.lock())
     {
+        if (boost::qvm::mag_sqr(target_position - target) < 5)
+        {
+            position = target;
+        }
         path.clear();
         if (target != position)
         {
@@ -112,7 +107,9 @@ void Player::addTargetPositionImmediately(jngl::Vec2 target, sol::function callb
 
             path.insert(path.end(), newPath.begin(), newPath.end());
             this->walk_callback = callback;
-        }else{
+        }
+        else
+        {
             this->walk_callback = callback;
             walk_callback();
             walk_callback = (*_game->lua_state)["pass"];
@@ -126,7 +123,7 @@ void Player::stop_walking()
     setTargentPosition(position);
 }
 
-bool Player::step(bool)
+bool Player::step(bool /*force*/)
 {
     if (auto _game = game.lock())
     {
@@ -137,39 +134,45 @@ bool Player::step(bool)
         }
 #endif
 
-        skeleton->step();
-        spSkeleton_updateWorldTransform(skeleton->skeleton);
-        spSkeletonBounds_update(bounds, skeleton->skeleton, true);
-
-        if (_game->getDialogManager()->isActive())
+        if (_game->getDialogManager()->isActive() || _game->getInactivLayerBorder() > layer)
+        {
+            skeleton->step();
+            spSkeleton_update(skeleton->skeleton, 1.0/60.0);
+            spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_UPDATE);
+            spSkeletonBounds_update(bounds, skeleton->skeleton, true);
             return false;
-        if (_game->getInactivLayerBorder() > layer)
-            return false;
+        }
 
         if (path.size() > 1 && position == path.front())
         {
             path.pop_front();
             setTargentPosition(path.front());
-            setDirection(target_position);
+            setDirection();
         }
 
         jngl::Vec2 tmp_target_position = target_position - position;
-        if (tmp_target_position == jngl::Vec2(0, 0) && currentAnimation == player_walk_animation)
+        if (tmp_target_position == jngl::Vec2(0, 0) && currentAnimation == (*_game->lua_state)["config"]["player_walk_animation"])
         {
-            currentAnimation = player_idle_animation;
+            currentAnimation = (*_game->lua_state)["config"]["player_idle_animation"];
             // Callback to Lua
-            walk_callback();
-            walk_callback = (*_game->lua_state)["pass"];
-
-            if(currentAnimation == player_idle_animation)
+            auto old_callback = walk_callback;
+            walk_callback(); // walk_callback can be changed in here.
+            if (old_callback == walk_callback)
             {
-                (*_game->lua_state)["player"]["animation"] = currentAnimation;
-                (*_game->lua_state)["player"]["loop_animation"] = true;
+                // only adjust the walk_callback if the Lua script itself hasn't changed it since
+                walk_callback = (*_game->lua_state)["pass"];
+            }
+
+            if (currentAnimation == (*_game->lua_state)["config"]["player_idle_animation"])
+            {
+                (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["animation"] = currentAnimation;
+                (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["loop_animation"] = true;
 
                 playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
             }
         }
 
+        float max_speed = (*_game->lua_state)["config"]["player_max_speed"];
         auto magnitude = std::sqrt(boost::qvm::dot(tmp_target_position, tmp_target_position));
         if (magnitude != 0 && magnitude > max_speed)
         {
@@ -177,40 +180,54 @@ bool Player::step(bool)
         }
         position += tmp_target_position;
 
+        spSkeleton_physicsTranslate(skeleton->skeleton, tmp_target_position.x * 2.0, tmp_target_position.y * 2.0);
+        skeleton->step();
+        spSkeleton_update(skeleton->skeleton, 1.0/60.0);
+        spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_UPDATE);
+        spSkeletonBounds_update(bounds, skeleton->skeleton, true);
+
         // TODO it's still possible to walk outside of the nav mesh. We have to fix that soon.
-        //#ifndef NDEBUG
+        // #ifndef NDEBUG
         //   if (!_game->currentScene->background->is_walkable(position))
         //   {
         //       throw std::runtime_error("Player is in a not Walkable area!");
         //   }
-        //#endif
+        // #endif
 
         if (_game->pointer->secondaryPressed())
         {
-            // Maybe LUA's DeattatchAllFromPointer here?
-            for (auto obj : _game->pointer->attatchedObjects)
+            // Maybe Lua's DeattachAllFromPointer here?
+            for (const auto &obj : _game->pointer->attachedObjects)
             {
                 obj->setParent(nullptr);
                 obj->setVisible(false);
             }
-            _game->pointer->attatchedObjects.clear();
+            _game->pointer->attachedObjects.clear();
         }
 
-        if (_game->pointer->secondaryPressed())
+        if (_game->pointer->primaryDown() && !path.empty() && interruptible && !_game->pointer->isPrimaryAlreadyHandled() && walk_callback == (*_game->lua_state)["pass"] )
         {
-            // Maybe LUA's DeattatchAllFromPointer here?
-            for (auto obj : _game->pointer->attatchedObjects)
+            const jngl::Vec2 click_position = _game->pointer->getPosition();
+
+            if (boost::qvm::mag_sqr(target_position - click_position) > 5)
             {
-                obj->setParent(nullptr);
-                obj->setVisible(false);
+                path.clear();
+                newPath = _game->currentScene->background->getPathToTarget(position, click_position);
+
+                path.insert(path.end(), newPath.begin(), newPath.end());
+                if (!path.empty())
+                {
+                    setTargentPosition(path.front());
+                }
             }
-            _game->pointer->attatchedObjects.clear();
         }
 
         if (_game->pointer->primaryPressed() && interruptible && !_game->pointer->isPrimaryAlreadyHandled())
         {
-            jngl::Vec2 click_position = _game->pointer->getPosition();
-            auto collision = spSkeletonBounds_containsPoint(bounds, (float)click_position.x - (float)position.x, (float)click_position.y - (float)position.y);
+            const jngl::Vec2 click_position = _game->pointer->getPosition();
+            auto *collision = spSkeletonBounds_containsPoint(bounds,
+                                                             static_cast<float>(click_position.x) - static_cast<float>(position.x),
+                                                             static_cast<float>(click_position.y) - static_cast<float>(position.y));
             if (collision)
             {
                 collision_script = collision->super.super.name;
@@ -218,62 +235,48 @@ bool Player::step(bool)
                 jngl::debugLn("clicked player");
                 _game->pointer->setPrimaryHandled();
                 _game->runAction(collision_script, getptr());
-
             }
 
+            const double time = jngl::getTime();
+            auto click_distance = boost::qvm::dot(last_click_position - click_position, last_click_position - click_position);
             path.clear();
+
+            // Return if players current position is the target position
+            double double_click_time = (*_game->lua_state)["config"]["double_click_time"];
+            double max_click_distance = (*_game->lua_state)["config"]["max_click_distance"];
+            if (boost::qvm::mag_sqr(target_position - click_position) < 5 && (time - last_click_time >= double_click_time || click_distance >= max_click_distance))
+            {
+                return false;
+            }
+
             newPath = _game->currentScene->background->getPathToTarget(position, click_position);
             walk_callback = (*_game->lua_state)["pass"];
 
             path.insert(path.end(), newPath.begin(), newPath.end());
-            if (path.size() > 0)
+            if (!path.empty())
             {
                 setTargentPosition(path.front());
             }
 
             // Handle double click
-            double time = jngl::getTime();
-            auto click_distance = boost::qvm::dot(last_click_position - click_position, last_click_position - click_position);
-            if (max_speed > 0.0 && _game->currentScene->background->is_walkable(click_position) && time - last_click_time < DOUBLE_CLICK_TIME && click_distance < MAX_CLICK_DISTANCE)
+            if (max_speed > 0.0 && _game->currentScene->background->is_walkable(click_position) && time - last_click_time < double_click_time && click_distance < max_click_distance)
             {
                 path.clear();
                 walk_callback = (*_game->lua_state)["pass"];
                 path.push_back(click_position);
                 position = click_position;
                 setTargentPosition(click_position);
-                currentAnimation = player_beam_animation;
-                (*_game->lua_state)["player"]["animation"] = currentAnimation;
-                (*_game->lua_state)["player"]["loop_animation"] = false;
+                currentAnimation = (*_game->lua_state)["config"]["player_beam_animation"];
+                (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["animation"] = currentAnimation;
+                (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["loop_animation"] = false;
                 playAnimation(0, currentAnimation, false, (*_game->lua_state)["pass"]);
-                nextAnimation = player_idle_animation;
+                addAnimation(0, (*_game->lua_state)["config"]["player_idle_animation"], true, 0, (*_game->lua_state)["pass"]);
             }
             last_click_time = time;
             last_click_position = click_position;
         }
 
-        // Move scean if the player is at the border of the screen.
-        auto size = jngl::getScreenSize();
-        jngl::Vec2 camPos = _game->getCameraOrigin();
-
-        if (position.x + X_BORDER > size.x / 2.0 / _game->getCameraZoom())
-        {
-            camPos.x = position.x + X_BORDER - size.x / 2.0 / _game->getCameraZoom();
-        }
-        if (position.x - X_BORDER < -size.x / 2.0 / _game->getCameraZoom())
-        {
-            camPos.x = position.x - X_BORDER + size.x / 2.0 / _game->getCameraZoom();
-        }
-
-        if (position.y + Y_BORDER > size.y / 2.0 / _game->getCameraZoom())
-        {
-            camPos.y = position.y + Y_BORDER - size.y / 2.0 / _game->getCameraZoom();
-        }
-        if (position.y - Y_BORDER < -size.y / 2.0 / _game->getCameraZoom())
-        {
-            camPos.y = position.y - Y_BORDER + size.y / 2.0 / _game->getCameraZoom();
-        }
-
-        _game->setCameraPosition(camPos, 0, 0);
+        _game->setCameraPosition(calcCamPos(), 0, 0);
     }
 
     return false;
@@ -284,11 +287,15 @@ void Player::draw() const
     jngl::pushMatrix();
     jngl::translate(position);
     jngl::rotate(getRotation());
+    if (auto _game = game.lock())
+    {
+        jngl::scale(_game->currentScene->getScale(position));
+    }
 
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
-    skeleton->debugdraw = _game->enableDebugDraw;
+        skeleton->debugdraw = _game->enableDebugDraw;
     }
 #endif
 
@@ -301,7 +308,64 @@ void Player::setTargentPosition(jngl::Vec2 position)
     if (auto _game = game.lock())
     {
         target_position = position;
-        (*_game->lua_state)["player"]["x"] = position.x;
-        (*_game->lua_state)["player"]["y"] = position.y;
+        (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["x"] = position.x;
+        (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["y"] = position.y;
+    }
+}
+
+jngl::Vec2 Player::calcCamPos()
+{
+    if (auto _game = game.lock())
+    {
+        // Move scean if the player is at the border of the screen.
+        auto size = jngl::getScreenSize();
+        jngl::Vec2 camPos = jngl::Vec2(0, 0);
+
+        int border_x = (*_game->lua_state)["config"]["border"]["x"];
+        int border_y = (*_game->lua_state)["config"]["border"]["y"];
+
+        if (position.x + border_x > size.x / 2.0 / _game->getCameraZoom())
+        {
+            camPos.x = position.x + border_x - size.x / 2.0 / _game->getCameraZoom();
+        }
+        if (position.x - border_x < -size.x / 2.0 / _game->getCameraZoom())
+        {
+            camPos.x = position.x - border_x + size.x / 2.0 / _game->getCameraZoom();
+        }
+
+        if (position.y + border_y > size.y / 2.0 / _game->getCameraZoom())
+        {
+            camPos.y = position.y + border_y - size.y / 2.0 / _game->getCameraZoom();
+        }
+        if (position.y - border_y < -size.y / 2.0 / _game->getCameraZoom())
+        {
+            camPos.y = position.y - border_y + size.y / 2.0 / _game->getCameraZoom();
+        }
+        return camPos;
+    }
+    return {0, 0};
+}
+
+
+void Player::toLuaState()
+{
+    SpineObject::toLuaState();
+    if (auto _game = game.lock()) {
+        (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["max_speed"] = (*_game->lua_state)["config"]["player_max_speed"];
+    }
+}
+
+float Player::getMaxSpeed() const
+{
+    if (auto _game = game.lock()) {
+        return (*_game->lua_state)["config"]["player_max_speed"];
+    }
+    throw std::runtime_error("Couldn't lock game.");
+}
+
+void Player::setMaxSpeed(float speed)
+{
+    if (auto _game = game.lock()) {
+        (*_game->lua_state)["config"]["player_max_speed"] = speed;
     }
 }

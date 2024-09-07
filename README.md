@@ -5,6 +5,7 @@ It's written in C++ and can easily be scripted in Lua.
 
 [📚 Documentation](https://alpaca-engine.de/)
 [🎮 Example Game](https://hobbyspieleentwicklerpodcast.de/2080-Demo/)
+[🪟 Windows Build](https://brain-connected.itch.io/alpaca)
 
 [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.gg/zWdnq6UJ79)
 
@@ -86,7 +87,7 @@ Visual Studio will automatically run CMake and you can choose pac.exe as target 
 
 If you need help setting up your first project or want to talk about your game.
 Book a time slot with the developers of ALPACA at [calendly](https://calendly.com/pinguin999/pac-indie-game-development) 🇩🇪🇬🇧
-or mail me at [kolja@portaldogs.com](kolja@portaldogs.com) 🇩🇪🇬🇧
+or mail me at [kolja@portaldogs.com](mailto:kolja@portaldogs.com) 🇩🇪🇬🇧
 
 ## Contributing
 

@@ -2,22 +2,30 @@
 #include "../game.hpp"
 #include <math.h>
 
-SpeechBubble::SpeechBubble(std::shared_ptr<Game> game, const std::string &spine_file,
-                           const jngl::Text &text,
-                           jngl::Vec2 pos) : SpineObject(game, spine_file, "SpeechBubble", .2),
-    text(text)
+SpeechBubble::SpeechBubble(std::shared_ptr<Game> game,
+                           const std::string &spine_file,
+                           const jngl::Text &text, const jngl::Color textColor,
+                           jngl::Vec2 pos)
+    : SpineObject(game, spine_file, "SpeechBubble", .2),
+      color(textColor),
+      text(jngl::Text(text))
 {
     position = pos;
 
-    auto middlebone = spSkeleton_findBone(skeleton->skeleton, "middlemiddle");
+    auto *middlebone = spSkeleton_findBone(skeleton->skeleton, "middlemiddle");
 
     auto textSize = text.getSize();
 
-    middlebone->scaleX = textSize.y / game->config["speechbubbleScaleX"].as<double>();
-    middlebone->scaleY = textSize.x / game->config["speechbubbleScaleY"].as<double>();
+    double const speechbubbleScaleX = (*game->lua_state)["config"]["speechbubbleScaleX"];
+    double const speechbubbleScaleY = (*game->lua_state)["config"]["speechbubbleScaleY"];
+
+    middlebone->scaleX = textSize.y / speechbubbleScaleX;
+    middlebone->scaleY = textSize.x / speechbubbleScaleY;
 
     if (position.x - textSize.x / 2.0 < -1920 / 2)
+    {
         position.x = std::max(position.x, -860.0 + textSize.x / 2.0);
+    }
 }
 
 bool SpeechBubble::step(bool)
@@ -42,7 +50,7 @@ void SpeechBubble::draw() const
     skeleton->draw();
     auto textSize = text.getSize();
     jngl::translate(-textSize.x / 2, -textSize.y / 2);
-    jngl::setFontColor(255, 255, 255);
+    jngl::setFontColor(color);
     text.draw();
     jngl::popMatrix();
 }

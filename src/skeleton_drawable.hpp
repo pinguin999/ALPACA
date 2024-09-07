@@ -18,17 +18,20 @@ public:
 	explicit SkeletonDrawable(spSkeletonData* skeleton, spAnimationStateData* stateData = 0);
 	~SkeletonDrawable() override;
 
-	void endAnimation(int trackIndex);
+    void endAnimation(int trackIndex) const;
 
-	void step() override;
+    void step() override;
 
 	void draw() const override;
+
+	void setAlpha(float);
 
 #ifndef NDEBUG
 	bool debugdraw = false;
 #endif
 
 private:
+	float alpha = 1.f;
 	bool ownsAnimationStateData;
 	float* worldVertices;
 	spFloatArray* tempUvs;

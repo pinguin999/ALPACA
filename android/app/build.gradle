@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     sourceSets {
         main {
-            assets.srcDirs = ["../../data"]
+            assets.srcDirs = ["../../../../data"]
         }
     }
     signingConfigs {
@@ -11,13 +11,21 @@ android {
             storePassword 'password'
             keyPassword 'password'
             keyAlias = 'key0'
-            storeFile file('../../certs/android/android.jks')
+            storeFile file('../../../../certs/android/android.jks')
         }
     }
     defaultConfig {
         applicationId = 'com.alpaca.game'
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 33
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_STL=c++_shared"
+            }
+        }
+    }
+    buildFeatures {
+        prefab true
     }
     buildTypes {
         release {
@@ -30,16 +38,17 @@ android {
     externalNativeBuild {
         cmake {
             version '3.18.0+'
-            path 'src/main/cpp/CMakeLists.txt'
+            path '../../CMakeLists.txt'
         }
     }
-    compileSdkVersion 31
+    compileSdkVersion 33
     productFlavors {
     }
-    ndkVersion "25.0.8775105"
+    ndkVersion '26.1.10909125'
     namespace 'com.alpaca.game'
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.google.oboe:oboe:1.7.0'
 }

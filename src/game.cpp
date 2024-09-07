@@ -11,8 +11,9 @@
 #include <spine/spine.h>
 #include "pointer.hpp"
 #include "interactable_object.hpp"
+#include "scene_fade.hpp"
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 #include "FileWatch.hpp"
 #include <filesystem>
 #endif
@@ -20,51 +21,69 @@
 using jngl::Vec2;
 using namespace std::string_literals;
 
-Game::Game(YAML::Node config) : config(config)
+Game::Game(const YAML::Node &config) : config(config),
+									   cameraPosition(jngl::Vec2(0, 0)),
+									   targetCameraPosition(jngl::Vec2(0, 0))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+									   ,
+									   gifGameFrame(0),
+									   gifTime(0.0)
+#endif
 {
-	setCameraPositionImmediately(getCameraOrigin());
 
 	auto screensize = jngl::getScreenSize();
 	auto zoomx = this->config["screenSize"]["x"].as<int>() / screensize.x;
 	auto zoomy = this->config["screenSize"]["y"].as<int>() / screensize.y;
 	cameraZoom = 1.0 / std::max(zoomx, zoomy);
 
+#ifndef NDEBUG
+	debug_info.setText(debug_text);
+
+	debug_info.setPos(jngl::Vec2(-screensize.x / 2, -screensize.y / 2));
+#endif
+
 	bool language_supportet = false;
 	language = jngl::getPreferredLanguage();
 
 	YAML::Node languages = this->config["supportedLanguages"];
-	for(auto supported_language : languages)
+	for (auto supported_language : languages)
 	{
-		if(language == supported_language.as<std::string>())
+		if (language == supported_language.as<std::string>())
 		{
 			language_supportet = true;
 			break;
 		}
 	}
 
-	if(!language_supportet)
+	if (!language_supportet)
 	{
-		language = "en";
+		if (languages.size() >= 1)
+		{
+			language = languages[0].as<std::string>();
+		}
+		else
+		{
+			language = "en";
+		}
 	}
 
-
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
-    gifAnimation = std::make_shared<GifAnim>();
-    gifWriter = std::make_shared<GifWriter>();
-	gifBuffer = new uint8_t[(jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR * (jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR)) * 4];
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+	gifAnimation = std::make_shared<GifAnim>();
+	gifWriter = std::make_shared<GifWriter>();
+	gifBuffer = std::make_unique<uint8_t[]>((jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR * (jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR)) * 4);
 #endif
 
 	// open some common libraries
 	lua_state = std::make_shared<sol::state>();
-	lua_state->open_libraries(sol::lib::base, sol::lib::package);
+	lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 #ifdef _WIN32
 #define TYPE std::wstring
 #else
 #define TYPE std::string
 #endif
-	static filewatch::FileWatch<TYPE> watch(
+	const static filewatch::FileWatch<TYPE> watch(
 #ifdef _WIN32
 		L"."s,
 #else
@@ -80,8 +99,8 @@ Game::Game(YAML::Node config) : config(config)
 				if (path.find(L"webp") != TYPE::npos)
 #elif __unix__
 				if (path.find("webp") != TYPE::npos)
-#else  // Mac has no file extension here
-				if(true)
+#else // Mac has no file extension here
+				if (true)
 #endif
 				{
 					reload = true;
@@ -97,51 +116,155 @@ Game::Game(YAML::Node config) : config(config)
 void Game::init()
 {
 	dialogManager = std::make_shared<DialogManager>(shared_from_this());
+
+	configToLua();
 	setupLuaFunctions();
-	loadLuaState();
+	if (config["auto_load_savegame"].as<bool>(true))
+	{
+		loadLuaState();
+	}else{
+		loadLuaState(std::nullopt);
+	}
 }
 
-// TODO in LoadScene umbenennen
-void Game::loadLevel(const std::string &level)
+void Game::configToLua()
 {
+	(*lua_state)["config"] = (*lua_state).create_table();
+	(*lua_state)["config"]["name"] = config["name"].as<std::string>();
+    (*lua_state)["config"]["screenSize"] = (*lua_state).create_table();
+    (*lua_state)["config"]["screenSize"]["x"] = config["screenSize"]["x"].as<int>();
+    (*lua_state)["config"]["screenSize"]["y"] = config["screenSize"]["y"].as<int>();
+    (*lua_state)["config"]["minAspectRatio"] = (*lua_state).create_table();
+    (*lua_state)["config"]["minAspectRatio"]["x"] = config["minAspectRatio"]["x"].as<int>();
+    (*lua_state)["config"]["minAspectRatio"]["y"] = config["minAspectRatio"]["y"].as<int>();
+    (*lua_state)["config"]["maxAspectRatio"] = (*lua_state).create_table();
+    (*lua_state)["config"]["maxAspectRatio"]["x"] = config["maxAspectRatio"]["x"].as<int>();
+    (*lua_state)["config"]["maxAspectRatio"]["y"] = config["maxAspectRatio"]["y"].as<int>();
+    (*lua_state)["config"]["default_font"] = config["default_font"].as<std::string>();
+    (*lua_state)["config"]["player"] = config["player"].as<std::string>("");
+    (*lua_state)["config"]["pointer"] = config["pointer"].as<std::string>();
+    (*lua_state)["config"]["dialog"] = config["dialog"].as<std::string>();
+    (*lua_state)["config"]["antiAliasing"] = config["antiAliasing"].as<bool>();
+    (*lua_state)["config"]["icon"] = config["icon"].as<std::string>();
+    (*lua_state)["config"]["start_scene"] = config["start_scene"].as<std::string>();
+    (*lua_state)["config"]["double_click_time"] = config["double_click_time"].as<float>();
+    (*lua_state)["config"]["max_click_distance"] = config["max_click_distance"].as<int>();
+#ifndef NDEBUG
+    (*lua_state)["config"]["debug_grap_distance"] = config["debug_grap_distance"].as<float>();
+#endif
+    (*lua_state)["config"]["gamepad_speed_multiplier"] = config["gamepad_speed_multiplier"].as<float>();
+    (*lua_state)["config"]["inventory_default_skin"] = config["inventory_default_skin"].as<std::string>();
+    (*lua_state)["config"]["player_default_skin"] = config["player_default_skin"].as<std::string>();
+    (*lua_state)["config"]["player_side_skin"] = config["player_side_skin"].as<std::string>();
+    (*lua_state)["config"]["player_front_skin"] = config["player_front_skin"].as<std::string>();
+    (*lua_state)["config"]["player_up_skin"] = config["player_up_skin"].as<std::string>();
+    (*lua_state)["config"]["player_walk_animation"] = config["player_walk_animation"].as<std::string>();
+    (*lua_state)["config"]["player_beam_animation"] = config["player_beam_animation"].as<std::string>();
+    (*lua_state)["config"]["player_idle_animation"] = config["player_idle_animation"].as<std::string>();
+    (*lua_state)["config"]["player_start_animation"] = config["player_start_animation"].as<std::string>();
+    (*lua_state)["config"]["spine_default_animation"] = config["spine_default_animation"].as<std::string>();
+    (*lua_state)["config"]["pointer_idle_animation"] = config["pointer_idle_animation"].as<std::string>();
+    (*lua_state)["config"]["pointer_over_animation"] = config["pointer_over_animation"].as<std::string>();
+    (*lua_state)["config"]["background_default_animation"] = config["background_default_animation"].as<std::string>();
+    (*lua_state)["config"]["speechbubbleScaleX"] = config["speechbubbleScaleX"].as<float>();
+    (*lua_state)["config"]["speechbubbleScaleY"] = config["speechbubbleScaleY"].as<float>();
+    (*lua_state)["config"]["pointer_max_speed"] = config["pointer_max_speed"].as<float>();
+    (*lua_state)["config"]["player_max_speed"] = config["player_max_speed"].as<float>();
+    (*lua_state)["config"]["player_start_position"] = (*lua_state).create_table();
+    (*lua_state)["config"]["player_start_position"]["x"] = config["player_start_position"]["x"].as<int>();
+    (*lua_state)["config"]["player_start_position"]["y"] = config["player_start_position"]["y"].as<int>();
+    (*lua_state)["config"]["border"] = (*lua_state).create_table();
+    (*lua_state)["config"]["border"]["x"] = config["border"]["x"].as<int>();
+    (*lua_state)["config"]["border"]["y"] = config["border"]["y"].as<int>();
+	(*lua_state)["config"]["supportedLanguages"] = sol::as_table(config["supportedLanguages"].as<std::vector<std::string>>());
+}
+
+void Game::loadSceneWithFade(std::string level)
+{
+	if(enable_fade){
+		jngl::setWork<SceneFade>(jngl::getWork(), [this, level = std::move(level)]() {
+			loadScene(std::move(level));
+		});
+		pointer->setPrimaryHandled();
+	}else{
+		loadScene(level);
+	}
+#ifndef NDEBUG
+	// Run tests to get a savegame at the start of each scene
+	auto old_savegame = jngl::readConfig(level);
+	if(old_savegame.empty())
+	{
+		saveLuaState(level);
+	}
+#endif
+}
+
+void Game::loadScene(const std::string& level)
+{
+	std::string old_scene;
+	if (currentScene)
+	{
+		old_scene = currentScene->getSceneName();
+	}
 	dialogManager->cancelDialog();
 
 	// Clear the level if there is already a level loaded
-	for (auto it = gameObjects.begin(); it != gameObjects.end();)
+	for (auto it = gameObjects.rbegin(); it != gameObjects.rend();)
 	{
-		if ((*it)->cross_scene)
-		{
-			++it;
-		}
-		else
-		{
-			(*it)->setDeleted();
-			++it;
-		}
+		remove(*it);
+		std::advance(it, 1);
+	}
+	player = nullptr;
+
+	auto newScene = std::make_shared<Scene>(level, shared_from_this());
+	if (!newScene->background)
+	{
+		jngl::debugLn("There is no scene with the name: " + level);
+		newScene = std::make_shared<Scene>(old_scene, shared_from_this());
 	}
 
-	currentScene = std::make_shared<Scene>(level, shared_from_this());
+	currentScene = newScene;
+	currentScene->background->step();
 	currentScene->playMusic();
 
 	// Pointer should be last in gameObjects so it's on top
 	if (pointer == nullptr)
 	{
-		pointer = std::make_shared<Pointer>(shared_from_this(), config["pointer"].as<std::string>());
-		pointer->cross_scene = true;
+		pointer = std::make_shared<Pointer>(shared_from_this(), (*lua_state)["config"]["pointer"]);
+		pointer->setCrossScene(true);
 		pointer->setPosition(Vec2(0, 0));
 		add(pointer);
 	}
+
+	if (player)
+	{
+		auto position = currentScene->background->getPoint(old_scene);
+		if (position)
+		{
+			player->setPosition(position.value());
+		}
+		player->stop_walking();
+		setCameraPositionImmediately(player->calcCamPos());
+	}
+
+	runAction(level, std::static_pointer_cast<SpineObject>(newScene->background));
 }
 
 Game::~Game()
 {
 	saveLuaState();
+	reset();
+}
+
+void Game::reset()
+{
 	gameObjects.clear();
 	needToAdd.clear();
 	needToRemove.clear();
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
-	delete[] gifBuffer;
-#endif
+	lua_state = {};
+	currentScene = nullptr;
+	player = nullptr;
+	pointer = nullptr;
 }
 
 void Game::step()
@@ -153,7 +276,7 @@ void Game::step()
 
 	for (auto it = gameObjects.rbegin(); it != gameObjects.rend();)
 	{
-		if((*it) == pointer)
+		if ((*it) == pointer)
 		{
 			std::advance(it, 1);
 			continue;
@@ -179,34 +302,237 @@ void Game::step()
 }
 
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
-const std::string currentDateTime() {
-    time_t     now = time(0);
-    struct tm  tstruct;
-    char       buf[80];
-    tstruct = *localtime(&now);
-    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
-    // for more information about date/time format
-    strftime(buf, sizeof(buf), "%Y-%m-%d-%M-%S", &tstruct);
+std::string currentDateTime()
+{
+	const time_t now = time(0);
+	struct tm tstruct;
+	char buf[80];
+	tstruct = *localtime(&now);
+	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+	// for more information about date/time format
+	strftime(buf, sizeof(buf), "%Y-%m-%d-%M-%S", &tstruct);
 
-    return buf;
+	return buf;
 }
 
 #ifndef NDEBUG
 void Game::debugStep()
 {
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+	// Reload Scene
+	if (jngl::keyPressed("r") || reload)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		auto dialogFilePath = (*lua_state)["config"]["dialog"];
+		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
+		loadScene(currentScene->getSceneName());
+		reload = false;
+	}
+
+	if (jngl::keyPressed(jngl::key::F10))
+	{
+		enableDebugDraw = !enableDebugDraw;
+	}
+	if (jngl::keyPressed('m'))
+	{
+		if (jngl::getVolume() > 0.0)
+	{
+		jngl::setVolume(0);
+		}
+		else
+		{
+			jngl::setVolume(1.0);
+		}
+	}
+	if (jngl::keyPressed('z'))
+	{
+		enablezMapDebugDraw = !enablezMapDebugDraw;
+	}
+	if (jngl::keyPressed(jngl::key::Tab))
+	{
+		editMode = !editMode;
+	}
+	if (editMode && jngl::keyPressed("s"))
+	{
+		currentScene->writeToFile();
+	}
+
+	if (jngl::keyPressed("x"))
+	{
+		show_debug_info = !show_debug_info;
+	}
+
+	// Quick Save
+	if (jngl::keyPressed("c"))
+	{
+		saveLuaState();
+	}
+
+	// Quick Load
+	if (jngl::keyPressed("v"))
+	{
+		reset();
+		lua_state = std::make_shared<sol::state>();
+		lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+		init();
+	}
+
+	// Restart Game
+	if (jngl::keyPressed("l"))
+	{
+		jngl::writeConfig("savegame", "");
+		reset();
+		lua_state = std::make_shared<sol::state>();
+		lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+		init();
+	}
+
+	if (!room_select_mode)
+		{
+		// Save with Control + 1-9 and Load with 1-9
+		for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
+		{
+			if (jngl::keyDown(jngl::key::ControlL) && jngl::keyPressed(number))
+			{
+				jngl::debugLn("Save to Save " + std::string(number));
+				saveLuaState("savegame" + std::string(number));
+			}
+			else if (jngl::keyPressed(number))
+			{
+				reset();
+				lua_state = std::make_shared<sol::state>();
+				lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+				dialogManager = std::make_shared<DialogManager>(shared_from_this());
+
+				configToLua();
+				setupLuaFunctions();
+				loadLuaState("savegame" + std::string(number));
+			}
+		}
+	}
+
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+	for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
+	{
+		int x = static_cast<int>(number[0]) - static_cast<int>('0');
+		if (room_select_mode && jngl::keyPressed(number) && tens.has_value())
+		{
+			const std::string path = jngl::internal::getConfigPath();
+			const int target = tens.value() * 10 + x;
+
+			int i = 0;
+			for (const auto & entry : std::filesystem::directory_iterator(path))
+			{
+				i++;
+			}
+			if (target < i) {
+				reset();
+				lua_state = std::make_shared<sol::state>();
+				lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+				dialogManager = std::make_shared<DialogManager>(shared_from_this());
+
+				configToLua();
+				setupLuaFunctions();
+
+				i = 0;
+				for (const auto & entry : std::filesystem::directory_iterator(path))
+				{
+					if (i == target) {
+#ifdef _WIN32
+						std::wstring wide = std::wstring(entry.path().filename());
+						std::string str( wide.begin(), wide.end() );
+						loadLuaState(str);
+#else
+						loadLuaState(std::string(entry.path().filename()));
+#endif
+					}
+					i++;
+				}
+				room_select_mode = false;
+				tens.reset();
+				debug_info.setText(debug_text);
+			}else {
+				room_select_mode = false;
+				tens.reset();
+				debug_info.setText(debug_text);
+			}
+		}
+		else if (room_select_mode && jngl::keyPressed(number) && !tens.has_value())
+		{
+			tens = x;
+		}
+	}
+
+	// Jump to a room
+	if (jngl::keyPressed("j"))
+	{
+		int i = 0;
+		std::string files;
+
+		const std::string path = jngl::internal::getConfigPath();
+		for (const auto & entry : std::filesystem::directory_iterator(path))
+		{
+#ifdef _WIN32
+			std::wstring wide = std::wstring(entry.path().filename());
+			std::string str( wide.begin(), wide.end() );
+			files += std::to_string(i) + " " + str + "\n";
+#else
+			files += std::to_string(i) + " " + std::string(entry.path().filename()) + "\n";
+#endif
+			i++;
+		}
+
+		debug_info.setText(files);
+		room_select_mode = true;
+	}
+
+	if (recordingGif)
+	{
+		if (gifGameFrame % GIF_FRAME_SKIP == 0)
+		{
+			auto pixels = jngl::readPixels();
+			const int w = jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR;
+			const int h = jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR;
+
+			for (int y = 0; y < h; y++)
+			{
+				for (int x = 0; x < w; x++)
+				{
+					gifBuffer[((w * y) + x) * 4] = static_cast<uint8_t>(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3] * 255);
+					gifBuffer[((w * y) + x) * 4 + 1] = static_cast<uint8_t>(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3 + 1] * 255);
+					gifBuffer[((w * y) + x) * 4 + 2] = static_cast<uint8_t>(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3 + 2] * 255);
+					gifBuffer[((w * y) + x) * 4 + 3] = 255;
+				}
+			}
+
+			auto currentTime = jngl::getTime();
+			auto timeDiff = currentTime - gifTime;
+
+			gifAnimation->GifWriteFrame(gifWriter.get(),
+										gifBuffer.get(),
+										jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR,
+										jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR,
+										static_cast<uint32_t>(timeDiff),
+										8,
+										false,
+										nullptr);
+
+			gifTime = currentTime;
+		}
+		gifGameFrame++;
+	}
+
 	if (jngl::keyPressed(jngl::key::F12))
 	{
-		if(!recordingGif)
+		if (!recordingGif)
 		{
 			// start recording
 			recordingGif = true;
+			show_debug_info = false;
 
-			gifFrame = 0;
 			gifGameFrame = 0;
 			gifTime = jngl::getTime();
 
-			std::string filename = "";
+			std::string filename = "./../";
 			filename += currentDateTime() + ".gif";
 			jngl::debug("start recording ");
 			jngl::debugLn(filename);
@@ -229,121 +555,6 @@ void Game::debugStep()
 		}
 	}
 #endif
-
-	// Reload Scene
-	if (jngl::keyPressed("r") || reload)
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		std::string dialogFilePath = config["dialog"].as<std::string>();
-		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
-		loadLevel(currentScene->getSceneName());
-		reload = false;
-	}
-
-	if (jngl::keyPressed(jngl::key::F10))
-	{
-		enableDebugDraw = !enableDebugDraw;
-	}
-	if (jngl::keyPressed(jngl::key::Tab))
-	{
-		editMode = !editMode;
-	}
-	if (editMode && jngl::keyPressed("S"))
-	{
-		currentScene->writeToFile();
-	}
-
-	// Quick Save
-	if (jngl::keyPressed("c"))
-	{
-		saveLuaState();
-	}
-
-	// Quick Load
-	if (jngl::keyPressed("v"))
-	{
-		loadLuaState();
-	}
-
-	// End all Animations, I'm not sure jet where to put it.
-	if (jngl::keyPressed(jngl::key::Space))
-	{
-		for (const auto& obj : gameObjects)
-		{
-			obj->skeleton->endAnimation(0);
-		}
-	}
-
-	// Save with Control + 1-9 and Load with 1-9
-	for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
-	{
-		if (jngl::keyDown(jngl::key::ControlL) && jngl::keyPressed(number))
-		{
-			jngl::debugLn("Save to Save " + std::string(number));
-			saveLuaState("savegame" + std::string(number));
-		}
-		else if (jngl::keyPressed(number))
-		{
-			loadLuaState("savegame" + std::string(number));
-		}
-	}
-
-	// if(jngl::keyPressed(jngl::key::Space)) {
-	//     dialogManager.showTypewriterAnimation("Freitag, 13. September 2080");
-	// }
-	// if(jngl::keyPressed(jngl::key::Delete)) {
-	//     std::list<std::string> choises;
-	//     choises.push_front("Hallo Carsten");
-	//     choises.push_front("Hallo Kolja");
-	//     choises.push_front("Willkommen zum Hobby Spieleprogrammierer Podcast!");
-	//     dialogManager.showChoices(choises);
-
-	//    // dialogManager.showNarratorText("Wir schreiben das Jahr 2080.\nDie Menschheit ist auf der Suche nach außerirdischem Leben Dose");
-	//}
-
-	// if(jngl::keyPressed(jngl::key::BackSpace)) {
-	//     dialogManager.showCharacterText("Wir schreiben das Jahr 2080.\nDie Menschheit ist auf der Suche nach außerirdischem Leben", jngl::Vec2(0,0));
-	// }
-
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
-	if(recordingGif)
-	{
-		if(gifGameFrame % GIF_FRAME_SKIP == 0)
-		{
-
-			auto pixels = jngl::readPixels();
-			int w = jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR;
-			int h = jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR;
-
-			for(int y = 0; y < h; y++)
-			{
-				for(int x = 0; x < w; x++)
-				{
-					gifBuffer[((w * y) + x) * 4]     = (uint8_t)(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3] * 255);
-					gifBuffer[((w * y) + x) * 4 + 1] = (uint8_t)(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3 + 1] * 255);
-					gifBuffer[((w * y) + x) * 4 + 2] = (uint8_t)(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3 + 2] * 255);
-					gifBuffer[((w * y) + x) * 4 + 3] = 255;
-				}
-			}
-
-			auto currentTime = jngl::getTime();
-			auto timeDiff = currentTime - gifTime;
-
-			gifAnimation->GifWriteFrame(gifWriter.get(),
-									gifBuffer,
-									jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR,
-									jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR,
-									(uint32_t)timeDiff,
-									8,
-									false,
-									nullptr);
-
-			gifFrame++;
-			gifTime = currentTime;
-		}
-		gifGameFrame++;
-	}
-#endif
 }
 #endif
 
@@ -354,15 +565,26 @@ void Game::draw() const
 	applyCamera();
 	jngl::setColor(30, 200, 30, 255);
 
-	for (auto& obj : gameObjects)
+	for (auto &obj : gameObjects)
 	{
-		if(obj->getVisible())
+		if (obj->getVisible())
+		{
 			obj->draw();
+		}
 	}
 
 	dialogManager->draw();
 	// Der Pointer wird doppelt gedrawed, damit der immer vorne ist.
 	pointer->draw();
+
+#ifndef NDEBUG
+	if (show_debug_info)
+	{
+		jngl::setFontColor(0, 0, 0, 255);
+		debug_info.draw();
+	}
+#endif
+
 	jngl::popMatrix();
 }
 
@@ -382,11 +604,6 @@ Vec2 Game::getCameraSpeed() const
 	return targetCameraPosition - cameraPosition;
 }
 
-Vec2 Game::getCameraOrigin() const
-{
-	return Vec2(0, 0);
-}
-
 Vec2 Game::getCameraPosition() const
 {
 	return cameraPosition;
@@ -402,13 +619,21 @@ void Game::setCameraPosition(Vec2 position, const double deadzoneFactorX,
 							 const double deadzoneFactorY)
 {
 	if (position.x < currentScene->left_border)
+	{
 		position.x = currentScene->left_border;
+	}
 	if (position.x > currentScene->right_border)
+	{
 		position.x = currentScene->right_border;
+	}
 	if (position.y < currentScene->top_border)
+	{
 		position.y = currentScene->top_border;
-	if(position.y > currentScene->bottom_border)
+	}
+	if (position.y > currentScene->bottom_border)
+	{
 		position.y = currentScene->bottom_border;
+	}
 
 	cameraDeadzone = position - targetCameraPosition;
 	const double x = 160 * deadzoneFactorX;
@@ -430,6 +655,22 @@ void Game::setCameraPosition(Vec2 position, const double deadzoneFactorX,
 
 void Game::setCameraPositionImmediately(Vec2 position)
 {
+	if (position.x < currentScene->left_border)
+	{
+		position.x = currentScene->left_border;
+	}
+	if (position.x > currentScene->right_border)
+	{
+		position.x = currentScene->right_border;
+	}
+	if (position.y < currentScene->top_border)
+	{
+		position.y = currentScene->top_border;
+	}
+	if (position.y > currentScene->bottom_border)
+	{
+		position.y = currentScene->bottom_border;
+	}
 	targetCameraPosition = cameraPosition = position;
 }
 
@@ -439,23 +680,30 @@ void Game::stepCamera()
 	cameraPosition += speed / 36.0;
 }
 
-void Game::add(std::shared_ptr<SpineObject> obj) {
+void Game::add(const std::shared_ptr<SpineObject> &obj)
+{
 	needToAdd.emplace_back(obj);
 }
 
-void Game::remove(std::shared_ptr<SpineObject> object) {
+void Game::remove(const std::shared_ptr<SpineObject> &object)
+{
 	needToRemove.push_back(object);
 }
 
-void Game::addObjects() {
+void Game::addObjects()
+{
 	std::copy(needToAdd.begin(), needToAdd.end(), std::back_inserter(gameObjects));
 	needToAdd.clear();
 }
 
-void Game::removeObjects() {
-	for (const auto& toRemove : needToRemove) {
-		for (auto it = gameObjects.begin(); it != gameObjects.end(); ++it) {
-			if (*it == toRemove) {
+void Game::removeObjects()
+{
+	for (const auto &toRemove : needToRemove)
+	{
+		for (auto it = gameObjects.begin(); it != gameObjects.end(); ++it)
+		{
+			if (*it == toRemove)
+			{
 				gameObjects.erase(it);
 				break;
 			}
@@ -474,10 +722,12 @@ AudioManager *Game::getAudioManager()
 	return &audioManager;
 }
 
-void Game::runAction(std::string actionName, std::shared_ptr<SpineObject> thisObject)
+void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject> thisObject)
 {
-	if (actionName == "")
-        return;
+	if (actionName.empty())
+	{
+		return;
+	}
 
 	std::string errorMessage;
 	std::string script;
@@ -485,18 +735,24 @@ void Game::runAction(std::string actionName, std::shared_ptr<SpineObject> thisOb
 
 	// if the name starts with "dlg:", play the dialog,
 	// no need for a separate Lua file
-	if(actionName.substr(0, 4) == "dlg:")
+	if (actionName.substr(0, 4) == "dlg:")
 	{
-		std::string dialogName = actionName.substr(4);
+		const std::string dialogName = actionName.substr(4);
 		script = "PlayDialog(\"" + dialogName + "\", pass)";
 		errorMessage = "Failed to play dialog " + dialogName + "!\n";
+	}
+	else if (actionName.substr(0, 5) == "anim:")
+	{
+		const std::string animName = actionName.substr(5);
+		script = "PlayAnimationOn(\"" + thisObject->getId() + "\", 0, \"" + animName + "\", false, pass)";
+		errorMessage = "Failed to play animation " + animName + "!\n";
 	}
 	// if there is no specific prefix, just load the according Lua file
 	else
 	{
-		std::string file = "scripts/" + actionName + ".lua";
-		errorMessage = "The LUA code of " + file + " has failed to run!\n";
-		std::stringstream scriptstream = jngl::readAsset(file);
+		const std::string file = "scripts/" + actionName + ".lua";
+		errorMessage = "The Lua code of " + file + " has failed to run!\n";
+		const std::stringstream scriptstream = jngl::readAsset(file);
 
 		if (!scriptstream)
 		{
@@ -506,59 +762,62 @@ void Game::runAction(std::string actionName, std::shared_ptr<SpineObject> thisOb
 		script = scriptstream.str();
 	}
 
-    auto result = lua_state->safe_script(script, sol::script_pass_on_error);
+	auto result = lua_state->safe_script(script, sol::script_pass_on_error);
 
-	if (!result.valid()) {
-		sol::error err = result;
+	if (!result.valid())
+	{
+		const sol::error err = result;
 		std::cerr << errorMessage
-		          << err.what()
-		          << std::endl;
+				  << err.what()
+				  << std::endl;
 	}
 }
 
-void Game::saveLuaState(std::string savefile)
+void Game::saveLuaState(const std::string &savefile)
 {
 	// jngl::debugLn("Backup all globals start");
 	const sol::table &globals = lua_state->globals();
 
-	std::string backup = backupLuaTable(globals, "");
+	const std::string backup = backupLuaTable(globals, "");
 	jngl::debugLn("Backup all globals end: \n" + backup);
 
 	jngl::writeConfig(savefile, backup);
 }
 
-void Game::loadLuaState(std::string savefile)
+void Game::loadLuaState(const std::optional<std::string> &savefile)
 {
 	jngl::debugLn("Load all globals");
-	std::string state = jngl::readConfig(savefile);
-	auto result = lua_state->safe_script(state, sol::script_pass_on_error);
+	if (savefile) {
+		const std::string state = jngl::readConfig(savefile.value());
+		auto result = lua_state->safe_script(state, sol::script_pass_on_error);
 
-	if (!result.valid())
-	{
-		sol::error err = result;
-		std::cerr << "Failed to load savgame " + savefile + " \n"
-				  << err.what()
-				  << std::endl;
+		if (!result.valid())
+		{
+			const sol::error err = result;
+			std::cerr << "Failed to load savgame " + savefile.value() + " \n"
+					<< err.what()
+					<< std::endl;
+		}
 	}
 
-	std::string dialogFilePath = config["dialog"].as<std::string>();
+	const std::string dialogFilePath = (*lua_state)["config"]["dialog"];
 	if ((*lua_state)["game"].valid() && (*lua_state)["game"]["scene"].valid())
 	{
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
-		std::string scene = (*lua_state)["game"]["scene"];
-		loadLevel(scene);
+		const std::string scene = (*lua_state)["game"]["scene"];
+		loadScene(scene);
 	}
 	else
 	{
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, true);
-		std::string startscene = config["start_scene"].as<std::string>();
-		loadLevel(startscene);
+		const std::string startscene = (*lua_state)["config"]["start_scene"];
+		loadScene(startscene);
 	}
 	// TODO Error handling
 	jngl::debugLn("Loaded all globals");
 }
 
-std::string Game::cleanLuaString(std::string variable)
+const std::string Game::cleanLuaString(std::string variable)
 {
 	// The following strings denote other tokens:
 
@@ -566,7 +825,7 @@ std::string Game::cleanLuaString(std::string variable)
 	//  ==    ~=    <=    >=    <     >     =
 	//  (     )     {     }     [     ]
 	//  ;     :     ,     .     ..    ...
-	for (const char* const& invalidChar : {"+", "-", "*", "/", "%", "^", "#", "<", ">", "=", "(", ")", "{", "}", "[", "]", ";", ":", ",", "."})
+	for (const char *const &invalidChar : {"+", "-", "*", "/", "%", "^", "#", "<", ">", "=", "(", ")", "{", "}", "[", "]", ";", ":", ",", "."})
 	{
 		while (variable.find(invalidChar) != std::string::npos)
 		{
@@ -579,13 +838,13 @@ std::string Game::cleanLuaString(std::string variable)
 
 std::string Game::backupLuaTable(const sol::table table, const std::string &parent)
 {
-	std::string result = "";
+	std::string result;
 	for (const auto &key_value_pair : table)
 	{
-		sol::object key = key_value_pair.first;
-		sol::object value = key_value_pair.second;
+		const sol::object key = key_value_pair.first;
+		const sol::object value = key_value_pair.second;
 
-		std::string k = "";
+		std::string k;
 		if (key.get_type() == sol::type::string)
 		{
 			k = key.as<std::string>();
@@ -595,7 +854,20 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 			k = std::to_string(key.as<int>());
 		}
 
-		if (k != "_entry_node" && k != "_VERSION" && k.substr(0, 4) != "sol." && k != "_G" && k != "base" && k != "package" && k != "searches")
+		if (!parent.empty())
+		{
+			k = "[\"" + k + "\"]";
+		}
+
+		if (k != "_entry_node" &&
+			k != "_VERSION" &&
+			k.substr(0, 4) != "sol." &&
+			k != "_G" &&
+			k != "base" &&
+			k != "package" &&
+			k != "math" &&
+			k != "string" &&
+			k != "searches")
 		{
 			std::string v;
 			switch (value.get_type())
@@ -615,7 +887,12 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 				result += parent + k + " = \"" + v + "\"\n";
 				break;
 			case sol::type::number:
+				if (value.is<int>())
+				{
+					v = std::to_string(value.as<int>());
+				}else{
 				v = std::to_string(value.as<double>());
+				}
 				result += parent + k + " = " + v + "\n";
 				break;
 			case sol::type::boolean:
@@ -633,7 +910,7 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 				break;
 			case sol::type::table:
 				result += parent + k + " = {}\n";
-				result += backupLuaTable(value.as<sol::table>(), parent + k + ".");
+				result += backupLuaTable(value.as<sol::table>(), parent + k);
 				break;
 			}
 		}
@@ -642,11 +919,11 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 	return result;
 }
 
-std::shared_ptr<SpineObject> Game::getObjectById(std::string objectId)
+const std::shared_ptr<SpineObject> Game::getObjectById(std::string objectId)
 {
-	if (objectId == "Player")
+	if (objectId == "Player" || objectId == "player")
 	{
-		return player;
+		return (*this->lua_state)["scenes"]["cross_scene"]["items"]["player"]["object"];
 	}
 	if (objectId == "Background")
 	{
@@ -670,29 +947,41 @@ std::shared_ptr<SpineObject> Game::getObjectById(std::string objectId)
 			obj = (*this->lua_state)["scenes"][scene]["items"][objectId]["object"];
 		}
 	}
+	if (obj == nullptr)
+	{
+		if ((*this->lua_state)["scenes"]["cross_scene"]["items"][objectId].valid())
+		{
+			obj = (*this->lua_state)["scenes"]["cross_scene"]["items"][objectId]["object"];
+		}
+	}
 	return obj;
 }
 
-std::string Game::getLUAPath(std::string objectId)
+const std::string Game::getLuaPath(std::string objectId)
 {
-	if (objectId == "Player")
+	if (objectId == "Player" || objectId == "player")
 	{
-		return "player";
+		return R"(scenes["cross_scene"]["items"]["player"])";
 	}
 
 	std::string scene = (*this->lua_state)["game"]["scene"];
-	if (objectId == "Background")
-	{
-		return "scenes[\"" + scene + "\"][\"background\"]";
+	if (objectId == "Background") {
+		return "scenes[\"" + scene + R"("]["background"])";
 	}
 
-	if ((*this->lua_state)["inventory_items"][objectId].valid())
+        if ((*this->lua_state)["inventory_items"][objectId].valid())
 	{
 		return "inventory_items[\"" + objectId + "\"]";
 	}
-	else if ((*this->lua_state)["scenes"][scene]["items"][objectId].valid())
+
+	if ((*this->lua_state)["scenes"][scene]["items"][objectId].valid())
 	{
-		return "scenes[\"" + scene + "\"][\"items\"][\"" + objectId + "\"]";
+		return "scenes[\"" + scene + R"("]["items"][")" + objectId + "\"]";
+	}
+
+	if ((*this->lua_state)["scenes"]["cross_scene"]["items"][objectId].valid())
+	{
+		return R"(scenes["cross_scene"]["items"][")" + objectId + "\"]";
 	}
 	return "";
 }

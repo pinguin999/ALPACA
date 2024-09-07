@@ -9,12 +9,7 @@
 #include <cassert>
 #include <spine/spine.h>
 
-Pointer::Pointer(std::shared_ptr<Game> game, const std::string &spine_file):
-    SpineObject(game, spine_file, "Pointer", .5),
-    GAMEPAD_SPEED_MULTIPLYER(game->config["gamepad_speed_multiplyer"].as<double>()),
-    max_speed(std::abs(game->config["pointer_max_speed"].as<float>())),
-    pointer_idle_animation(game->config["pointer_idle_animation"].as<std::string>()),
-    pointer_over_animation(game->config["pointer_over_animation"].as<std::string>())
+Pointer::Pointer(std::shared_ptr<Game> game, const std::string &spine_file) : SpineObject(game, spine_file, "Pointer", .5)
 {
     const auto controllers = jngl::getConnectedControllers();
     if (controllers.size() > pointerNr)
@@ -25,10 +20,6 @@ Pointer::Pointer(std::shared_ptr<Game> game, const std::string &spine_file):
     {
         control = std::make_unique<Keyboard>();
     }
-}
-
-Pointer::~Pointer()
-{
 }
 
 bool Pointer::step(bool)
@@ -48,7 +39,8 @@ bool Pointer::step(bool)
         auto cam_pos = _game->getCameraPosition() - (screensize / 2.0);
         mouse_pose = (mouse_pose + cam_pos) / _game->getCameraZoom();
 
-        auto move = control->getMovement() * GAMEPAD_SPEED_MULTIPLYER;
+        float gamepad_speed_multiplier = (*_game->lua_state)["config"]["gamepad_speed_multiplier"];
+        auto move = control->getMovement() * gamepad_speed_multiplier;
         auto movesec = control->getSecondaryMovement();
         if (move != jngl::Vec2(0, 0))
         {
@@ -74,6 +66,7 @@ bool Pointer::step(bool)
         {
             jngl::Vec2 tmp_target_position = target_position - position;
             auto magnitude = std::sqrt(boost::qvm::dot(tmp_target_position, tmp_target_position));
+            float max_speed = (*_game->lua_state)["config"]["pointer_max_speed"];
             if (magnitude != 0 && magnitude > max_speed)
             {
                 tmp_target_position *= max_speed / magnitude;
@@ -95,7 +88,8 @@ bool Pointer::step(bool)
                 if (obj->getVisible() &&
                     !(_game->getInactivLayerBorder() > obj->layer) &&
                     obj->bounds &&
-                    bool(spine::spSkeletonBounds_containsPointNotMatchingName(obj->bounds, "walkable_area", (float)position.x - (float)obj->getPosition().x, (float)position.y - (float)obj->getPosition().y)))
+                    bool(spine::spSkeletonBounds_containsPointNotMatchingName(obj->bounds, "walkable_area", (float)position.x - (float)obj->getPosition().x, (float)position.y - (float)obj->getPosition().y)) &&
+                    bool(spine::spSkeletonBounds_containsPointNotMatchingName(obj->bounds, "non_walkable_area", (float)position.x - (float)obj->getPosition().x, (float)position.y - (float)obj->getPosition().y)))
                 {
                     over = true;
                     vibrate();
@@ -106,18 +100,18 @@ bool Pointer::step(bool)
 
         if (over)
         {
-            if (currentAnimation != pointer_over_animation)
+            if (currentAnimation != (*_game->lua_state)["config"]["pointer_over_animation"])
             {
-                currentAnimation = pointer_over_animation;
+                currentAnimation = (*_game->lua_state)["config"]["pointer_over_animation"];
                 playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
                 this->setSkin("active");
             }
         }
         else
         {
-            if (currentAnimation != pointer_idle_animation)
+            if (currentAnimation != (*_game->lua_state)["config"]["pointer_idle_animation"])
             {
-                currentAnimation = pointer_idle_animation;
+                currentAnimation = (*_game->lua_state)["config"]["pointer_idle_animation"];
                 playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
                 this->setSkin("inactive");
             }
@@ -127,6 +121,13 @@ bool Pointer::step(bool)
 
         skeleton->step();
     }
+
+    fade_out -= 0.03f;
+    if (boost::qvm::mag_sqr(last_position - position) > 1) {
+        last_position = position;
+        fade_out = 2.f;
+    }
+    skeleton->setAlpha(std::clamp(fade_out, 0.f, 1.f));
 
     return false;
 }
@@ -151,7 +152,7 @@ void Pointer::draw() const
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
-    skeleton->debugdraw = _game->enableDebugDraw;
+        skeleton->debugdraw = _game->enableDebugDraw;
     }
 #endif
 
@@ -222,6 +223,20 @@ bool Pointer::primaryPressed()
     return jngl::mousePressed() || control->primary() || control->rTrigger();
 }
 
+bool Pointer::primaryDown()
+{
+#ifndef NDEBUG
+    if (auto _game = game.lock())
+    {
+        if (_game->editMode)
+        {
+            return false;
+        }
+    }
+#endif
+    return jngl::mouseDown() || control->primary() || control->rTrigger();
+}
+
 bool Pointer::secondaryPressed()
 {
 #ifndef NDEBUG
@@ -235,7 +250,6 @@ bool Pointer::secondaryPressed()
 #endif
     return jngl::mousePressed(jngl::mouse::Right) || control->secondary();
 }
-
 
 void Pointer::setPrimaryHandled()
 {
