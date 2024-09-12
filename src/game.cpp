@@ -115,10 +115,9 @@ Game::Game(const YAML::Node &config) : config(config),
 
 void Game::init()
 {
-	dialogManager = std::make_shared<DialogManager>(shared_from_this());
-
 	configToLua();
 	setupLuaFunctions();
+	dialogManager = std::make_shared<DialogManager>(shared_from_this());
 	if (config["auto_load_savegame"].as<bool>(true))
 	{
 		loadLuaState();
@@ -141,6 +140,9 @@ void Game::configToLua()
     (*lua_state)["config"]["maxAspectRatio"]["x"] = config["maxAspectRatio"]["x"].as<int>();
     (*lua_state)["config"]["maxAspectRatio"]["y"] = config["maxAspectRatio"]["y"].as<int>();
     (*lua_state)["config"]["default_font"] = config["default_font"].as<std::string>();
+    (*lua_state)["config"]["default_font_color"] = config["default_font_color"].as<std::string>();
+    (*lua_state)["config"]["default_font_selected_color"] = config["default_font_selected_color"].as<std::string>();
+    (*lua_state)["config"]["default_font_not_selected_color"] = config["default_font_not_selected_color"].as<std::string>();
     (*lua_state)["config"]["player"] = config["player"].as<std::string>("");
     (*lua_state)["config"]["pointer"] = config["pointer"].as<std::string>();
     (*lua_state)["config"]["dialog"] = config["dialog"].as<std::string>();
@@ -166,8 +168,6 @@ void Game::configToLua()
     (*lua_state)["config"]["pointer_idle_animation"] = config["pointer_idle_animation"].as<std::string>();
     (*lua_state)["config"]["pointer_over_animation"] = config["pointer_over_animation"].as<std::string>();
     (*lua_state)["config"]["background_default_animation"] = config["background_default_animation"].as<std::string>();
-    (*lua_state)["config"]["speechbubbleScaleX"] = config["speechbubbleScaleX"].as<float>();
-    (*lua_state)["config"]["speechbubbleScaleY"] = config["speechbubbleScaleY"].as<float>();
     (*lua_state)["config"]["pointer_max_speed"] = config["pointer_max_speed"].as<float>();
     (*lua_state)["config"]["player_max_speed"] = config["player_max_speed"].as<float>();
     (*lua_state)["config"]["player_start_position"] = (*lua_state).create_table();
@@ -567,12 +567,18 @@ void Game::draw() const
 
 	for (auto &obj : gameObjects)
 	{
+		if ((obj) == pointer)
+		{
+			continue;
+		}
 		if (obj->getVisible())
 		{
 			obj->draw();
 		}
 	}
+	jngl::popMatrix();
 
+	jngl::pushMatrix();
 	dialogManager->draw();
 	// Der Pointer wird doppelt gedrawed, damit der immer vorne ist.
 	pointer->draw();

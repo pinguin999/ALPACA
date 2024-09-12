@@ -48,7 +48,7 @@ bool Background::stepClickableRegions(bool force)
 
         if (_game->pointer && _game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
         {
-            const jngl::Vec2 mousePos = _game->pointer->getPosition();
+            const jngl::Vec2 mousePos = _game->pointer->getWorldPosition();
             auto *collision = spine::spSkeletonBounds_containsPointNotMatchingName(bounds, "walkable_area", static_cast<float>(mousePos.x) - static_cast<float>(position.x), static_cast<float>(mousePos.y) - static_cast<float>(position.y));
             // TODO Double Click on Regions
             if (collision)
@@ -128,7 +128,7 @@ void Background::draw() const
                 }
 
                 jngl::setColor(255, 255, 0);
-                auto debugPath = getPathToTarget(_game->player->getPosition(), _game->pointer->getPosition());
+                auto debugPath = getPathToTarget(_game->player->getPosition(), _game->pointer->getWorldPosition());
                 for (size_t i = 1; i < debugPath.size(); i++)
                 {
                     jngl::drawLine(debugPath[i - 1], debugPath[i]);

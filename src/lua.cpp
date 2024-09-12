@@ -841,39 +841,6 @@ void Game::setupLuaFunctions()
 								return jngl::isPlaying("audio/" + file);
 							});
 
-	/// Set a speech bubble to a Spine point.
-	/// string point_name: Spine point name
-	lua_state->set_function("SetSpeechBubbleToPoint",
-							[this](const LuaSpinePoint &point_name)
-							{
-								auto position = getPointPosition(shared_from_this(), point_name);
-								if (position)
-								{
-									getDialogManager()->setSpeechBubblePosition(position.value());
-									(*lua_state)["speech_bubble_position_x"] = position->x;
-									(*lua_state)["speech_bubble_position_y"] = position->y;
-								}
-							});
-
-	/// See SetSpeechBubbleToPoint
-	/// SpineObject object: ID of the object to affect
-	/// string point_name: Spine point name
-	lua_state->set_function("SetSpeechBubbleToPointOn",
-							[this](const LuaSpineObject &object, const LuaSpinePoint &point_name)
-							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
-								if (obj)
-								{
-									auto position = obj->getPoint(point_name);
-									if (position)
-									{
-										getDialogManager()->setSpeechBubblePosition(position.value());
-										(*lua_state)["speech_bubble_position_x"] = position->x;
-										(*lua_state)["speech_bubble_position_y"] = position->y;
-									}
-								}
-							});
-
 	/// Get the objects ID
 	/// returns: the name as string
 	lua_state->set_function("GetID",

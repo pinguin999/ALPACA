@@ -207,7 +207,7 @@ bool Player::step(bool /*force*/)
 
         if (_game->pointer->primaryDown() && !path.empty() && interruptible && !_game->pointer->isPrimaryAlreadyHandled() && walk_callback == (*_game->lua_state)["pass"] )
         {
-            const jngl::Vec2 click_position = _game->pointer->getPosition();
+            const jngl::Vec2 click_position = _game->pointer->getWorldPosition();
 
             if (boost::qvm::mag_sqr(target_position - click_position) > 5)
             {
@@ -224,7 +224,7 @@ bool Player::step(bool /*force*/)
 
         if (_game->pointer->primaryPressed() && interruptible && !_game->pointer->isPrimaryAlreadyHandled())
         {
-            const jngl::Vec2 click_position = _game->pointer->getPosition();
+            const jngl::Vec2 click_position = _game->pointer->getWorldPosition();
             auto *collision = spSkeletonBounds_containsPoint(bounds,
                                                              static_cast<float>(click_position.x) - static_cast<float>(position.x),
                                                              static_cast<float>(click_position.y) - static_cast<float>(position.y));

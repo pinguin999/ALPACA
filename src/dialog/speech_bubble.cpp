@@ -4,28 +4,18 @@
 
 SpeechBubble::SpeechBubble(std::shared_ptr<Game> game,
                            const std::string &spine_file,
-                           const jngl::Text &text, const jngl::Color textColor,
-                           jngl::Vec2 pos)
+                           const jngl::Text &text,
+                           const jngl::Text &characterName,
+                           const jngl::Rgba characterNameColor
+                           )
     : SpineObject(game, spine_file, "SpeechBubble", .2),
-      color(textColor),
-      text(jngl::Text(text))
+      text(text),
+      textColor(game->getDialogManager()->textToColor((*game->lua_state)["config"]["default_font_color"])),
+      characterName(characterName),
+      characterNameColor(characterNameColor)
 {
-    position = pos;
+    position = jngl::Vec2{0, jngl::getScreenSize().y / 2.0};
 
-    auto *middlebone = spSkeleton_findBone(skeleton->skeleton, "middlemiddle");
-
-    auto textSize = text.getSize();
-
-    double const speechbubbleScaleX = (*game->lua_state)["config"]["speechbubbleScaleX"];
-    double const speechbubbleScaleY = (*game->lua_state)["config"]["speechbubbleScaleY"];
-
-    middlebone->scaleX = textSize.y / speechbubbleScaleX;
-    middlebone->scaleY = textSize.x / speechbubbleScaleY;
-
-    if (position.x - textSize.x / 2.0 < -1920 / 2)
-    {
-        position.x = std::max(position.x, -860.0 + textSize.x / 2.0);
-    }
 }
 
 bool SpeechBubble::step(bool)
@@ -36,21 +26,29 @@ bool SpeechBubble::step(bool)
 
 void SpeechBubble::draw() const
 {
+    if (auto _game = game.lock())
+    {
     jngl::pushMatrix();
     jngl::translate(position);
     jngl::rotate(getRotation());
 
 #ifndef NDEBUG
-    if (auto _game = game.lock())
-    {
     skeleton->debugdraw = _game->enableDebugDraw;
-    }
 #endif
 
     skeleton->draw();
-    auto textSize = text.getSize();
-    jngl::translate(-textSize.x / 2, -textSize.y / 2);
-    jngl::setFontColor(color);
+    jngl::popMatrix();
+
+    jngl::pushMatrix();
+    jngl::translate(jngl::Vec2{jngl::getScreenSize().x / -2.0 + 50, jngl::getScreenSize().y / 3.5});
+    jngl::setFontColor(characterNameColor);
+    characterName.draw();
+    jngl::popMatrix();
+
+    jngl::pushMatrix();
+    jngl::translate(jngl::Vec2{jngl::getScreenSize().x / -2.0 + 100, jngl::getScreenSize().y / 3.5 + 80});
+    jngl::setFontColor(textColor);
     text.draw();
     jngl::popMatrix();
+    }
 }

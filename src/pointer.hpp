@@ -38,6 +38,8 @@ public:
     bool primary() const;
     bool secondary() const;
 
+    jngl::Vec2 getWorldPosition();
+
     std::vector<std::shared_ptr<SpineObject>> attachedObjects;
 
 private:
