@@ -182,8 +182,8 @@ void Game::configToLua()
 void Game::loadSceneWithFade(std::string level)
 {
 	if(enable_fade){
-		jngl::setWork<SceneFade>(jngl::getWork(), [this, level = std::move(level)]() {
-			loadScene(std::move(level));
+		jngl::setWork<SceneFade>(jngl::getWork(), [this, level]() {
+			loadScene(level);
 		});
 		pointer->setPrimaryHandled();
 	}else{
@@ -401,17 +401,17 @@ void Game::debugStep()
 				reset();
 				lua_state = std::make_shared<sol::state>();
 				lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
-				dialogManager = std::make_shared<DialogManager>(shared_from_this());
 
 				configToLua();
 				setupLuaFunctions();
 				loadLuaState("savegame" + std::string(number));
+				dialogManager = std::make_shared<DialogManager>(shared_from_this());
 			}
 		}
 	}
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
-	for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
+	for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"})
 	{
 		int x = static_cast<int>(number[0]) - static_cast<int>('0');
 		if (room_select_mode && jngl::keyPressed(number) && tens.has_value())
@@ -428,7 +428,6 @@ void Game::debugStep()
 				reset();
 				lua_state = std::make_shared<sol::state>();
 				lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
-				dialogManager = std::make_shared<DialogManager>(shared_from_this());
 
 				configToLua();
 				setupLuaFunctions();
@@ -447,6 +446,7 @@ void Game::debugStep()
 					}
 					i++;
 				}
+				dialogManager = std::make_shared<DialogManager>(shared_from_this());
 				room_select_mode = false;
 				tens.reset();
 				debug_info.setText(debug_text);
@@ -744,7 +744,7 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 	if (actionName.substr(0, 4) == "dlg:")
 	{
 		const std::string dialogName = actionName.substr(4);
-		script = "PlayDialog(\"" + dialogName + "\", pass)";
+		script = "PlayDialog(\"" + dialogName + "\")";
 		errorMessage = "Failed to play dialog " + dialogName + "!\n";
 	}
 	else if (actionName.substr(0, 5) == "anim:")
@@ -781,6 +781,10 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 
 void Game::saveLuaState(const std::string &savefile)
 {
+	if (savefile.empty())
+	{
+		return;
+	}
 	// jngl::debugLn("Backup all globals start");
 	const sol::table &globals = lua_state->globals();
 
