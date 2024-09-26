@@ -866,7 +866,14 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 
 		if (!parent.empty())
 		{
-			k = "[\"" + k + "\"]";
+			if (key.get_type() == sol::type::string)
+			{
+				k = "[\"" + k + "\"]";
+			}
+			else if (key.get_type() == sol::type::number)
+			{
+				k = "[" + k + "]";
+			}
 		}
 
 		if (k != "_entry_node" &&
