@@ -443,10 +443,13 @@ void Game::debugStep()
 #else
 						loadLuaState(std::string(entry.path().filename()));
 #endif
+						dialogManager = std::make_shared<DialogManager>(shared_from_this());
+						const std::string dialogFilePath = (*lua_state)["config"]["dialog"];
+						dialogManager->loadDialogsFromFile(dialogFilePath, false);
+						runAction(std::string(entry.path().filename()), std::static_pointer_cast<SpineObject>(currentScene->background));
 					}
 					i++;
 				}
-				dialogManager = std::make_shared<DialogManager>(shared_from_this());
 				room_select_mode = false;
 				tens.reset();
 				debug_info.setText(debug_text);
@@ -744,7 +747,7 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 	if (actionName.substr(0, 4) == "dlg:")
 	{
 		const std::string dialogName = actionName.substr(4);
-		script = "PlayDialog(\"" + dialogName + "\")";
+		script = "PlayDialog(\"" + dialogName + "\", pass)";
 		errorMessage = "Failed to play dialog " + dialogName + "!\n";
 	}
 	else if (actionName.substr(0, 5) == "anim:")
