@@ -446,7 +446,11 @@ void Game::debugStep()
 						dialogManager = std::make_shared<DialogManager>(shared_from_this());
 						const std::string dialogFilePath = (*lua_state)["config"]["dialog"];
 						dialogManager->loadDialogsFromFile(dialogFilePath, false);
+#ifdef _WIN32
+						runAction(std::string(str), std::static_pointer_cast<SpineObject>(currentScene->background));
+#else
 						runAction(std::string(entry.path().filename()), std::static_pointer_cast<SpineObject>(currentScene->background));
+#endif
 					}
 					i++;
 				}
