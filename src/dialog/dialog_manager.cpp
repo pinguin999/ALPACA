@@ -2,21 +2,18 @@
 #include "../game.hpp"
 #include <filesystem>
 
-constexpr int BOX_HEIGHT = 90;
+constexpr int BOX_HEIGHT = 75;
 
 DialogManager::DialogManager(std::shared_ptr<Game> game)
-    : typewriterFont("fonts/BarcadeBrawlRegular-cc0.ttf", 30),
-      dialogFont("fonts/ABeeZee-Regular.ttf", 25),
-      currentTypewriterLine(typewriterFont, ""),
-      currentNarratorText(""),
-      isNarratorTextVisible(false),
+    : dialogFont((*game->lua_state)["config"]["default_font"], 25),
       bubble(nullptr),
       selected_index(-1),
       dialog_callback((*game->lua_state)["pass"]),
-      game(game)
+      game(game),
+      default_font_color(textToColor((*game->lua_state)["config"]["default_font_color"])),
+      default_font_selected_color(textToColor((*game->lua_state)["config"]["default_font_selected_color"])),
+      default_font_not_selected_color(textToColor((*game->lua_state)["config"]["default_font_not_selected_color"]))
 {
-    currentNarratorText.setFont(dialogFont);
-    currentNarratorText.setAlign(jngl::Alignment::CENTER);
 }
 
 void DialogManager::loadDialogsFromFile(std::string fileName, bool initializeVariables)
@@ -108,78 +105,34 @@ void DialogManager::step()
         {
             bubble->step();
         }
-
-        if (currentTypewriterProgress >= 0 && currentTypewriterProgress < currentTypewriterText.length())
-        {
-            int currentProgress = (int)currentTypewriterProgress;
-            currentTypewriterProgress += DIALOG_MANAGER_TYPEWRITER_SPEED;
-            int newProgress = (int)currentTypewriterProgress;
-
-            if (newProgress > currentProgress)
-            {
-                currentTypewriterLine = {typewriterFont, currentTypewriterText.substr(0, newProgress)};
-                currentTypewriterLine.setPos(10, 10);
-            }
-            currentTypewriterLine.step();
-        }
     }
 }
 
 void DialogManager::draw() const
 {
-    jngl::setFontColor(0, 0, 0, 255);
-    if (currentTypewriterProgress > 0)
-    {
-        currentTypewriterLine.draw();
-    }
-
-    if (isNarratorTextVisible)
-    {
-        jngl::setFontColor(255, 255, 255, 255);
-        jngl::setColor(0, 0, 0, 178);
-        jngl::drawRect(0, 1080 - BOX_HEIGHT, 1920, BOX_HEIGHT);
-        currentNarratorText.draw();
-    }
-
-    size_t pos = BOX_HEIGHT * (choiceTexts.size() -1);
-    int index = 0;
-    for (auto& text : choiceTexts)
-    {
-        jngl::setFontColor(255, 255, 255, 255);
-        jngl::setColor(0, 0, 0, 178);
-        jngl::drawRect(-1920/2, 1080/2 - BOX_HEIGHT - pos, 1920, BOX_HEIGHT);
-        pos -= BOX_HEIGHT;
-
-        if (index == selected_index)
-            jngl::setFontColor(255, 255, 0, 255);
-        text.draw();
-        index++;
-    }
-
-    if (bubble != nullptr)
-    {
-        jngl::setFontColor(0, 0, 0, 255);
+    if (bubble) {
+        jngl::setFontColor(default_font_color);
         bubble->draw();
+    }
+    if (isSelectTextActive())
+    {
+        int index = 0;
+        for (auto& text : choiceTexts)
+        {
+
+            jngl::setFontColor(default_font_not_selected_color);
+
+            if (index == selected_index)
+                jngl::setFontColor(default_font_selected_color);
+            text.draw();
+            index++;
+        }
     }
 }
 
 bool DialogManager::isActive()
 {
     return currentDialog != nullptr;
-}
-
-void DialogManager::showTypewriterAnimation(const std::string &text)
-{
-    currentTypewriterText = text;
-    currentTypewriterProgress = 0;
-}
-
-void DialogManager::showNarratorText(const std::string &text)
-{
-    currentNarratorText.setText(text);
-    currentNarratorText.setAlign(jngl::Alignment::CENTER);
-    currentNarratorText.setCenter(960, 1040);
-    isNarratorTextVisible = true;
 }
 
 void DialogManager::showChoices(std::shared_ptr<schnacker::AnswersStepResult> answers)
@@ -201,43 +154,66 @@ void DialogManager::showChoices(std::shared_ptr<schnacker::AnswersStepResult> an
         choiceTexts.push_back(choiceText);
     }
 
+    if (auto _game = game.lock())
+    {
+        bubble = std::make_shared<SpeechBubble>(_game, "speechbubble", jngl::Text(), jngl::Text(), 0xffffffff_rgba);
+    }
+
     selected_index = 0;
 
     currentAnswers = answers;
 }
 
-void DialogManager::showCharacterText(std::shared_ptr<schnacker::TextStepResult> text, jngl::Vec2 pos)
+jngl::Rgba DialogManager::textToColor(std::string color_text)
+{
+    unsigned int r;
+    unsigned int g;
+    unsigned int b;
+    unsigned int a = 255;
+
+    std::stringstream ssr;
+    ssr << std::hex << color_text.substr(1, 2);
+    ssr >> r;
+
+    std::stringstream ssg;
+    ssg << std::hex << color_text.substr(3, 2);
+    ssg >> g;
+
+    std::stringstream ssb;
+    ssb << std::hex << color_text.substr(5, 2);
+    ssb >> b;
+
+    if (color_text.size() == 9)
+    {
+        std::stringstream ssa;
+        ssa << std::hex << color_text.substr(7, 2);
+        ssa >> a;
+    }
+
+    return jngl::Rgba::u8(r, g, b, a);
+}
+
+
+void DialogManager::showCharacterText(std::shared_ptr<schnacker::TextStepResult> text)
 {
     // TODO: use player pos in order to determine direction preference for bubble
     auto bubbleText = jngl::Text(text->text);
     bubbleText.setFont(dialogFont);
-    auto textColor = 0xffffff_rgb;
+
+    auto characterName = jngl::Text(text->character->displayName);
+    characterName.setFont(dialogFont);
+
+    jngl::Rgba textColor = 0xffffffff_rgba;
 
     if (text->character->color.size() == 7)
     {
-        unsigned int r;
-        unsigned int g;
-        unsigned int b;
-
-        std::stringstream ssr;
-        ssr << std::hex << text->character->color.substr(1, 2);
-        ssr >> r;
-
-        std::stringstream ssg;
-        ssg << std::hex << text->character->color.substr(3, 2);
-        ssg >> g;
-
-        std::stringstream ssb;
-        ssb << std::hex << text->character->color.substr(5, 2);
-        ssb >> b;
-
-        textColor = jngl::Color(r, g, b);
+        textColor = textToColor(text->character->color);
     }
 
     if (auto _game = game.lock())
     {
         bubble = std::make_shared<SpeechBubble>(_game, "speechbubble",
-                                                bubbleText, textColor, pos);
+                                                bubbleText, characterName, textColor);
     }
 }
 
@@ -297,14 +273,7 @@ void DialogManager::continueCurrent()
         if(textResult)
         {
             std::string character = textResult->character->canonicalName;
-            std::shared_ptr<SpineObject> spine_character = _game->getObjectById(character);
-            if (spine_character)
-            {
-                auto optionalpos = spine_character->getPoint("speechbubble");
-                if(optionalpos)
-                    bubble_pos = spine_character->getPosition() + optionalpos.value();
-            }
-            showCharacterText(textResult, bubble_pos);
+            showCharacterText(textResult);
             std::string fileName = textResult->nodeId;
             auto fullFileName = "audio/" + _game->language + "_" + std::string(n_zero - std::min(n_zero, fileName.length()), '0') + fileName  + ".ogg";
             playCharacterAnimation(character, fileName);
@@ -359,7 +328,7 @@ void DialogManager::hideCharacterText()
     bubble = nullptr;
 }
 
-bool DialogManager::isSelectTextActive()
+bool DialogManager::isSelectTextActive() const
 {
     return !choiceTexts.empty();
 }
@@ -367,13 +336,4 @@ bool DialogManager::isSelectTextActive()
 bool DialogManager::isOverText(jngl::Vec2 mouse_pos)
 {
     return mouse_pos.y > 1040 - BOX_HEIGHT * choiceTexts.size();
-}
-
-void DialogManager::setSpeechBubblePosition(jngl::Vec2 position)
-{
-    bubble_pos = position;
-    if (bubble)
-    {
-        bubble->setPosition(position);
-    }
 }

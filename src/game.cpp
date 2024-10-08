@@ -115,10 +115,9 @@ Game::Game(const YAML::Node &config) : config(config),
 
 void Game::init()
 {
-	dialogManager = std::make_shared<DialogManager>(shared_from_this());
-
 	configToLua();
 	setupLuaFunctions();
+	dialogManager = std::make_shared<DialogManager>(shared_from_this());
 	if (config["auto_load_savegame"].as<bool>(true))
 	{
 		loadLuaState();
@@ -141,6 +140,9 @@ void Game::configToLua()
     (*lua_state)["config"]["maxAspectRatio"]["x"] = config["maxAspectRatio"]["x"].as<int>();
     (*lua_state)["config"]["maxAspectRatio"]["y"] = config["maxAspectRatio"]["y"].as<int>();
     (*lua_state)["config"]["default_font"] = config["default_font"].as<std::string>();
+    (*lua_state)["config"]["default_font_color"] = config["default_font_color"].as<std::string>();
+    (*lua_state)["config"]["default_font_selected_color"] = config["default_font_selected_color"].as<std::string>();
+    (*lua_state)["config"]["default_font_not_selected_color"] = config["default_font_not_selected_color"].as<std::string>();
     (*lua_state)["config"]["player"] = config["player"].as<std::string>("");
     (*lua_state)["config"]["pointer"] = config["pointer"].as<std::string>();
     (*lua_state)["config"]["dialog"] = config["dialog"].as<std::string>();
@@ -166,8 +168,6 @@ void Game::configToLua()
     (*lua_state)["config"]["pointer_idle_animation"] = config["pointer_idle_animation"].as<std::string>();
     (*lua_state)["config"]["pointer_over_animation"] = config["pointer_over_animation"].as<std::string>();
     (*lua_state)["config"]["background_default_animation"] = config["background_default_animation"].as<std::string>();
-    (*lua_state)["config"]["speechbubbleScaleX"] = config["speechbubbleScaleX"].as<float>();
-    (*lua_state)["config"]["speechbubbleScaleY"] = config["speechbubbleScaleY"].as<float>();
     (*lua_state)["config"]["pointer_max_speed"] = config["pointer_max_speed"].as<float>();
     (*lua_state)["config"]["player_max_speed"] = config["player_max_speed"].as<float>();
     (*lua_state)["config"]["player_start_position"] = (*lua_state).create_table();
@@ -182,8 +182,8 @@ void Game::configToLua()
 void Game::loadSceneWithFade(std::string level)
 {
 	if(enable_fade){
-		jngl::setWork<SceneFade>(jngl::getWork(), [this, level = std::move(level)]() {
-			loadScene(std::move(level));
+		jngl::setWork<SceneFade>(jngl::getWork(), [this, level]() {
+			loadScene(level);
 		});
 		pointer->setPrimaryHandled();
 	}else{
@@ -401,17 +401,17 @@ void Game::debugStep()
 				reset();
 				lua_state = std::make_shared<sol::state>();
 				lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
-				dialogManager = std::make_shared<DialogManager>(shared_from_this());
 
 				configToLua();
 				setupLuaFunctions();
 				loadLuaState("savegame" + std::string(number));
+				dialogManager = std::make_shared<DialogManager>(shared_from_this());
 			}
 		}
 	}
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
-	for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
+	for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"})
 	{
 		int x = static_cast<int>(number[0]) - static_cast<int>('0');
 		if (room_select_mode && jngl::keyPressed(number) && tens.has_value())
@@ -428,7 +428,6 @@ void Game::debugStep()
 				reset();
 				lua_state = std::make_shared<sol::state>();
 				lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
-				dialogManager = std::make_shared<DialogManager>(shared_from_this());
 
 				configToLua();
 				setupLuaFunctions();
@@ -444,6 +443,10 @@ void Game::debugStep()
 #else
 						loadLuaState(std::string(entry.path().filename()));
 #endif
+						dialogManager = std::make_shared<DialogManager>(shared_from_this());
+						const std::string dialogFilePath = (*lua_state)["config"]["dialog"];
+						dialogManager->loadDialogsFromFile(dialogFilePath, false);
+						runAction(std::string(entry.path().filename()), std::static_pointer_cast<SpineObject>(currentScene->background));
 					}
 					i++;
 				}
@@ -567,12 +570,18 @@ void Game::draw() const
 
 	for (auto &obj : gameObjects)
 	{
+		if ((obj) == pointer)
+		{
+			continue;
+		}
 		if (obj->getVisible())
 		{
 			obj->draw();
 		}
 	}
+	jngl::popMatrix();
 
+	jngl::pushMatrix();
 	dialogManager->draw();
 	// Der Pointer wird doppelt gedrawed, damit der immer vorne ist.
 	pointer->draw();
@@ -775,6 +784,10 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 
 void Game::saveLuaState(const std::string &savefile)
 {
+	if (savefile.empty())
+	{
+		return;
+	}
 	// jngl::debugLn("Backup all globals start");
 	const sol::table &globals = lua_state->globals();
 
@@ -856,7 +869,14 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 
 		if (!parent.empty())
 		{
-			k = "[\"" + k + "\"]";
+			if (key.get_type() == sol::type::string)
+			{
+				k = "[\"" + k + "\"]";
+			}
+			else if (key.get_type() == sol::type::number)
+			{
+				k = "[" + k + "]";
+			}
 		}
 
 		if (k != "_entry_node" &&

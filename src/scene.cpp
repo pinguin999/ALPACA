@@ -141,8 +141,12 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
     }
     else if (json["background"].IsDefined() && !json["background"].IsNull())
     {
-        auto const animation = (*game->lua_state)["config"]["background_default_animation"];
+        std::string animation = (*game->lua_state)["config"]["background_default_animation"];
         auto const spine = json["background"]["spine"].as<std::string>();
+        if(json["background"]["animation"].IsDefined() && !json["background"]["animation"].IsNull())
+        {
+            animation = json["background"]["animation"].as<std::string>();
+        }
         if (!(*game->lua_state)["scenes"][scene]["background"].valid())
         {
             (*game->lua_state)["scenes"][scene]["background"] = game->lua_state->create_table_with(
@@ -156,6 +160,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         }
         background = std::make_shared<Background>(game, spine);
         background->setPosition(jngl::Vec2(0, 0));
+        background->playAnimation(0, animation, true, (*game->lua_state)["pass"]);
         background->layer = 0;
         if (json["background"]["skin"])
         {

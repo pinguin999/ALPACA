@@ -11,8 +11,6 @@
 
 class Game;
 
-#define DIALOG_MANAGER_TYPEWRITER_SPEED 0.3f
-
 class DialogManager
 {
 public:
@@ -25,22 +23,20 @@ public:
     bool isActive();
     void cancelDialog();
 
-    bool isSelectTextActive();
+    bool isSelectTextActive() const;
     bool isOverText(jngl::Vec2 mouse_pos);
 
     void play(const std::string &characterName, jngl::Vec2 pos, const sol::function &callback); // TODO: multiple positions for different characters
     void continueCurrent();
     void selectCurrentAnswer(int selected_index);
+    jngl::Rgba textToColor(std::string color_text);
 
-    void setSpeechBubblePosition(jngl::Vec2 position);
 #ifndef NDEBUG
     int getChoiceTextsSize(){return int(choiceTexts.size());};
 #endif
 private:
-    void showTypewriterAnimation(const std::string &text);
-    void showNarratorText(const std::string &text);
     void showChoices(std::shared_ptr<schnacker::AnswersStepResult> answers);
-    void showCharacterText(std::shared_ptr<schnacker::TextStepResult> text, jngl::Vec2 pos);
+    void showCharacterText(std::shared_ptr<schnacker::TextStepResult> text);
     void playCharacterVoice(const std::string &file);
     void playCharacterAnimation(const std::string &character, const std::string &id);
     void hideChoices();
@@ -52,21 +48,18 @@ private:
     std::shared_ptr<schnacker::Dialog> currentDialog;
     std::shared_ptr<schnacker::Node> currentNode;
 
-    jngl::Font typewriterFont;
     jngl::Font dialogFont;
-    std::string currentTypewriterText;
-    float currentTypewriterProgress = -1;
-    jngl::TextLine currentTypewriterLine;
-    jngl::Text currentNarratorText;
     std::list<jngl::Text> choiceTexts;
-    bool isNarratorTextVisible;
     std::shared_ptr<SpeechBubble> bubble;
-    jngl::Vec2 bubble_pos = {0, 0};
     int selected_index;
     std::string last_played_audio;
     bool wasActiveLastFrame = false;
     sol::function dialog_callback;
 	const std::weak_ptr<Game> game;
+
+    jngl::Rgba default_font_color;
+    jngl::Rgba default_font_selected_color;
+    jngl::Rgba default_font_not_selected_color;
 
     size_t n_zero = 3;
 };

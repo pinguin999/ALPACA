@@ -62,7 +62,7 @@ bool InteractableObject::step(bool force)
         // TODO Double Click on Objekts
         if (_game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
         {
-            jngl::Vec2 click_position = _game->pointer->getPosition();
+            jngl::Vec2 click_position = _game->pointer->getWorldPosition();
             if (abs_position)
             {
                 click_position -= _game->getCameraPosition();
@@ -141,7 +141,7 @@ void InteractableObject::draw() const
             jngl::drawCircle(jngl::Vec2(0, 0), DEBUG_GRAP_DISTANCE);
             jngl::Text pposition;
             pposition.setText("x: " + std::to_string(position.x) + "\ny: " + std::to_string(position.y));
-            jngl::setFontColor(jngl::Color(255, 0, 0));
+            jngl::setFontColor(jngl::Rgba(1.0, 0, 0, 1.0));
             pposition.setAlign(jngl::Alignment::CENTER);
             pposition.setCenter(0, 0);
             pposition.draw();
