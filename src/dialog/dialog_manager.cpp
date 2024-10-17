@@ -25,11 +25,11 @@ void DialogManager::loadDialogsFromFile(std::string fileName, bool initializeVar
     }
 }
 
-void DialogManager::play(const std::string &characterName, jngl::Vec2, const sol::function &callback)
+void DialogManager::play(const std::string &dialogName, jngl::Vec2, const sol::function &callback)
 {
     cancelDialog();
 
-    currentDialog = schnackFile->dialogs[characterName];
+    currentDialog = schnackFile->dialogs[dialogName];
     if (currentDialog)
     {
         currentNode = currentDialog->getEntryNode();
@@ -37,7 +37,7 @@ void DialogManager::play(const std::string &characterName, jngl::Vec2, const sol
         dialog_callback = callback;
     }else
     {
-        jngl::debugLn("Dialog " + characterName + " not found.");
+        jngl::debugLn("Dialog " + dialogName + " not found.");
     }
 }
 
@@ -268,6 +268,7 @@ void DialogManager::continueCurrent()
             return;
         }
         currentNode = result->currentNode;
+        currentDialog = result->currentDialog;
 
         auto textResult = std::dynamic_pointer_cast<schnacker::TextStepResult>(result);
         if(textResult)
