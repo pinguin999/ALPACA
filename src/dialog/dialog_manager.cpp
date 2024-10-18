@@ -227,13 +227,14 @@ void DialogManager::playCharacterVoice(const std::string &file)
     try
     {
         jngl::play(file);
+        last_played_audio = file;
     }
     catch(std::exception&)
     {
         jngl::debugLn("Audiofile does not exist: " + file);
+        last_played_audio = "";
     }
 
-    last_played_audio = file;
 }
 
 void DialogManager::playCharacterAnimation(const std::string &character, const std::string &id)
