@@ -154,8 +154,8 @@ def rhubarb_reexport() -> None:
     progress.finish()
 
 
-def apply_rhubarb() -> None:
-    nodes = get_notes()
+def apply_rhubarb(character=None) -> None:
+    nodes = get_notes(character)
     for node_info in nodes:
         node_id = node_info[0]
         character_name = node_info[1]
@@ -196,7 +196,7 @@ def apply_rhubarb() -> None:
                 character_path.chmod(S_IREAD | S_IRGRP | S_IROTH)
 
 
-def get_notes() -> list[Any]:
+def get_notes(character=None) -> list[Any]:
     nodes = []
     for _root, _dirs, files in walk(SCHNACKER_FOLDER):
         for file in files:
@@ -205,16 +205,13 @@ def get_notes() -> list[Any]:
                     dialogs = json.load(dialog_file)
                     for dialog in dialogs["dialogs"]:
                         for node in dialog["nodes"]:
-                            character_name = ""
+                            if "character" not in node or (character and node["character"] != character):
+                                continue
+
+                            character_name = node["character"]
+
                             if "character" not in node or node["character"] in ["Player"]:
                                 character_name = "joy"
-                            elif "character" not in node or node["character"] in ["char_dog"]:
-                                character_name = "dog"
-                            else:
-                                character_name = node["character"]
-
-                            if "character" not in node or node["character"] in ["marc"]:
-                                continue  # Wir haben Marc noch nicht erstellt
 
                             if dialogs["localization"].get(str(node["id"])):
                                 node_id = str(node["id"]).zfill(3)
@@ -468,7 +465,7 @@ def on_data_src_modified(event) -> None:
             parse_spine_json(spine_file=spine_file)
         if len(errors) > 0:
             printErrors(event.src_path, errors)
-        apply_rhubarb()
+        apply_rhubarb(list(spine_object.keys())[0])
     if event.src_path.endswith(".ogg"):
         (errors) = rhubarb_export(event.src_path)
         if len(errors) > 0:
