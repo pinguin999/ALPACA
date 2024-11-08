@@ -89,7 +89,7 @@ Game::Game(const YAML::Node &config) : config(config),
 #else
 		"."s,
 #endif
-		[this](const TYPE &path, const filewatch::Event change_type)
+		[this](const TYPE &path [[maybe_unused]], const filewatch::Event change_type)
 		{
 			switch (change_type)
 			{
@@ -185,7 +185,6 @@ void Game::loadSceneWithFade(std::string level)
 		jngl::setWork<SceneFade>(jngl::getWork(), [this, level]() {
 			loadScene(level);
 		});
-		pointer->setPrimaryHandled();
 	}else{
 		loadScene(level);
 	}
@@ -420,7 +419,7 @@ void Game::debugStep()
 			const int target = tens.value() * 10 + x;
 
 			int i = 0;
-			for (const auto & entry : std::filesystem::directory_iterator(path))
+			for (const auto & entry [[maybe_unused]] : std::filesystem::directory_iterator(path))
 			{
 				i++;
 			}

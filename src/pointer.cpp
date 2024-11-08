@@ -2,6 +2,7 @@
 
 #include "input/gamepad.hpp"
 #include "input/keyboard.hpp"
+#include "jngl/matrix.hpp"
 #include "skeleton_drawable.hpp"
 #include "game.hpp"
 
@@ -139,16 +140,11 @@ bool Pointer::step(bool)
 
 void Pointer::draw() const
 {
-    jngl::pushMatrix();
-    jngl::translate(position);
-    jngl::rotate(getRotation());
-
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
         if (_game->editMode)
         {
-            jngl::popMatrix();
             return;
         }
     }
@@ -161,9 +157,7 @@ void Pointer::draw() const
     }
 #endif
 
-    skeleton->draw();
-
-    jngl::popMatrix();
+    skeleton->draw(jngl::modelview().translate(position).rotate(getRotation()));
 }
 
 void Pointer::vibrate()

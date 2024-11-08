@@ -9,20 +9,20 @@ _SP_ARRAY_DECLARE_TYPE(spColorArray, spColor)
 
 namespace spine {
 
-class SkeletonDrawable : public jngl::Drawable {
+class SkeletonDrawable {
 public:
 	spSkeleton* skeleton;
 	spAnimationState* state;
 	float timeScale;
 
 	explicit SkeletonDrawable(spSkeletonData* skeleton, spAnimationStateData* stateData = 0);
-	~SkeletonDrawable() override;
+	~SkeletonDrawable();
 
     void endAnimation(int trackIndex) const;
 
-    void step() override;
+    void step();
 
-	void draw() const override;
+	void draw(const jngl::Mat3& modelview = jngl::modelview()) const;
 
 	void setAlpha(float);
 

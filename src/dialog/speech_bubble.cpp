@@ -1,5 +1,6 @@
 #include "speech_bubble.hpp"
 #include "../game.hpp"
+#include "jngl/matrix.hpp"
 #include <math.h>
 
 SpeechBubble::SpeechBubble(std::shared_ptr<Game> game,
@@ -28,16 +29,10 @@ void SpeechBubble::draw() const
 {
     if (auto _game = game.lock())
     {
-    jngl::pushMatrix();
-    jngl::translate(position);
-    jngl::rotate(getRotation());
-
 #ifndef NDEBUG
     skeleton->debugdraw = _game->enableDebugDraw;
 #endif
-
-    skeleton->draw();
-    jngl::popMatrix();
+    skeleton->draw(jngl::modelview().translate(position).rotate(getRotation()));
 
     jngl::pushMatrix();
     jngl::translate(jngl::Vec2{jngl::getScreenSize().x / -2.0 + 50, jngl::getScreenSize().y / 3.5});

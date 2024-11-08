@@ -284,12 +284,10 @@ bool Player::step(bool /*force*/)
 
 void Player::draw() const
 {
-    jngl::pushMatrix();
-    jngl::translate(position);
-    jngl::rotate(getRotation());
+    auto mv = jngl::modelview().translate(position).rotate(getRotation());
     if (auto _game = game.lock())
     {
-        jngl::scale(_game->currentScene->getScale(position));
+        mv.scale(_game->currentScene->getScale(position));
     }
 
 #ifndef NDEBUG
@@ -299,8 +297,7 @@ void Player::draw() const
     }
 #endif
 
-    skeleton->draw();
-    jngl::popMatrix();
+    skeleton->draw(mv);
 }
 
 void Player::setTargentPosition(jngl::Vec2 position)

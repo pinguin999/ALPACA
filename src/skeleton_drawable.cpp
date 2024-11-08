@@ -112,7 +112,7 @@ void SkeletonDrawable::setAlpha(float alpha) {
 	this->alpha = alpha;
 }
 
-void SkeletonDrawable::draw() const {
+void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 	unsigned short quadIndices[6] = { 0, 1, 2, 2, 3, 0 };
 
     static auto *blancColor = new spColor();
@@ -177,9 +177,9 @@ void SkeletonDrawable::draw() const {
 				}else{
 					for (int i = 0; i < box->super.verticesCount - 2; i += 2)
 					{
-						jngl::drawLine(jngl::Vec2{bbvertices[i], bbvertices[i + 1]},jngl::Vec2{bbvertices[i + 2], bbvertices[i + 3]});
+						jngl::drawLine(modelview, {bbvertices[i], bbvertices[i + 1]}, {bbvertices[i + 2], bbvertices[i + 3]});
 					}
-					jngl::drawLine(jngl::Vec2{bbvertices[box->super.verticesCount - 2], bbvertices[box->super.verticesCount - 1]}, jngl::Vec2{bbvertices[0], bbvertices[1]});
+					jngl::drawLine(modelview, {bbvertices[box->super.verticesCount - 2], bbvertices[box->super.verticesCount - 1]}, {bbvertices[0], bbvertices[1]});
 				}
 				jngl::Text bbname;
 				bbname.setText(box->super.super.name);
@@ -227,7 +227,7 @@ void SkeletonDrawable::draw() const {
 			if (texture)
 			{
 				jngl::setSpriteColor(r, g, b, a * alpha);
-				texture->drawMesh(vertexArray);
+				texture->drawMesh(modelview, vertexArray);
 				jngl::setSpriteColor(255, 255, 255, 255);
 			}
 

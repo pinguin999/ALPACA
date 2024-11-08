@@ -1,5 +1,6 @@
 #include "background.hpp"
 
+#include "jngl/matrix.hpp"
 #include "skeleton_drawable.hpp"
 #include "game.hpp"
 
@@ -67,10 +68,6 @@ bool Background::stepClickableRegions(bool force)
 
 void Background::draw() const
 {
-    jngl::pushMatrix();
-    jngl::translate(position);
-    jngl::rotate(getRotation());
-
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
@@ -78,14 +75,15 @@ void Background::draw() const
     }
 #endif
 
-    skeleton->draw();
+    auto mv = jngl::modelview().translate(position).rotate(getRotation());
+    skeleton->draw(mv);
 
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
         if (_game->enablezMapDebugDraw && sprite)
         {
-            sprite->draw();
+            sprite->draw(mv);
         }
     }
 #endif
@@ -102,7 +100,7 @@ void Background::draw() const
                 {
                     if (hasPathTo(_game->player->getPosition(), corner))
                     {
-                        jngl::drawLine(_game->player->getPosition(), corner);
+                        jngl::drawLine(mv, _game->player->getPosition(), corner);
                     }
                 }
 
@@ -111,7 +109,7 @@ void Background::draw() const
                 {
                     for (size_t i = 1; i < forbidden_area.size(); i++)
                     {
-                        jngl::drawLine(forbidden_area.at(i), forbidden_area.at(i - 1));
+                        jngl::drawLine(mv, forbidden_area.at(i), forbidden_area.at(i - 1));
                     }
                 }
 
@@ -122,7 +120,7 @@ void Background::draw() const
                     {
                         if (hasPathTo(_game->player->getPosition(), forbidden_corner))
                         {
-                            jngl::drawLine(_game->player->getPosition(), forbidden_corner);
+                            jngl::drawLine(mv, _game->player->getPosition(), forbidden_corner);
                         }
                     }
                 }
@@ -131,7 +129,7 @@ void Background::draw() const
                 auto debugPath = getPathToTarget(_game->player->getPosition(), _game->pointer->getWorldPosition());
                 for (size_t i = 1; i < debugPath.size(); i++)
                 {
-                    jngl::drawLine(debugPath[i - 1], debugPath[i]);
+                    jngl::drawLine(mv, debugPath[i - 1], debugPath[i]);
                 }
             }
 
@@ -141,7 +139,7 @@ void Background::draw() const
                 auto pos = getPoint(point_name);
                 if (pos)
                 {
-                    jngl::drawCircle(jngl::modelview().translate(jngl::Vec2(pos->x, pos->y)), 1);
+                    jngl::drawCircle(jngl::Mat3(mv).translate(jngl::Vec2(pos->x, pos->y)), 1);
                     jngl::Text bbname;
                     bbname.setText(point_name);
                     bbname.setAlign(jngl::Alignment::CENTER);
@@ -152,8 +150,6 @@ void Background::draw() const
         }
     }
 #endif
-
-    jngl::popMatrix();
 }
 
 enum class Result {

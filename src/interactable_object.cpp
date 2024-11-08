@@ -1,5 +1,6 @@
 #include "interactable_object.hpp"
 
+#include "jngl/Mat3.hpp"
 #include "skeleton_drawable.hpp"
 #include "game.hpp"
 
@@ -108,20 +109,20 @@ void InteractableObject::draw() const
         return;
     }
 
-    jngl::pushMatrix();
+    auto mv = jngl::modelview();
     if (abs_position)
     {
-        jngl::reset();
+        mv = jngl::Mat3();
         if (auto _game = game.lock())
         {
-            jngl::scale(_game->getCameraZoom());
+            mv.scale(_game->getCameraZoom());
         }
     }
     else
     {
-        jngl::translate(position);
+        mv.translate(position);
     }
-    jngl::rotate(getRotation());
+    mv.rotate(getRotation());
 
 #ifndef NDEBUG
     if (auto _game = game.lock())
@@ -130,7 +131,7 @@ void InteractableObject::draw() const
     }
 #endif
 
-    skeleton->draw();
+    skeleton->draw(mv);
 
 #ifndef NDEBUG
     if (auto _game = game.lock())
@@ -138,18 +139,16 @@ void InteractableObject::draw() const
         if (_game->editMode)
         {
             const float DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
-            jngl::drawCircle(jngl::Vec2(0, 0), DEBUG_GRAP_DISTANCE);
+            jngl::drawCircle(mv, DEBUG_GRAP_DISTANCE);
             jngl::Text pposition;
             pposition.setText("x: " + std::to_string(position.x) + "\ny: " + std::to_string(position.y));
             jngl::setFontColor(jngl::Rgba(1.0, 0, 0, 1.0));
             pposition.setAlign(jngl::Alignment::CENTER);
             pposition.setCenter(0, 0);
-            pposition.draw();
+            pposition.draw(mv);
         }
     }
 #endif
-
-    jngl::popMatrix();
 }
 
 void InteractableObject::goToPosition(jngl::Vec2 position, const sol::function &callback)
