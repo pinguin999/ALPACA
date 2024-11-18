@@ -39,6 +39,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         old_scene = (*game->lua_state)["game"]["scene"];
     }
     (*game->lua_state).script("game.scene = '" + fileName + "'");
+    (*game->lua_state).script("game.old_scene = '" + old_scene + "'");
 
     if (!(*game->lua_state)["scenes"].valid())
     {
