@@ -5,7 +5,7 @@
 #define SPINE_MESH_VERTEX_COUNT_MAX 1000
 #endif
 
-bool operator==(const spColor& lhs, const spColor& rhs)
+static bool operator==(const spColor& lhs, const spColor& rhs)
 {
     return lhs.a == rhs.a && lhs.r == rhs.r &&lhs.g == rhs.g &&lhs.b == rhs.b;
 }

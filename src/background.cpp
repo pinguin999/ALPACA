@@ -159,7 +159,7 @@ enum class Result {
 };
 
 // Quelle: https://www.youtube.com/watch?v=c065KoXooSw
-Result lineIntersection(jngl::Vec2 a, jngl::Vec2 b, jngl::Vec2 c, jngl::Vec2 d)
+static Result lineIntersection(jngl::Vec2 a, jngl::Vec2 b, jngl::Vec2 c, jngl::Vec2 d)
 {
     if (boost::qvm::mag_sqr(a - c) < 0.1) {
         return boost::qvm::mag_sqr(b - d) < 0.1 ? Result::TWO_POINTS_EQUAL

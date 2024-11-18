@@ -15,7 +15,7 @@ bool InteractableObject::step(bool force)
     if (auto _game = game.lock())
     {
         skeleton->step();
-        spSkeleton_update(skeleton->skeleton, 1.0/60.0);
+        spSkeleton_update(skeleton->skeleton, 1.0f/60.0f);
         spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_UPDATE);
         spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
 

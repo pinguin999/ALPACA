@@ -10,7 +10,7 @@
 #define LuaAudio std::string
 #define LuaLanguage std::string
 
-std::optional<jngl::Vec2> getPointPosition(std::shared_ptr<Game> game, const std::string &pointName)
+static std::optional<jngl::Vec2> getPointPosition(std::shared_ptr<Game> game, const std::string &pointName)
 {
 	std::optional<jngl::Vec2> position;
 	// first look for the point in the "this" object,

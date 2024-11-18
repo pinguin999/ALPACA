@@ -9,7 +9,7 @@ SpeechBubble::SpeechBubble(std::shared_ptr<Game> game,
                            const jngl::Text &characterName,
                            const jngl::Rgba characterNameColor
                            )
-    : SpineObject(game, spine_file, "SpeechBubble", .2),
+    : SpineObject(game, spine_file, "SpeechBubble", .2f),
       text(text),
       textColor(game->getDialogManager()->textToColor((*game->lua_state)["config"]["default_font_color"])),
       characterName(characterName),

@@ -37,7 +37,7 @@ void Player::setDirection()
 
             if (skeleton->skeleton->scaleX < 0)
             {
-                skeleton->skeleton->scaleX *= -1.0;
+                skeleton->skeleton->scaleX *= -1.0f;
             }
             auto *slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
             if (slot)
