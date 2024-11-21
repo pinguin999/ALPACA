@@ -225,7 +225,7 @@ std::deque<jngl::Vec2> Background::getPathToTarget(jngl::Vec2 start, jngl::Vec2 
             }
         }
 
-        if (current->coordinates == target)
+        if (boost::qvm::mag_sqr(current->coordinates - target) < 1)
         {
             break;
         }
@@ -289,7 +289,7 @@ Node *Background::findNodeOnList(const std::vector<Node *> &nodes_, jngl::Vec2 c
 {
     for (const auto node : nodes_)
     {
-        if (node->coordinates == coordinates_)
+        if (boost::qvm::mag_sqr(node->coordinates - coordinates_) < 0.5)
         {
             return node;
         }
@@ -424,7 +424,7 @@ bool Background::is_walkable(jngl::Vec2 position) const
     {
         for (const auto &obj : _game->gameObjects)
         {
-            auto *non_walkable = spine::spSkeletonBounds_containsPointMatchingName(obj->bounds, "non_walkable_area", static_cast<float>(position.x) - static_cast<float>(obj->getPosition().x), static_cast<float>(position.y) - static_cast<float>(obj->getPosition().y));
+            auto *non_walkable = spine::spSkeletonBounds_containsPointMatchingName(obj->bounds, "non_walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
             if (non_walkable)
             {
                 return false;

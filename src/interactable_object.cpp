@@ -150,11 +150,3 @@ void InteractableObject::draw() const
     }
 #endif
 }
-
-void InteractableObject::goToPosition(jngl::Vec2 position, const sol::function &callback)
-{
-    if (auto _game = game.lock())
-    {
-        _game->player->addTargetPositionImmediately(this->position + position, callback);
-    }
-}

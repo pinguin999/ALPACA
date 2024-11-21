@@ -246,7 +246,7 @@ void Game::loadScene(const std::string& level)
 		setCameraPositionImmediately(player->calcCamPos());
 	}
 
-	runAction(level, std::static_pointer_cast<SpineObject>(newScene->background));
+	runAction(level, newScene->background);
 }
 
 Game::~Game()

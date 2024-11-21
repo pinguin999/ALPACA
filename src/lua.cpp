@@ -1,14 +1,14 @@
 #include "game.hpp"
 #include "interactable_object.hpp"
 
-#define LuaSpineObject std::string
-#define LuaSpineAnimation std::string
-#define LuaSpineSkin std::string
-#define LuaSpinePoint std::string
-#define LuaDialog std::string
-#define LuaScene std::string
-#define LuaAudio std::string
-#define LuaLanguage std::string
+using LuaSpineObject = std::string;
+using LuaSpineAnimation = std::string;
+using LuaSpineSkin = std::string;
+using LuaSpinePoint = std::string;
+using LuaDialog = std::string;
+using LuaScene = std::string;
+using LuaAudio = std::string;
+using LuaLanguage = std::string;
 
 static std::optional<jngl::Vec2> getPointPosition(std::shared_ptr<Game> game, const std::string &pointName)
 {
@@ -413,10 +413,10 @@ void Game::setupLuaFunctions()
 								auto position = obj->getPoint(point_name);
 								if (!position)
 								{
-									jngl::debugLn("Point " + point_name + " not found.");
+									jngl::error("Point " + point_name + " not found.");
 									return;
 								}
-								std::static_pointer_cast<InteractableObject>(obj)->goToPosition(*position, callback.value());
+								player->addTargetPositionImmediately(obj->getPosition() + *position, callback.value());
 								pointer->setPrimaryHandled();
 								// TODO Write Players position to Lua
 							});
@@ -437,10 +437,10 @@ void Game::setupLuaFunctions()
 									auto position = obj->getPoint(point_name);
 									if (!position)
 									{
-										jngl::debugLn("Point " + point_name + " not found.");
+										jngl::error("Point " + point_name + " not found.");
 										return;
 									}
-									std::static_pointer_cast<InteractableObject>(obj)->goToPosition(*position, callback.value());
+									player->addTargetPositionImmediately(obj->getPosition() + *position, callback.value());
 									pointer->setPrimaryHandled();
 									// TODO Write Players position to Lua
 								}

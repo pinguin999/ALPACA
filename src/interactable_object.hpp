@@ -16,8 +16,6 @@ public:
 
     void draw() const override;
 
-    void goToPosition(jngl::Vec2 position, const sol::function &callback);
-
     void registerToDelete();
     void setLuaIndex(const std::string &index) { luaIndex = index; };
 

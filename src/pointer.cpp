@@ -47,7 +47,7 @@ bool Pointer::step(bool)
         float gamepad_speed_multiplier = (*_game->lua_state)["config"]["gamepad_speed_multiplier"];
         auto move = control->getMovement() * gamepad_speed_multiplier;
         auto movesec = control->getSecondaryMovement();
-        if (move != jngl::Vec2(0, 0))
+        if (boost::qvm::mag_sqr(move - jngl::Vec2(0, 0)) > 0.5)
         {
             position += move;
             position.x = std::max(position.x, -screensize.x / _game->getCameraZoom() / 2);
@@ -56,13 +56,13 @@ bool Pointer::step(bool)
             position.y = std::min(position.y, screensize.y / _game->getCameraZoom() / 2);
             target_position = position;
         }
-        else if (movesec != jngl::Vec2(0, 0))
+        else if (boost::qvm::mag_sqr(movesec - jngl::Vec2(0, 0)) > 0.5)
         {
             position.x = screensize.x * jngl::getScaleFactor() / 2.0 + movesec.x * screensize.x * jngl::getScaleFactor() / 2.0;
             position.y = screensize.y * jngl::getScaleFactor() / 2.0 + movesec.y * screensize.y * jngl::getScaleFactor() / 2.0;
             target_position = position;
         }
-        else if (target_position != mouse_pose && last_mouse_pose != mouse_pose)
+        else if (boost::qvm::mag_sqr(target_position - mouse_pose) > 0.5 && boost::qvm::mag_sqr(last_mouse_pose - mouse_pose) > 0.5)
         {
             target_position = mouse_pose;
             position = mouse_pose;

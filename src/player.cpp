@@ -101,7 +101,7 @@ void Player::addTargetPositionImmediately(jngl::Vec2 target, const sol::function
             position = target;
         }
         path.clear();
-        if (target != position)
+        if (boost::qvm::mag_sqr(target - position) > 0.5)
         {
             newPath = _game->currentScene->background->getPathToTarget(position, target);
 
@@ -143,7 +143,7 @@ bool Player::step(bool /*force*/)
             return false;
         }
 
-        if (path.size() > 1 && position == path.front())
+        if (path.size() > 1 && boost::qvm::mag_sqr(position - path.front()) < 0.5)
         {
             path.pop_front();
             setTargentPosition(path.front());
@@ -151,7 +151,7 @@ bool Player::step(bool /*force*/)
         }
 
         jngl::Vec2 tmp_target_position = target_position - position;
-        if (tmp_target_position == jngl::Vec2(0, 0) && currentAnimation == (*_game->lua_state)["config"]["player_walk_animation"])
+        if (boost::qvm::mag_sqr(tmp_target_position - jngl::Vec2(0, 0)) < 0.5 && currentAnimation == (*_game->lua_state)["config"]["player_walk_animation"])
         {
             currentAnimation = (*_game->lua_state)["config"]["player_idle_animation"];
             // Callback to Lua

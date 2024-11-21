@@ -37,7 +37,7 @@ void DialogManager::play(const std::string &dialogName, jngl::Vec2, const sol::f
         dialog_callback = callback;
     }else
     {
-        jngl::debugLn("Dialog " + dialogName + " not found.");
+        jngl::error("Dialog " + dialogName + " not found.");
     }
 }
 
@@ -68,12 +68,12 @@ void DialogManager::step()
         if(selected_index >= 0)
         {
             auto direction = _game->pointer->getMovementStep();
-            if (direction == jngl::Vec2(0, 1))
+            if (boost::qvm::mag_sqr(direction - jngl::Vec2(0, 1)) < 0.5)
             {
                 selected_index = std::max(selected_index - 1, 0);
             }
 
-            if (direction == jngl::Vec2(0, -1))
+            if (boost::qvm::mag_sqr(direction - jngl::Vec2(0, -1)) < 0.5)
             {
                 selected_index = std::min(selected_index + 1, (int)choiceTexts.size() - 1);
             }
