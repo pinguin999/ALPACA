@@ -162,7 +162,8 @@ if(MSVC)
 	# TODO add /WX
 else()
 	if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-		target_compile_options(pac PRIVATE -std=c++20 -Wall -Wextra -pedantic -Wno-long-long -Wunused -Wnon-virtual-dtor -Wno-align-mismatch -Wpedantic -Werror -Wpointer-arith -Wcast-qual -Wno-missing-braces -Wdangling)
+		target_compile_options(pac PRIVATE -std=c++20 -Wall -Wextra -pedantic -Wno-long-long -Wunused -Wnon-virtual-dtor -Wno-align-mismatch -Wpedantic -Werror -Wpointer-arith -Wcast-qual -Wno-missing-braces)
+		# -Wdangling only works with clang
 	#    TODO Add -Wshadow -Wconversion -Wmissing-prototypes
 	# -std=c++20 -O3 -fsanitize=fuzzer,address,undefined -fPIE
 	endif()
