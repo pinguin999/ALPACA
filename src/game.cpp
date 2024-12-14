@@ -300,6 +300,7 @@ void Game::step()
 	removeObjects();
 }
 
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
 static std::string currentDateTime()
 {
@@ -313,6 +314,7 @@ static std::string currentDateTime()
 
 	return buf;
 }
+#endif
 
 #ifndef NDEBUG
 void Game::debugStep()

@@ -11,7 +11,7 @@ class Pointer : public SpineObject
 {
 public:
     explicit Pointer(std::shared_ptr<Game> game, const std::string &spine_file);
-    ~Pointer() = default;
+    ~Pointer() override = default;
 
     bool step(bool force = false) override;
 

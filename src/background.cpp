@@ -5,7 +5,6 @@
 #include "game.hpp"
 
 #include <cmath>
-#include <limits>
 
 Background::Background(const std::shared_ptr<Game> &game, const std::string &spine_file) : SpineObject(game, spine_file, "Background")
 {

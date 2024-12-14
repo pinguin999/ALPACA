@@ -673,7 +673,7 @@ namespace filewatch {
                   if (stat.st_mode & S_IFREG || stat.st_mode & S_IFLNK) {
                         size_t len = strlen(buf);
 
-                        for (size_t i = len - 1; i >= 0; i--) {
+                        for (int i = len - 1; i >= 0; i--) {
                               if (buf[i] == '/') {
                                     buf[i] = '\0';
                                     break;
@@ -705,7 +705,7 @@ namespace filewatch {
                   if (stat.st_mode & S_IFREG || stat.st_mode & S_IFLNK) {
                         size_t len = strlen(buf);
 
-                        for (size_t i = len - 1; i >= 0; i--) {
+                        for (int i = len - 1; i >= 0; i--) {
                               if (buf[i] == '/') {
                                     buf[i] = '\0';
                                     break;
