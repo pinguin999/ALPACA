@@ -40,6 +40,7 @@ public:
     std::unique_ptr<jngl::ImageData> zBufferMap;
 #ifndef NDEBUG
     void writeToFile();
+    void addToFile(const std::string &spine_file);
     void updateObjectPosition(const std::string &id, jngl::Vec2 position);
 #endif
 private:

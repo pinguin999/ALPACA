@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <jngl.hpp>
 #include <set>
 #include <vector>
@@ -20,7 +21,7 @@ public:
     ~Game() override;
     void init();
     void reset();
-    void loadSceneWithFade(std::string level);
+    void loadSceneWithFade(const std::string &level);
     void setupLuaFunctions();
     void configToLua();
     void saveLuaState(const std::string &savefile = "savegame");
@@ -91,7 +92,7 @@ public:
     };
     int getInactivLayerBorder() { return inactivLayerBorder; };
 
-    const std::shared_ptr<SpineObject> getObjectById(std::string objectId);
+    const std::shared_ptr<SpineObject> getObjectById(const std::string &objectId);
     const std::string getLuaPath(std::string objectId);
 
     const std::string cleanLuaString(std::string variable);
@@ -122,5 +123,6 @@ private:
     double gifTime;
     const int GIF_FRAME_SKIP = 10;
     const int GIF_DOWNSCALE_FACTOR = 2;
+    void onFileDrop(const std::filesystem::path& path) override;
 #endif
 };

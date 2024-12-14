@@ -66,7 +66,7 @@ SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &s
         skeletonData = spSkeletonJson_readSkeletonDataFile(json, (spine_file + "/" + spine_file + ".json").c_str());
         if (!skeletonData)
         {
-            jngl::debugLn("Fatal Error loading " + spine_file + ": " + json->error);
+            jngl::error("Fatal Error loading " + spine_file + ": " + json->error);
 #ifndef NDEBUG
             atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
             json = spSkeletonJson_create(atlas);
@@ -146,7 +146,7 @@ void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimat
     }
     else
     {
-        jngl::debugLn("\033[1;31m The animation " + currentAnimation + " is missing! \033[0m");
+        jngl::error("\033[1;31m The animation " + currentAnimation + " is missing! \033[0m");
     }
 }
 
@@ -164,7 +164,7 @@ void SpineObject::addAnimation(int trackIndex, const std::string &currentAnimati
     }
     else
     {
-        jngl::debugLn("\033[1;31m The animation " + currentAnimation + " is missing! \033[0m");
+        jngl::error("\033[1;31m The animation " + currentAnimation + " is missing! \033[0m");
     }
 }
 
@@ -193,7 +193,7 @@ void SpineObject::setSkin(const std::string &skin)
     spSkeleton_setSlotsToSetupPose(skeleton->skeleton);
     if (!resault)
     {
-        jngl::debugLn("The Skin " + skin + " does not exist.");
+        jngl::error("The Skin " + skin + " does not exist.");
     }
 }
 

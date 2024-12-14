@@ -15,7 +15,7 @@ class DialogManager
 {
 public:
     explicit DialogManager(std::shared_ptr<Game> game);
-    void loadDialogsFromFile(std::string fileName, bool initializeVariables);
+    void loadDialogsFromFile(const std::string& fileName, bool initializeVariables);
 
     void step();
     void draw() const;
@@ -29,7 +29,7 @@ public:
     void play(const std::string &characterName, jngl::Vec2 pos, const sol::function &callback); // TODO: multiple positions for different characters
     void continueCurrent();
     void selectCurrentAnswer(int selected_index);
-    jngl::Rgba textToColor(std::string color_text);
+    jngl::Rgba textToColor(const std::string& color_text);
 
 #ifndef NDEBUG
     int getChoiceTextsSize(){return int(choiceTexts.size());};

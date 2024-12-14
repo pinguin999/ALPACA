@@ -18,7 +18,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
 
     if (json.IsNull())
     {
-        jngl::debugLn("Wasn't able to load " + fileName);
+        jngl::error("Wasn't able to load " + fileName);
         background = nullptr;
         return;
     }
@@ -127,7 +127,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
 
         if (!zBufferMap)
         {
-            jngl::debugLn("Fatal Error loading " + std::string((*game->lua_state)["scenes"][scene]["zBufferMap"]));
+            jngl::error("Fatal Error loading " + std::string((*game->lua_state)["scenes"][scene]["zBufferMap"]));
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
         }
@@ -458,6 +458,15 @@ void Scene::writeToFile()
     std::ofstream fout("./../data-src/scenes/" + fileName + ".json");
     jngl::debugLn("Rewrite ./../data-src/scenes/" + fileName + ".json");
     fout << emitter1.c_str();
+}
+
+void Scene::addToFile(const std::string &spine_file)
+{
+    YAML::Node node;
+    node["spine"] = spine_file;
+    node["x"] = 0;
+    node["y"] = 0;
+    json["items"].push_back(node);
 }
 
 void Scene::updateObjectPosition(const std::string &id, jngl::Vec2 position)

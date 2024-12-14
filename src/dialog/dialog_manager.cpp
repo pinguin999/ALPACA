@@ -16,7 +16,7 @@ DialogManager::DialogManager(std::shared_ptr<Game> game)
 {
 }
 
-void DialogManager::loadDialogsFromFile(std::string fileName, bool initializeVariables)
+void DialogManager::loadDialogsFromFile(const std::string& fileName, bool initializeVariables)
 {
     if (auto _game = game.lock())
     {
@@ -164,7 +164,7 @@ void DialogManager::showChoices(std::shared_ptr<schnacker::AnswersStepResult> an
     currentAnswers = answers;
 }
 
-jngl::Rgba DialogManager::textToColor(std::string color_text)
+jngl::Rgba DialogManager::textToColor(const std::string& color_text)
 {
     unsigned int r;
     unsigned int g;
@@ -231,7 +231,7 @@ void DialogManager::playCharacterVoice(const std::string &file)
     }
     catch(std::exception&)
     {
-        jngl::debugLn("Audiofile does not exist: " + file);
+        jngl::error("Audiofile does not exist: " + file);
         last_played_audio = "";
     }
 
@@ -282,7 +282,7 @@ void DialogManager::continueCurrent()
             try {
                 playCharacterVoice(fullFileName);
             }catch (const std::runtime_error& e) {
-                jngl::debugLn("\033[1;31m Failed to load: " + fullFileName + "\033[0m");
+                jngl::error("\033[1;31m Failed to load: " + fullFileName + "\033[0m");
             }
         }
         else

@@ -179,7 +179,7 @@ void Game::configToLua()
 	(*lua_state)["config"]["supportedLanguages"] = sol::as_table(config["supportedLanguages"].as<std::vector<std::string>>());
 }
 
-void Game::loadSceneWithFade(std::string level)
+void Game::loadSceneWithFade(const std::string &level)
 {
 	if(enable_fade){
 		jngl::setWork<SceneFade>(jngl::getWork(), [this, level]() {
@@ -218,7 +218,7 @@ void Game::loadScene(const std::string& level)
 	auto newScene = std::make_shared<Scene>(level, shared_from_this());
 	if (!newScene->background)
 	{
-		jngl::debugLn("There is no scene with the name: " + level);
+		jngl::error("There is no scene with the name: " + level);
 		newScene = std::make_shared<Scene>(old_scene, shared_from_this());
 	}
 
@@ -770,7 +770,7 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 
 		if (!scriptstream)
 		{
-			jngl::debugLn("Can not load lua script " + file);
+			jngl::error("Can not load lua script " + file);
 			return;
 		}
 		script = scriptstream.str();
@@ -944,7 +944,7 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 	return result;
 }
 
-const std::shared_ptr<SpineObject> Game::getObjectById(std::string objectId)
+const std::shared_ptr<SpineObject> Game::getObjectById(const std::string &objectId)
 {
 	if (objectId == "Player" || objectId == "player")
 	{
@@ -1010,3 +1010,23 @@ const std::string Game::getLuaPath(std::string objectId)
 	}
 	return "";
 }
+
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+void Game::onFileDrop(const std::filesystem::path& path)
+{
+	std::string spine_file = path.stem();
+
+    auto atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
+    assert(atlas);
+    spSkeletonJson *json = spSkeletonJson_create(atlas);
+	auto skeletonData = spSkeletonJson_readSkeletonDataFile(json, (spine_file + "/" + spine_file + ".json").c_str());
+
+	if (!skeletonData)
+	{
+		jngl::error("Error loading " + spine_file + " Spine project. Make sure it is saved in data-src and prepare_assets is running.");
+		return;
+	}
+	currentScene->addToFile(spine_file);
+	currentScene->writeToFile();
+}
+#endif

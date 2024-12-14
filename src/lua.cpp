@@ -184,7 +184,6 @@ void Game::setupLuaFunctions()
 							[this](const LuaSpineSkin &skin)
 							{
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								jngl::debugLn("setting skin of " + obj->getName() + " to " + skin);
 								obj->setSkin(skin);
 								std::string lua_object = getLuaPath(obj->getId());
 								lua_state->script(lua_object + ".skin = \"" + skin + "\"");
@@ -476,10 +475,11 @@ void Game::setupLuaFunctions()
 
 								if (position)
 								{
-									if (std::shared_ptr<Player> p = std::dynamic_pointer_cast<Player>(obj); p != nullptr)
+									std::shared_ptr<Player> point = std::dynamic_pointer_cast<Player>(obj);
+									if (point)
 									{
-										p->setPosition(position.value());
-										p->addTargetPositionImmediately(position.value(), (*lua_state)["pass"]);
+										point->setPosition(position.value());
+										point->addTargetPositionImmediately(position.value(), (*lua_state)["pass"]);
 									}
 									obj->setPosition(position.value());
 									std::string lua_object = getLuaPath(obj->getId());
@@ -501,12 +501,12 @@ void Game::setupLuaFunctions()
 									auto position = getPointPosition(shared_from_this(), point_name);
 									if (position)
 									{
-
-										if (std::shared_ptr<Player> p = std::dynamic_pointer_cast<Player>(obj); p != nullptr)
+										std::shared_ptr<Player> point = std::dynamic_pointer_cast<Player>(obj);
+										if ( point != nullptr)
 										{
-											p->setPosition(position.value());
-											p->stop_walking();
-											p->addTargetPositionImmediately(position.value(), (*lua_state)["pass"]);
+											point->setPosition(position.value());
+											point->stop_walking();
+											point->addTargetPositionImmediately(position.value(), (*lua_state)["pass"]);
 										}
 										obj->setPosition(position.value());
 										std::string lua_object = getLuaPath(obj->getId());
@@ -600,7 +600,10 @@ void Game::setupLuaFunctions()
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->layer = layer;
 								std::string lua_object = getLuaPath(obj->getId());
-								lua_state->script(lua_object + ".layer = " + std::to_string(layer));
+								if (!lua_object.empty())
+								{
+									lua_state->script(lua_object + ".layer = " + std::to_string(layer));
+								}
 							});
 
 	/// See SetLayer
@@ -613,7 +616,10 @@ void Game::setupLuaFunctions()
 								{
 									obj->layer = layer;
 									std::string lua_object = getLuaPath(obj->getId());
-									lua_state->script(lua_object + ".layer = " + std::to_string(layer));
+									if (!lua_object.empty())
+									{
+										lua_state->script(lua_object + ".layer = " + std::to_string(layer));
+									}
 								}
 							});
 
