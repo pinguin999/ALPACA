@@ -304,7 +304,7 @@ void Game::step()
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
 static std::string currentDateTime()
 {
-	const time_t now = time(0);
+	const time_t now = time(nullptr);
 	struct tm tstruct;
 	char buf[80];
 	tstruct = *localtime(&now);
