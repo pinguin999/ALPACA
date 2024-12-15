@@ -168,3 +168,8 @@ else()
 	# -std=c++20 -O3 -fsanitize=fuzzer,address,undefined -fPIE
 	endif()
 endif()
+
+option(ALPACA_CLANG_TIDY "Run clang-tidy on source files" OFF)
+if(ALPACA_CLANG_TIDY)
+	set_target_properties(pac PROPERTIES CXX_CLANG_TIDY "clang-tidy;--use-color")
+endif()

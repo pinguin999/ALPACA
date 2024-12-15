@@ -71,11 +71,9 @@ linux:
   - rm -rf build
   - mkdir build
   - cd build
-  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DALPACA_CLANG_TIDY=1
     -GNinja ..
   - TERM=xterm script -qfec "ninja pac" /dev/null
-  - TERM=xterm script -qfec "../subprojects/jngl/data/run-clang-tidy.py" | sed s_$PWD/__
-  - '! grep -Fq "error:" typescript'
 
 linux_debug:
   stage: build
@@ -92,11 +90,9 @@ linux_debug:
   - rm -rf build
   - mkdir build
   - cd build
-  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DALPACA_CLANG_TIDY=1
     -GNinja -DCMAKE_BUILD_TYPE=Debug ..
   - TERM=xterm script -qfec "ninja pac" /dev/null
-  - TERM=xterm script -qfec "../subprojects/jngl/data/run-clang-tidy.py" | sed s_$PWD/__
-  - '! grep -Fq "error:" typescript'
 
 linux_release:
   stage: build
@@ -113,11 +109,9 @@ linux_release:
   - rm -rf build
   - mkdir build
   - cd build
-  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DALPACA_CLANG_TIDY=1
     -GNinja -DCMAKE_BUILD_TYPE=Release ..
   - TERM=xterm script -qfec "ninja pac" /dev/null
-  - TERM=xterm script -qfec "../subprojects/jngl/data/run-clang-tidy.py" | sed s_$PWD/__
-  - '! grep -Fq "error:" typescript'
 
 windows:
   stage: build
