@@ -52,7 +52,7 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
     }
 }
 
-SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, const std::string &id, float scale) : walk_callback((*game->lua_state)["pass"]), scale(scale), spine_name(spine_file), id(id), game(game)
+SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, std::string id, float scale) : walk_callback((*game->lua_state)["pass"]), scale(scale), spine_name(spine_file), id(std::move(id)), game(game)
 {
     atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
     assert(atlas);
