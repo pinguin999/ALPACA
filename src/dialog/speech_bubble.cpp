@@ -5,12 +5,12 @@
 
 SpeechBubble::SpeechBubble(std::shared_ptr<Game> game,
                            const std::string &spine_file,
-                           const jngl::Text &text,
-                           const jngl::Text &characterName,
+                           jngl::Text text,
+                           jngl::Text characterName,
                            const jngl::Rgba characterNameColor
                            )
     : SpineObject(game, spine_file, "SpeechBubble", .2f),
-      text(text),
+      text(std::move(text)),
       textColor(game->getDialogManager()->textToColor((*game->lua_state)["config"]["default_font_color"])),
       characterName(characterName),
       characterNameColor(characterNameColor)

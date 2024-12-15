@@ -2,7 +2,7 @@
 
 SceneFade::SceneFade(std::shared_ptr<jngl::Work> game,
                      std::function<void()> loadScene)
-    : loadScene(std::move(loadScene)), game(game) {}
+    : loadScene(std::move(loadScene)), game(std::move(game)) {}
 
 void SceneFade::step() {
     if (loadScene) {

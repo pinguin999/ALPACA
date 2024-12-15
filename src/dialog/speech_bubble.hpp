@@ -9,8 +9,8 @@ class SpeechBubble : public SpineObject
 {
 public:
     SpeechBubble(std::shared_ptr<Game> game, const std::string &spine_file,
-                           const jngl::Text &text,
-                           const jngl::Text &characterName,
+                           jngl::Text text,
+                           jngl::Text characterName,
                            const jngl::Rgba characterNameColor);
     void draw() const override;
     bool step(bool force = false) override;
