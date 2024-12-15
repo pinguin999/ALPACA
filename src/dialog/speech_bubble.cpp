@@ -12,7 +12,7 @@ SpeechBubble::SpeechBubble(std::shared_ptr<Game> game,
     : SpineObject(game, spine_file, "SpeechBubble", .2f),
       text(std::move(text)),
       textColor(game->getDialogManager()->textToColor((*game->lua_state)["config"]["default_font_color"])),
-      characterName(characterName),
+      characterName(std::move(characterName)),
       characterNameColor(characterNameColor)
 {
     position = jngl::Vec2{0, jngl::getScreenSize().y / 2.0};
