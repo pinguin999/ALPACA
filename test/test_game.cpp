@@ -81,6 +81,7 @@ suite alpaca_test_suite = []
 
         while (!(*game->lua_state)["game_finished"] && i < MAX_STEPS)
         {
+            jngl::updateInput();
             i++;
             actions.clear();
 
