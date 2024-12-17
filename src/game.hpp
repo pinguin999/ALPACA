@@ -2,7 +2,6 @@
 
 #include <filesystem>
 #include <jngl.hpp>
-#include <set>
 #include <vector>
 #include <sol/sol.hpp>
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))

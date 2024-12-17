@@ -423,7 +423,7 @@ bool Background::is_walkable(jngl::Vec2 position) const
     {
         for (const auto &obj : _game->gameObjects)
         {
-            auto *non_walkable = spine::spSkeletonBounds_containsPointMatchingName(obj->bounds, "non_walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
+            auto *non_walkable = spine::spSkeletonBounds_containsPointMatchingName(obj->bounds, "non_walkable_area", static_cast<float>(position.x) - static_cast<float>(obj->getPosition().x), static_cast<float>(position.y) - static_cast<float>(obj->getPosition().y));
             if (non_walkable)
             {
                 return false;

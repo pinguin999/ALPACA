@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <map>
 #include <string>
 #include <iostream>
 #include <chrono>
@@ -10,7 +9,6 @@
 
 #include <spine/spine.h>
 #include "pointer.hpp"
-#include "interactable_object.hpp"
 #include "scene_fade.hpp"
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))

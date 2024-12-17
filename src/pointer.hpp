@@ -3,7 +3,6 @@
 #include "spine_object.hpp"
 #include "input/control.hpp"
 
-#include <array>
 #include <jngl.hpp>
 #include <memory>
 

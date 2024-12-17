@@ -7,7 +7,6 @@
 #include "game.hpp"
 
 #include <cmath>
-#include <cassert>
 #include <spine/spine.h>
 
 Pointer::Pointer(std::shared_ptr<Game> game, const std::string &spine_file) : SpineObject(game, spine_file, "Pointer", .5)

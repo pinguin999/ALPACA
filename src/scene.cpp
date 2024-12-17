@@ -1,7 +1,6 @@
 #include "scene.hpp"
 
 #include <fstream>
-#include <streambuf>
 #include "interactable_object.hpp"
 #include "game.hpp"
 #include "player.hpp"

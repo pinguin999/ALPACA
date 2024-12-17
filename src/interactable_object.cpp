@@ -66,7 +66,7 @@ bool InteractableObject::step(bool force)
             jngl::Vec2 click_position = _game->pointer->getWorldPosition();
             if (abs_position)
             {
-                click_position -= _game->getCameraPosition();
+                click_position = _game->pointer->getPosition();
             }
 
             auto *collision = spSkeletonBounds_containsPoint(bounds, static_cast<float>(click_position.x) - static_cast<float>(position.x), static_cast<float>(click_position.y) - static_cast<float>(position.y));

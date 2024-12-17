@@ -1,8 +1,6 @@
 #include <jngl/init.hpp>
 #include "game.hpp"
 
-#include <fstream>
-
 #ifndef NDEBUG
 void pac_unload_file(const char* path)
 {

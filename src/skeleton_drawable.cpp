@@ -1,5 +1,4 @@
 #include "skeleton_drawable.hpp"
-#include "game.hpp"
 
 #ifndef SPINE_MESH_VERTEX_COUNT_MAX
 #define SPINE_MESH_VERTEX_COUNT_MAX 1000
@@ -185,7 +184,8 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 				bbname.setText(box->super.super.name);
 				bbname.setAlign(jngl::Alignment::CENTER);
 				bbname.setCenter(bbvertices[0], bbvertices[1]);
-				bbname.draw();
+				jngl::setFontColor(jngl::Rgba(0,1,0,1));
+				bbname.draw(modelview);
 			}
 #endif
         }

@@ -2,7 +2,6 @@
 
 #include "spine_object.hpp"
 
-#include <array>
 #include <deque>
 #include <jngl.hpp>
 #include <sol/sol.hpp>
