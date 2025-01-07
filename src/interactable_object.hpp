@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mouse_info.hpp"
 #include "spine_object.hpp"
 
 #include <jngl.hpp>
@@ -21,6 +22,7 @@ public:
 private:
     std::string luaIndex;
 #ifndef NDEBUG
-    jngl::Vec2 dragposition = jngl::Vec2(0, 0);
+    bool mouseOver = false;
+    std::optional<MouseInfo::Down> mouseDown;
 #endif
 };

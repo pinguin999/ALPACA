@@ -20,28 +20,26 @@ bool InteractableObject::step(bool force)
         spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
 
 #ifndef NDEBUG
-        if (_game->editMode && jngl::mousePressed())
+        if (_game->editMode)
         {
-            dragposition = jngl::getMousePos();
-        }
-        if (_game->editMode && jngl::mouseDown())
-        {
-            auto mouse_pose = jngl::getMousePos();
-
-            double DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
-            if (std::sqrt((mouse_pose.x - position.x) * (mouse_pose.x - position.x) + (mouse_pose.y - position.y) * (mouse_pose.y - position.y)) < DEBUG_GRAP_DISTANCE)
-            {
-                position += (jngl::getMousePos() - dragposition) / _game->getCameraZoom();
-                jngl::debugLn(position);
-                dragposition = jngl::getMousePos();
-#ifndef NDEBUG
-                _game->currentScene->updateObjectPosition(id, position);
-#endif
+            mouseOver = false;
+            if (std::optional<MouseInfo::Over> over = _game->mouseInfo.pos()) {
+                double DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
+                mouseOver = std::sqrt((over->pos().x - position.x) * (over->pos().x - position.x) +
+                                      (over->pos().y - position.y) * (over->pos().y - position.y)) <
+                            DEBUG_GRAP_DISTANCE;
+                if (mouseOver) {
+                    mouseDown = over->pressed(position);
+                }
             }
         }
-        if (_game->editMode && jngl::mousePressed())
-        {
-            dragposition = jngl::getMousePos();
+        if (mouseDown) {
+            position = mouseDown->newPos();
+            jngl::debugLn(position);
+            _game->currentScene->updateObjectPosition(id, position);
+            if (mouseDown->released()) {
+                mouseDown = std::nullopt;
+            }
         }
 #endif
 
@@ -139,9 +137,11 @@ void InteractableObject::draw() const
         if (_game->editMode)
         {
             const float DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
-            jngl::drawCircle(mv, DEBUG_GRAP_DISTANCE);
+            jngl::drawCircle(mv, DEBUG_GRAP_DISTANCE,
+                             jngl::Rgba(0, mouseOver ? 0.7 : (mouseDown ? 0.4 : 0.9), 0, 0.9));
             jngl::Text pposition;
-            pposition.setText("x: " + std::to_string(position.x) + "\ny: " + std::to_string(position.y));
+            pposition.setText("x: " + std::to_string(std::lround(position.x)) +
+                              "\ny: " + std::to_string(std::lround(position.y)));
             jngl::setFontColor(jngl::Rgba(1.0, 0, 0, 1.0));
             pposition.setAlign(jngl::Alignment::CENTER);
             pposition.setCenter(0, 0);

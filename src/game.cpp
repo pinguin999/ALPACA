@@ -270,6 +270,11 @@ void Game::step()
 	stepCamera();
 
 	pointer->step();
+#ifndef NDEBUG
+	if (editMode) {
+		mouseInfo.setMousePos(pointer->getWorldPosition());
+	}
+#endif
 
 	for (auto it = gameObjects.rbegin(); it != gameObjects.rend();)
 	{
