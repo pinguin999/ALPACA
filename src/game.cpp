@@ -1033,7 +1033,7 @@ const std::string Game::getLuaPath(std::string objectId)
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 void Game::onFileDrop(const std::filesystem::path& path)
 {
-	std::string spine_file = path.stem();
+	std::string spine_file = path.stem().string();
 
     auto atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
     assert(atlas);
