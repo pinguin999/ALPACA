@@ -88,6 +88,7 @@ public:
     void removeObjects();
 
     std::shared_ptr<Scene> currentScene = nullptr;
+    std::string nextScene;
     bool reload = false;
     void setInactivLayerBorder(int layer)
     {
@@ -106,6 +107,7 @@ public:
 private:
     YAML::Node config;
     void loadScene(const std::string& level);
+    void loadScene_internal();
 
     std::vector<std::shared_ptr<SpineObject>> needToAdd;
     std::vector<std::shared_ptr<SpineObject>> needToRemove;

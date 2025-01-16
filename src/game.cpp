@@ -198,6 +198,12 @@ void Game::loadSceneWithFade(const std::string &level)
 
 void Game::loadScene(const std::string& level)
 {
+	nextScene = level;
+}
+
+void Game::loadScene_internal()
+{
+	jngl::debugLn("loadScene");
 	std::string old_scene;
 	if (currentScene)
 	{
@@ -213,10 +219,10 @@ void Game::loadScene(const std::string& level)
 	}
 	player = nullptr;
 
-	auto newScene = std::make_shared<Scene>(level, shared_from_this());
+	auto newScene = std::make_shared<Scene>(nextScene, shared_from_this());
 	if (!newScene->background)
 	{
-		jngl::error("There is no scene with the name: " + level);
+		jngl::error("There is no scene with the name: " + nextScene);
 		newScene = std::make_shared<Scene>(old_scene, shared_from_this());
 	}
 
@@ -244,7 +250,8 @@ void Game::loadScene(const std::string& level)
 		setCameraPositionImmediately(player->calcCamPos());
 	}
 
-	runAction(level, newScene->background);
+	runAction(nextScene, newScene->background);
+	nextScene = "";
 }
 
 Game::~Game()
@@ -266,6 +273,11 @@ void Game::reset()
 
 void Game::step()
 {
+	if (!nextScene.empty())
+	{
+		loadScene_internal();
+	}
+
 	addObjects();
 	stepCamera();
 
@@ -283,7 +295,10 @@ void Game::step()
 			std::advance(it, 1);
 			continue;
 		}
-		if ((*it) == nullptr || (*it)->step())
+		if ((*it) == nullptr) {
+			jngl::error("nullptr in obj");
+		}
+		if ((*it)->step())
 		{
 			remove(*it);
 		}
@@ -1011,6 +1026,7 @@ const std::string Game::getLuaPath(std::string objectId)
 	{
 		return R"(scenes["cross_scene"]["items"][")" + objectId + "\"]";
 	}
+	jngl::error(objectId +  " does not exist!");
 	return "";
 }
 
