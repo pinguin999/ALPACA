@@ -8,14 +8,14 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
     {
         if (event->data->audioPath)
         {
-            jngl::debugLn(event->data->audioPath);
+            jngl::debug(event->data->audioPath);
             jngl::play("audio/" + std::string(event->data->audioPath));
         }
         if (event->data->stringValue)
         {
             // This in Lua setzen
 
-            jngl::debugLn(event->data->stringValue);
+            jngl::debug(event->data->stringValue);
 
             if (auto _game = reinterpret_cast<SpineObject *>(state->userData)->game.lock())
             {

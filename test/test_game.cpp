@@ -57,7 +57,7 @@ suite alpaca_test_suite = []
             }
         }
         fs::current_path(dataFolder);
-        jngl::debugLn(fs::current_path());
+        jngl::debug(fs::current_path());
 #endif
         YAML::Node const config = YAML::Load(jngl::readAsset("config/game.json").str());
         jngl::showWindow((config)["name"].as<std::string>(), 800, 600, 0, {16, 9}, {16, 9});
@@ -88,8 +88,7 @@ suite alpaca_test_suite = []
             game->step();
 
             // TODO: Solange ein Callback gesetzt ist keine neue Aktion auswählen.
-
-            jngl::debug("OPTIONS ");
+            std::string options = "";
             for (auto &obj : game->gameObjects)
             {
                 if (game->getInactivLayerBorder() > obj->layer || obj->getParent() != nullptr)
@@ -105,21 +104,20 @@ suite alpaca_test_suite = []
                             std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setDE" &&
                             std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setEN")
                         {
-                            jngl::debug(obj->bounds->boundingBoxes[j]->super.super.name);
-                            jngl::debug(", ");
+                            options += std::string(obj->bounds->boundingBoxes[j]->super.super.name) + ", ";
                             actions.emplace_back(std::string(obj->bounds->boundingBoxes[j]->super.super.name), obj);
                         }
                     }
                 }
             }
-            jngl::debugLn("");
+            jngl::debug("OPTIONS {}", options);
+
 
             int const min = 0;
             int const max = actions.size() - 1;
             int const randAction = std::abs(int(gen())) % (max - min + 1) + min;
 
-            jngl::debug("RUN: ");
-            jngl::debugLn(std::get<0>(actions.at(randAction)));
+            jngl::debug("RUN: {}", std::get<0>(actions.at(randAction)));
             game->runAction(std::get<0>(actions.at(randAction)), std::get<1>(actions.at(randAction)));
 
             // Give Action time
@@ -144,9 +142,7 @@ suite alpaca_test_suite = []
             }
         }
         // expect(eq(game->getInactivLayerBorder(), 2));
-        jngl::debug("Took: ");
-        jngl::debug(i);
-        jngl::debugLn(" steps");
+        jngl::debug("Took: {} steps", i);
 
         jngl::hideWindow();
 
@@ -206,7 +202,7 @@ suite alpaca_test_suite = []
 
             // TODO: Solange ein Callback gesetzt ist keine neue Aktion auswählen.
 
-            jngl::debug("OPTIONS ");
+            std::string options;
             for (auto &obj : game->gameObjects)
             {
                 if (game->getInactivLayerBorder() > obj->layer)
@@ -222,22 +218,19 @@ suite alpaca_test_suite = []
                             std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setDE" &&
                             std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setEN")
                         {
-                            jngl::debug(obj->bounds->boundingBoxes[j]->super.super.name);
-                            jngl::debug(", ");
+                            options += std::string(obj->bounds->boundingBoxes[j]->super.super.name) + ", ";
                             actions.emplace_back(std::string(obj->bounds->boundingBoxes[j]->super.super.name), obj);
                         }
                     }
                 }
             }
-
-            jngl::debugLn("");
+            jngl::debug("OPTIONS: {}", options);
 
             int const min = 0;
             int const max = actions.size() - 1;
             int const randAction = std::abs(int(gen())) % (max - min + 1) + min;
 
-            jngl::debug("RUN: ");
-            jngl::debugLn(std::get<0>(actions.at(randAction)));
+            jngl::debug("RUN: {}", std::get<0>(actions.at(randAction)));
             game->runAction(std::get<0>(actions.at(randAction)), std::get<1>(actions.at(randAction)));
 
             // Give Action time
@@ -265,9 +258,7 @@ suite alpaca_test_suite = []
         } while (!(*game->lua_state)["game_finished"] && i < MAX_STEPS);
 
         // expect(eq(game->getInactivLayerBorder(), 2));
-        jngl::debug("Took: ");
-        jngl::debug(i);
-        jngl::debugLn(" steps");
+        jngl::debug("Took: {} steps", i);
 
         jngl::hideWindow();
 

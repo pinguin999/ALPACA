@@ -54,8 +54,7 @@ bool Background::stepClickableRegions(bool force)
             if (collision)
             {
                 collision_script = collision->super.super.name;
-                jngl::debug("clicked interactable region ");
-                jngl::debugLn(collision_script);
+                jngl::debug("clicked interactable region {}", collision_script);
                 _game->pointer->setPrimaryHandled();
                 _game->runAction(collision_script, getptr());
             }

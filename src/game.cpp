@@ -203,7 +203,7 @@ void Game::loadScene(const std::string& level)
 
 void Game::loadScene_internal()
 {
-	jngl::debugLn("loadScene");
+	jngl::debug("loadScene");
 	std::string old_scene;
 	if (currentScene)
 	{
@@ -412,7 +412,7 @@ void Game::debugStep()
 		{
 			if (jngl::keyDown(jngl::key::ControlL) && jngl::keyPressed(number))
 			{
-				jngl::debugLn("Save to Save " + std::string(number));
+				jngl::debug("Save to Save " + std::string(number));
 				saveLuaState("savegame" + std::string(number));
 			}
 			else if (jngl::keyPressed(number))
@@ -560,8 +560,7 @@ void Game::debugStep()
 
 			std::string filename = "./../";
 			filename += currentDateTime() + ".gif";
-			jngl::debug("start recording ");
-			jngl::debugLn(filename);
+			jngl::debug("start recording {}", filename);
 
 			gifAnimation->GifBegin(gifWriter.get(),
 								   filename.c_str(),
@@ -577,7 +576,7 @@ void Game::debugStep()
 			// stop recording
 			recordingGif = false;
 			gifAnimation->GifEnd(gifWriter.get());
-			jngl::debugLn("stop recording");
+			jngl::debug("stop recording");
 		}
 	}
 #endif
@@ -811,18 +810,18 @@ void Game::saveLuaState(const std::string &savefile)
 	{
 		return;
 	}
-	// jngl::debugLn("Backup all globals start");
+	// jngl::debug("Backup all globals start");
 	const sol::table &globals = lua_state->globals();
 
 	const std::string backup = backupLuaTable(globals, "");
-	jngl::debugLn("Backup all globals end: \n" + backup);
+	jngl::debug("Backup all globals end: \n" + backup);
 
 	jngl::writeConfig(savefile, backup);
 }
 
 void Game::loadLuaState(const std::optional<std::string> &savefile)
 {
-	jngl::debugLn("Load all globals");
+	jngl::debug("Load all globals");
 	if (savefile) {
 		const std::string state = jngl::readConfig(savefile.value());
 		auto result = lua_state->safe_script(state, sol::script_pass_on_error);
@@ -850,7 +849,7 @@ void Game::loadLuaState(const std::optional<std::string> &savefile)
 		loadScene(startscene);
 	}
 	// TODO Error handling
-	jngl::debugLn("Loaded all globals");
+	jngl::debug("Loaded all globals");
 }
 
 const std::string Game::cleanLuaString(std::string variable)

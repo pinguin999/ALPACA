@@ -32,7 +32,7 @@ void Player::setDirection()
 
         if (angle < 45 && angle > -45)
         {
-            // jngl::debugLn("right");
+            // jngl::debug("right");
             setSkin((*_game->lua_state)["config"]["player_side_skin"]);
 
             if (skeleton->skeleton->scaleX < 0)
@@ -49,13 +49,13 @@ void Player::setDirection()
         }
         else if (angle < -45 && angle > -135)
         {
-            // jngl::debugLn("up");
+            // jngl::debug("up");
             setSkin((*_game->lua_state)["config"]["player_up_skin"]);
             (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"] = (*_game->lua_state)["config"]["player_up_skin"];
         }
         else if (angle < 135 && angle > 45)
         {
-            // jngl::debugLn("down");
+            // jngl::debug("down");
             setSkin((*_game->lua_state)["config"]["player_front_skin"]);
 
             auto *slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
@@ -68,7 +68,7 @@ void Player::setDirection()
         }
         else if (angle < -135 || angle > 135)
         {
-            // jngl::debugLn("left");
+            // jngl::debug("left");
             setSkin((*_game->lua_state)["config"]["player_side_skin"]);
 
             if (target_position.y != position.y && skeleton->skeleton->scaleX > 0)
@@ -232,7 +232,7 @@ bool Player::step(bool /*force*/)
             {
                 collision_script = collision->super.super.name;
 
-                jngl::debugLn("clicked player");
+                jngl::debug("clicked player");
                 _game->pointer->setPrimaryHandled();
                 _game->runAction(collision_script, getptr());
             }

@@ -35,7 +35,7 @@ bool InteractableObject::step(bool force)
         }
         if (mouseDown) {
             position = mouseDown->newPos();
-            jngl::debugLn(position);
+            jngl::debug("{}", position);
             _game->currentScene->updateObjectPosition(id, position);
             if (mouseDown->released()) {
                 mouseDown = std::nullopt;
@@ -72,8 +72,7 @@ bool InteractableObject::step(bool force)
             {
                 collision_script = collision->super.super.name;
                 if (collision_script != "non_walkable_area") {
-                    jngl::debug("clicked interactable item ");
-                    jngl::debugLn(collision_script);
+                    jngl::debug("clicked interactable item {}", collision_script);
                     _game->pointer->setPrimaryHandled();
                     _game->runAction(collision_script, getptr());
                 }

@@ -455,7 +455,7 @@ void Scene::writeToFile()
     emitter1.SetIndent(4);
     emitter1.SetMapFormat(YAML::Block);
     std::ofstream fout("./../data-src/scenes/" + fileName + ".json");
-    jngl::debugLn("Rewrite ./../data-src/scenes/" + fileName + ".json");
+    jngl::debug("Rewrite ./../data-src/scenes/" + fileName + ".json");
     fout << emitter1.c_str();
 }
 
