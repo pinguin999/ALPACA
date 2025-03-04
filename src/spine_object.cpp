@@ -146,7 +146,7 @@ void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimat
     }
     else
     {
-        jngl::error("\033[1;31m The animation " + currentAnimation + " is missing! \033[0m");
+        jngl::error("\033[1;31m The animation " + currentAnimation + " is missing for " + spine_name + " \033[0m");
     }
 }
 
@@ -164,7 +164,7 @@ void SpineObject::addAnimation(int trackIndex, const std::string &currentAnimati
     }
     else
     {
-        jngl::error("\033[1;31m The animation " + currentAnimation + " is missing! \033[0m");
+        jngl::error("\033[1;31m The animation " + currentAnimation + " is missing for " + spine_name + " \033[0m");
     }
 }
 
@@ -193,7 +193,7 @@ void SpineObject::setSkin(const std::string &skin)
     spSkeleton_setSlotsToSetupPose(skeleton->skeleton);
     if (!resault)
     {
-        jngl::error("The Skin " + skin + " does not exist.");
+        jngl::error("\033[1;31m The Skin " + skin + " is missing for " + spine_name + " \033[0m");
     }
 }
 

@@ -101,6 +101,7 @@ suite alpaca_test_suite = []
                     for (int j = 0; j < obj->bounds->count; j++)
                     {
                         if (std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "walkable_area" &&
+                            std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "non_walkable_area" &&
                             std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setDE" &&
                             std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setEN")
                         {
@@ -215,6 +216,7 @@ suite alpaca_test_suite = []
                     for (int j = 0; j < obj->bounds->count; j++)
                     {
                         if (std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "walkable_area" &&
+                            std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "non_walkable_area" &&
                             std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setDE" &&
                             std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setEN")
                         {
