@@ -38,4 +38,5 @@ private:
     void setDirection();
 
     std::deque<jngl::Vec2> newPath;
+    std::string script;
 };

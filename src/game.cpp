@@ -155,9 +155,6 @@ void Game::configToLua()
     (*lua_state)["config"]["gamepad_speed_multiplier"] = config["gamepad_speed_multiplier"].as<float>();
     (*lua_state)["config"]["inventory_default_skin"] = config["inventory_default_skin"].as<std::string>();
     (*lua_state)["config"]["player_default_skin"] = config["player_default_skin"].as<std::string>();
-    (*lua_state)["config"]["player_side_skin"] = config["player_side_skin"].as<std::string>();
-    (*lua_state)["config"]["player_front_skin"] = config["player_front_skin"].as<std::string>();
-    (*lua_state)["config"]["player_up_skin"] = config["player_up_skin"].as<std::string>();
     (*lua_state)["config"]["player_walk_animation"] = config["player_walk_animation"].as<std::string>();
     (*lua_state)["config"]["player_beam_animation"] = config["player_beam_animation"].as<std::string>();
     (*lua_state)["config"]["player_idle_animation"] = config["player_idle_animation"].as<std::string>();
@@ -798,9 +795,7 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 	if (!result.valid())
 	{
 		const sol::error err = result;
-		std::cerr << errorMessage
-				  << err.what()
-				  << std::endl;
+		jngl::debug("{} {}", errorMessage, err.what());
 	}
 }
 

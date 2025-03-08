@@ -8,7 +8,20 @@
 Player::Player(const std::shared_ptr<Game> &game, const std::string &spine_file) : SpineObject(game, spine_file, "player"),
                                                                                    last_click_time(std::numeric_limits<double>::min())
 {
+    const std::string file = "scripts/" + spine_name + ".lua";
+    const std::stringstream scriptstream = jngl::readAsset(file);
 
+    if (!scriptstream)
+    {
+        jngl::error("Can not load player lua script " + file);
+    }
+    script = scriptstream.str();
+    auto result = game->lua_state->safe_script(script, sol::script_pass_on_error);
+    if (!result.valid())
+    {
+        const sol::error err = result;
+        jngl::debug("Failed to load player script {} {}", spine_name, err.what());
+    }
 }
 
 void Player::setDirection()
@@ -28,62 +41,26 @@ void Player::setDirection()
             playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
         }
 
+#ifndef NDEBUG
+        const std::string file = "scripts/" + spine_name + ".lua";
+        const std::stringstream scriptstream = jngl::readAsset(file);
+
+        if (!scriptstream)
+        {
+            jngl::error("Can not load player lua script " + file);
+        }
+        script = scriptstream.str();
+        auto result = (*_game->lua_state).safe_script(script, sol::script_pass_on_error);
+        if (!result.valid())
+		{
+			const sol::error err = result;
+			jngl::debug("Failed to load player script {} {}", spine_name, err.what());
+		}
+#endif
+
         const double angle = std::atan2(target_position.y - position.y, target_position.x - position.x) * 180 / M_PI;
 
-        if (angle < 45 && angle > -45)
-        {
-            // jngl::debug("right");
-            setSkin((*_game->lua_state)["config"]["player_side_skin"]);
-
-            if (skeleton->skeleton->scaleX < 0)
-            {
-                skeleton->skeleton->scaleX *= -1.0f;
-            }
-            auto *slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
-            if (slot)
-            {
-                slot->color.a = 0;
-            }
-
-            (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"] = (*_game->lua_state)["config"]["player_side_skin"];
-        }
-        else if (angle < -45 && angle > -135)
-        {
-            // jngl::debug("up");
-            setSkin((*_game->lua_state)["config"]["player_up_skin"]);
-            (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"] = (*_game->lua_state)["config"]["player_up_skin"];
-        }
-        else if (angle < 135 && angle > 45)
-        {
-            // jngl::debug("down");
-            setSkin((*_game->lua_state)["config"]["player_front_skin"]);
-
-            auto *slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
-            if (slot)
-            {
-                slot->color.a = 1;
-            }
-
-            (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"] = (*_game->lua_state)["config"]["player_front_skin"];
-        }
-        else if (angle < -135 || angle > 135)
-        {
-            // jngl::debug("left");
-            setSkin((*_game->lua_state)["config"]["player_side_skin"]);
-
-            if (target_position.y != position.y && skeleton->skeleton->scaleX > 0)
-            {
-                skeleton->skeleton->scaleX *= -1.0;
-            }
-
-            auto *slot = spSkeleton_findSlot(skeleton->skeleton, "mouth");
-            if (slot)
-            {
-                slot->color.a = 0;
-            }
-
-            (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"] = (*_game->lua_state)["config"]["player_side_skin"];
-        }
+        (*_game->lua_state)["set_direction"](angle);
     }
 }
 
