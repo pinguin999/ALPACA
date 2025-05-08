@@ -208,9 +208,14 @@ void Game::loadScene_internal()
 	}
 	dialogManager->cancelDialog();
 
-	// Clear the level if there is already a level loaded
+	// Clear the level if there is already a level loaded, but keep the pointer
 	for (auto it = gameObjects.rbegin(); it != gameObjects.rend();)
 	{
+		if ((*it) == pointer)
+		{
+			std::advance(it, 1);
+			continue;
+		}
 		remove(*it);
 		std::advance(it, 1);
 	}
@@ -835,13 +840,15 @@ void Game::loadLuaState(const std::optional<std::string> &savefile)
 	{
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
 		const std::string scene = (*lua_state)["game"]["scene"];
-		loadScene(scene);
+		nextScene = scene;
+		loadScene_internal();
 	}
 	else
 	{
 		getDialogManager()->loadDialogsFromFile(dialogFilePath, true);
 		const std::string startscene = (*lua_state)["config"]["start_scene"];
-		loadScene(startscene);
+		nextScene = startscene;
+		loadScene_internal();
 	}
 	// TODO Error handling
 	jngl::debug("Loaded all globals");
