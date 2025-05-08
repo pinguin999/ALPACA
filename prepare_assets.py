@@ -708,8 +708,10 @@ if __name__ == "__main__":
     case_sensitive = True
 
     go_recursively = True
-    data_src_event_handler = PatternMatchingEventHandler(
-        patterns_src, ignore_patterns, ignore_directories, case_sensitive)
+    data_src_event_handler = PatternMatchingEventHandler(patterns = patterns_src,
+                                                         ignore_patterns = ignore_patterns,
+                                                         ignore_directories = ignore_directories,
+                                                         case_sensitive = case_sensitive)
     data_src_event_handler.on_created = on_created
     data_src_event_handler.on_deleted = on_deleted
     data_src_event_handler.on_modified = on_data_src_modified

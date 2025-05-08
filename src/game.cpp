@@ -316,7 +316,8 @@ void Game::step()
 #ifndef NDEBUG
 	debugStep();
 #endif
-	pointer->resetHandledFlags();
+	if(pointer)
+		pointer->resetHandledFlags();
 	removeObjects();
 }
 
@@ -608,7 +609,8 @@ void Game::draw() const
 	jngl::pushMatrix();
 	dialogManager->draw();
 	// Der Pointer wird doppelt gedrawed, damit der immer vorne ist.
-	pointer->draw();
+	if(pointer)
+		pointer->draw();
 
 #ifndef NDEBUG
 	if (show_debug_info)
