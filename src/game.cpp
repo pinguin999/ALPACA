@@ -96,7 +96,7 @@ Game::Game(const YAML::Node &config) : config(config),
 #ifdef _WIN32
 				if (path.find(L"webp") != TYPE::npos)
 #elif __unix__
-				if (path.find("webp") != TYPE::npos)
+				if (true)
 #else // Mac has no file extension here
 				if (true)
 #endif
@@ -1050,5 +1050,7 @@ void Game::onFileDrop(const std::filesystem::path& path)
 	}
 	currentScene->addToFile(spine_file);
 	currentScene->writeToFile();
+	std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	reload = true;
 }
 #endif

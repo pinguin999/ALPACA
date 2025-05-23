@@ -465,7 +465,8 @@ def on_data_src_modified(event) -> None:
             parse_spine_json(spine_file=spine_file)
         if len(errors) > 0:
             printErrors(event.src_path, errors)
-        apply_rhubarb(list(spine_object.keys())[0])
+        if spine_object.keys():
+            apply_rhubarb(list(spine_object.keys())[0])
     if event.src_path.endswith(".ogg"):
         (errors) = rhubarb_export(event.src_path)
         if len(errors) > 0:
