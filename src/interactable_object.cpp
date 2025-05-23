@@ -20,7 +20,7 @@ bool InteractableObject::step(bool force)
         spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
 
 #ifndef NDEBUG
-        if (_game->editMode)
+        if (_game->editMode  && !abs_position)
         {
             mouseOver = false;
             if (std::optional<MouseInfo::Over> over = _game->mouseInfo.pos()) {
@@ -133,7 +133,7 @@ void InteractableObject::draw() const
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
-        if (_game->editMode)
+        if (_game->editMode && !abs_position)
         {
             const float DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
             jngl::drawCircle(mv, DEBUG_GRAP_DISTANCE,
