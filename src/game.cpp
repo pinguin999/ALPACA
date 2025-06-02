@@ -967,7 +967,7 @@ std::string Game::backupLuaTable(const sol::table table, const std::string &pare
 
 const std::shared_ptr<SpineObject> Game::getObjectById(const std::string &objectId)
 {
-	if (objectId == "Player" || objectId == "player")
+	if (objectId == "Player" || objectId == "player" || player->getName() == objectId)
 	{
 		return (*this->lua_state)["scenes"]["cross_scene"]["items"]["player"]["object"];
 	}
