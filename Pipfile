@@ -11,8 +11,7 @@ google-cloud-texttospeech = "*"
 
 [dev-packages]
 mypy = "*"
-flake8 = "*"
-autopep8 = "*"
+ruff = "*"
 types-termcolor = "*"
 types-requests = "*"
 mkdocs = "*"

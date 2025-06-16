@@ -514,7 +514,7 @@ def on_data_src_modified(event) -> None:
 
 
 def fill_all_dialogs(path: Path, file: str) -> None:
-    with Path.open(path, encoding='utf-8') as f:
+    with Path.open(path, encoding="utf-8") as f:
         dialogs = json.load(f)
         for dialog in dialogs["dialogs"]:
             if dialog["name"] in all_dialogs:
@@ -634,7 +634,7 @@ class LuaDocsGen:
         for i, line in enumerate(code):
             if "set_function" in line:
                 doc_obj = DocFunction()
-                doc_obj.name = self.get_name(code[i])
+                doc_obj.name = self.get_name(line)
                 doc_obj.docs = self.get_docs(code, i)
                 doc_obj.parameters = self.get_parameters(code[i + 1])
                 doc_obj.copy_parameters = self.get_copy_parameters(code[i + 1])
