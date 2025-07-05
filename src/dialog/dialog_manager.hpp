@@ -38,6 +38,7 @@ private:
     void showChoices(std::shared_ptr<schnacker::AnswersStepResult> answers);
     void showCharacterText(std::shared_ptr<schnacker::TextStepResult> text);
     void playCharacterVoice(const std::string &file);
+    void stopCharacterVoiceAndAnimation();
     void playCharacterAnimation(const std::string &character, const std::string &id);
     void hideChoices();
     void hideCharacterText();
@@ -53,6 +54,7 @@ private:
     std::shared_ptr<SpeechBubble> bubble;
     int selected_index;
     std::string last_played_audio;
+    std::string last_played_audio_character;
     bool wasActiveLastFrame = false;
     sol::function dialog_callback;
 	const std::weak_ptr<Game> game;

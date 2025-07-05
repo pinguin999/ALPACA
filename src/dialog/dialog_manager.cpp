@@ -3,6 +3,8 @@
 #include <filesystem>
 
 constexpr int BOX_HEIGHT = 75;
+constexpr int SPINE_MOUTH_TRACK = 5;
+
 
 DialogManager::DialogManager(std::shared_ptr<Game> game)
     : dialogFont((*game->lua_state)["config"]["default_font"], 25),
@@ -48,6 +50,11 @@ void DialogManager::step()
         wasActiveLastFrame = false;
         return;
     }
+
+    if (!last_played_audio.empty() && !jngl::isPlaying(last_played_audio) && choiceTexts.empty())
+    {
+        continueCurrent();
+    }
     if (auto _game = game.lock())
     {
         auto pointer_position = _game->pointer->getPosition();
@@ -91,6 +98,7 @@ void DialogManager::step()
                 else
                 {
                     continueCurrent();
+                    stopCharacterVoiceAndAnimation();
                     _game->pointer->setPrimaryHandled();
                 }
             }
@@ -219,7 +227,7 @@ void DialogManager::showCharacterText(std::shared_ptr<schnacker::TextStepResult>
 
 void DialogManager::playCharacterVoice(const std::string &file)
 {
-    if (last_played_audio != "" && jngl::isPlaying(last_played_audio))
+    if (!last_played_audio.empty() && jngl::isPlaying(last_played_audio))
     {
         jngl::stop(last_played_audio);
     }
@@ -237,6 +245,19 @@ void DialogManager::playCharacterVoice(const std::string &file)
 
 }
 
+void DialogManager::stopCharacterVoiceAndAnimation() {
+	if (!last_played_audio.empty() && jngl::isPlaying(last_played_audio)) {
+		jngl::stop(last_played_audio);
+	}
+	if (auto _game = game.lock()) {
+		std::shared_ptr<SpineObject> spine_character = _game->getObjectById(last_played_audio_character);
+		if (spine_character) {
+			spine_character->stopAnimation(SPINE_MOUTH_TRACK);
+            last_played_audio_character = "";
+		}
+	}
+}
+
 void DialogManager::playCharacterAnimation(const std::string &character, const std::string &id)
 {
     if (auto _game = game.lock())
@@ -245,7 +266,8 @@ void DialogManager::playCharacterAnimation(const std::string &character, const s
         if (spine_character)
         {
             auto animation = "say_" + _game->language + "_" + std::string(n_zero - std::min(n_zero, id.length()), '0') + id;
-            spine_character->playAnimation(5, animation, false, (*_game->lua_state)["pass"]);
+            spine_character->playAnimation(SPINE_MOUTH_TRACK, animation, false, (*_game->lua_state)["pass"]);
+            last_played_audio_character = character;
         }
     }
 }
