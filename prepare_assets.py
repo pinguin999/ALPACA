@@ -201,27 +201,27 @@ def get_notes(character=None) -> list[Any]:
     for _root, _dirs, files in walk(SCHNACKER_FOLDER):
         for file in files:
             if file.endswith(".schnack"):
-                with Path(_root + file).open(encoding="utf-8") as dialog_file:
-                    dialogs = json.load(dialog_file)
-                    for dialog in dialogs["dialogs"]:
-                        for node in dialog["nodes"]:
-                            if "character" not in node or (character and node["character"] != character):
-                                continue
+                dialog_file = Path(_root + file).read_text(encoding="utf-8")
+                dialogs = json.loads(dialog_file)
+                for dialog in dialogs["dialogs"]:
+                    for node in dialog["nodes"]:
+                        if "character" not in node or (character and node["character"] != character):
+                            continue
 
-                            character_name = node["character"]
+                        character_name = node["character"]
 
-                            if "character" not in node or node["character"] in ["Player"]:
-                                character_name = "joy"
+                        if "character" not in node or node["character"] in ["Player"]:
+                            character_name = "joy"
 
-                            if dialogs["localization"].get(str(node["id"])):
-                                node_id = str(node["id"]).zfill(3)
+                        if dialogs["localization"].get(str(node["id"])):
+                            node_id = str(node["id"]).zfill(3)
 
-                                for lang_code in dialogs["locales"]:
-                                    if not Path(f"data/audio/{lang_code}_{node_id}.ogg").exists():
-                                        print(colored(f"Can not load: data/audio/{lang_code}_{node_id}.ogg", "red"))
-                                        continue
+                            for lang_code in dialogs["locales"]:
+                                if not Path(f"data/audio/{lang_code}_{node_id}.ogg").exists():
+                                    print(colored(f"Can not load: data/audio/{lang_code}_{node_id}.ogg", "red"))
+                                    continue
 
-                                    nodes.append((f"{lang_code}_{node_id}", character_name))
+                                nodes.append((f"{lang_code}_{node_id}", character_name))
     return nodes
 
 
@@ -265,62 +265,62 @@ def printErrors(fileName: str, errors: list[str]) -> None:
 
 def parse_spine_json(spine_file: str) -> None:
     # read spine json to check for missing scripts
-    with Path(spine_file).open() as spine_json:
-        spine_object = json.load(spine_json)
+    spine_json = Path(spine_file).read_text(encoding="utf-8")
+    spine_object = json.loads(spine_json)
 
-        if "animations" in spine_object:
-            for animation in spine_object["animations"]:
-                if animation in spine_animations:
-                    spine_animations[animation].add(spine_file)
-                else:
-                    spine_animations[animation] = {spine_file}
+    if "animations" in spine_object:
+        for animation in spine_object["animations"]:
+            if animation in spine_animations:
+                spine_animations[animation].add(spine_file)
+            else:
+                spine_animations[animation] = {spine_file}
 
-        if "skins" in spine_object:
-            for skin in spine_object["skins"]:
-                if skin["name"] in spine_skins:
-                    spine_skins[skin["name"]].add(spine_file)
-                else:
-                    spine_skins[skin["name"]] = {spine_file}
+    if "skins" in spine_object:
+        for skin in spine_object["skins"]:
+            if skin["name"] in spine_skins:
+                spine_skins[skin["name"]].add(spine_file)
+            else:
+                spine_skins[skin["name"]] = {spine_file}
 
-                if "attachments" not in skin:
-                    continue
+            if "attachments" not in skin:
+                continue
 
-                for attachment in skin["attachments"]:
-                    for subattachment in skin["attachments"][attachment]:
-                        if ("type" in skin["attachments"][attachment][subattachment] and
-                                skin["attachments"][attachment][subattachment]["type"] == "point"):
-                            point_name = subattachment
-                            if point_name in spine_points:
-                                spine_points[point_name].add(spine_file)
-                            else:
-                                spine_points[point_name] = {spine_file}
-
-            for i, _skin in enumerate(spine_object["skins"]):
-
-                if "attachments" not in spine_object["skins"][i]:
-                    continue
-
-                attachment_obj = spine_object["skins"][i]["attachments"]
-                for attachment in attachment_obj:
-                    for subattachment in attachment_obj[attachment]:
-                        if "name" in attachment_obj[attachment][subattachment]:
-                            bbname = attachment_obj[attachment][subattachment]["name"]
+            for attachment in skin["attachments"]:
+                for subattachment in skin["attachments"][attachment]:
+                    if ("type" in skin["attachments"][attachment][subattachment] and
+                            skin["attachments"][attachment][subattachment]["type"] == "point"):
+                        point_name = subattachment
+                        if point_name in spine_points:
+                            spine_points[point_name].add(spine_file)
                         else:
-                            bbname = subattachment
+                            spine_points[point_name] = {spine_file}
 
-                        if "type" in attachment_obj[attachment][subattachment] \
-                                and attachment_obj[attachment][subattachment]["type"] == "boundingbox":
-                            if bbname == "walkable_area" or bbname == "non_walkable_area":  # No scripts for navmeshes
-                                continue
-                            if (not bbname.startswith("dlg:") and not bbname.startswith("anim:") and
-                                    not Path(f"./data-src/scripts/{bbname}.lua").exists()):
-                                if not Path("./data-src/scripts/").exists():
-                                    Path("./data-src/scripts/").mkdir(parents=True, exist_ok=True)
-                                with Path(f"./data-src/scripts/{bbname}.lua").open("w") as f:
-                                    f.write(f'print("{bbname}")')
-                                print(colored(f"Script {bbname}.lua was created automatically!", "blue"))
-                            if bbname.startswith("dlg:") and bbname[4:] not in all_dialogs:
-                                print(colored(f"Dialog {bbname[4:]} is missing!", "red"))
+        for i, _skin in enumerate(spine_object["skins"]):
+
+            if "attachments" not in spine_object["skins"][i]:
+                continue
+
+            attachment_obj = spine_object["skins"][i]["attachments"]
+            for attachment in attachment_obj:
+                for subattachment in attachment_obj[attachment]:
+                    if "name" in attachment_obj[attachment][subattachment]:
+                        bbname = attachment_obj[attachment][subattachment]["name"]
+                    else:
+                        bbname = subattachment
+
+                    if "type" in attachment_obj[attachment][subattachment] \
+                            and attachment_obj[attachment][subattachment]["type"] == "boundingbox":
+                        if bbname == "walkable_area" or bbname == "non_walkable_area":  # No scripts for navmeshes
+                            continue
+                        if (not bbname.startswith("dlg:") and not bbname.startswith("anim:") and
+                                not Path(f"./data-src/scripts/{bbname}.lua").exists()):
+                            if not Path("./data-src/scripts/").exists():
+                                Path("./data-src/scripts/").mkdir(parents=True, exist_ok=True)
+                            with Path(f"./data-src/scripts/{bbname}.lua").open("w") as f:
+                                f.write(f'print("{bbname}")')
+                            print(colored(f"Script {bbname}.lua was created automatically!", "blue"))
+                        if bbname.startswith("dlg:") and bbname[4:] not in all_dialogs:
+                            print(colored(f"Dialog {bbname[4:]} is missing!", "red"))
 
 
 # there is no print allowed in this function, since this would destroy the progress bar
@@ -386,16 +386,15 @@ def rehash_scenes(directorys: str) -> None:
 
                 src_path = root + "/" + file
                 try:
-                    with Path(src_path).open() as f:
-                        data = f.read()
-                        parsed = json.loads(data)
+                    data = Path(src_path).read_text(encoding="utf-8")
+                    parsed = json.loads(data)
 
-                        for item in parsed["items"]:
-                            if "id" in item:
-                                spine_objects.update({item["id"]: file})
+                    for item in parsed["items"]:
+                        if "id" in item:
+                            spine_objects.update({item["id"]: file})
 
-                        parsed["hash"] = ""
-                        parsed["hash"] = hashlib.sha1(str(parsed).encode()).hexdigest()
+                    parsed["hash"] = ""
+                    parsed["hash"] = hashlib.sha1(str(parsed).encode()).hexdigest()
                     with Path(src_path).open("w") as f:
                         scene_files.append(src_path)
                         f.write(json.dumps(parsed, indent=4))
@@ -492,11 +491,10 @@ def on_data_src_modified(event) -> None:
             return
         parsed = None
         try:
-            with Path(event.src_path).open() as f:
-                data = f.read()
-                parsed = json.loads(data)
-                parsed["hash"] = ""
-                parsed["hash"] = hashlib.sha1(str(parsed).encode()).hexdigest()
+            data = Path(event.src_path).read_text(encoding="utf-8")
+            parsed = json.loads(data)
+            parsed["hash"] = ""
+            parsed["hash"] = hashlib.sha1(str(parsed).encode()).hexdigest()
             with Path(event.src_path).open("w") as f:
                 scene_files.append(event.src_path)
                 f.write(json.dumps(parsed, indent=4))
@@ -514,13 +512,13 @@ def on_data_src_modified(event) -> None:
 
 
 def fill_all_dialogs(path: Path, file: str) -> None:
-    with Path.open(path, encoding="utf-8") as f:
-        dialogs = json.load(f)
-        for dialog in dialogs["dialogs"]:
-            if dialog["name"] in all_dialogs:
-                all_dialogs[dialog["name"]].add(file)
-            else:
-                all_dialogs[dialog["name"]] = {file}
+    data = Path(path).read_text(encoding='utf-8')
+    dialogs = json.loads(data)
+    for dialog in dialogs["dialogs"]:
+        if dialog["name"] in all_dialogs:
+            all_dialogs[dialog["name"]].add(file)
+        else:
+            all_dialogs[dialog["name"]] = {file}
 
 
 def on_moved(event) -> None:
