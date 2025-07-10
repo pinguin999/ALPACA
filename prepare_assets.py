@@ -30,6 +30,7 @@ import requests
 from termcolor import colored
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
+from collections import defaultdict
 
 SCHNACKER_FOLDER = "data/dialog/"
 RHUBARB_OUT = "data/rhubarb/"
@@ -43,7 +44,7 @@ if sys.platform.startswith("linux"):
     SPINE = "/usr/bin/spine"
     LUA = "luac"
 elif sys.platform == "darwin":
-    RHUBARB = "/Applications/Rhubarb-Lip-Sync-1.13.0-macOS/rhubarb"
+    RHUBARB = "/Applications/Rhubarb-Lip-Sync-1.14.0-macOS/rhubarb"
     SPINE = "/Applications/Spine.app/Contents/MacOS/Spine"
     LUA = "luac"
 elif sys.platform == "win32":
@@ -156,44 +157,47 @@ def rhubarb_reexport() -> None:
 
 def apply_rhubarb(character=None) -> None:
     nodes = get_notes(character)
+    # Group nodes by character_name
+    nodes_by_character = defaultdict(list)
     for node_info in nodes:
         node_id = node_info[0]
         character_name = node_info[1]
+        nodes_by_character[character_name].append(node_id)
 
-        rhubarb_out = Path(f"{RHUBARB_OUT}{node_id}.json")
-        # read rhubarb output
-        with rhubarb_out.open() as rhubarb_outfile:
-            # Add animation to character
-            character_path = Path(f"data/{character_name}/{character_name}.json")
+    for character_name, node_ids in nodes_by_character.items():
+        character_path = Path(f"data/{character_name}/{character_name}.json")
+        if not character_path.exists():
+            print("Can not write into: ", character_path)
+            continue
+        if set_read_only:
+            character_path.chmod(S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
+        with character_path.open("r+") as character_file:
+            character = json.load(character_file)
+            if "animations" not in character:
+                character["animations"] = {}
 
-            if not character_path.exists():
-                print("Can not write into: ", character_path)
-                continue
-            if set_read_only:
-                character_path.chmod(S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
-            with character_path.open("r+") as character_file:
-                mouthCues = json.load(rhubarb_outfile)
-                character = json.load(character_file)
+            for node_id in node_ids:
+                rhubarb_out = Path(f"{RHUBARB_OUT}{node_id}.json")
+                with rhubarb_out.open() as rhubarb_outfile:
+                    mouthCues = json.load(rhubarb_outfile)
 
-                if "animations" not in character:
-                    character["animations"] = {}
+                    character["animations"][f"say_{node_id}"] = {}
+                    character["animations"][f"say_{node_id}"]["slots"] = {}
 
-                character["animations"][f"say_{node_id}"] = {}
-                character["animations"][f"say_{node_id}"]["slots"] = {}
+                    skins = [skin["name"] for skin in character["skins"]]
+                    for skin in skins:
+                        animation = [{"time": cues["start"], "name": f"{skin}/mouth-{str(cues['value']).lower()}"}
+                                     for cues in mouthCues["mouthCues"]]
 
-                skins = [skin["name"] for skin in character["skins"]]
-                for skin in skins:
-                    animation = [{"time": cues["start"], "name": f"{skin}/mouth-{str(cues['value']).lower()}"}
-                                 for cues in mouthCues["mouthCues"]]
+                        character["animations"][f"say_{node_id}"]["slots"][f"{skin}-mouth"] = {}
+                        character["animations"][f"say_{node_id}"]["slots"][f"{skin}-mouth"]["attachment"] = animation
 
-                    character["animations"][f"say_{node_id}"]["slots"][f"{skin}-mouth"] = {}
-                    character["animations"][f"say_{node_id}"]["slots"][f"{skin}-mouth"]["attachment"] = animation
+            character_file.seek(0)
+            character_file.write(json.dumps(character, indent=4))
+            character_file.truncate()
 
-                character_file.seek(0)
-                character_file.write(json.dumps(character, indent=4))
-
-            if set_read_only:
-                character_path.chmod(S_IREAD | S_IRGRP | S_IROTH)
+        if set_read_only:
+            character_path.chmod(S_IREAD | S_IRGRP | S_IROTH)
 
 
 def get_notes(character=None) -> list[Any]:

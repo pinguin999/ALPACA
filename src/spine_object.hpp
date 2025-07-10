@@ -65,6 +65,7 @@ public:
 	spAtlas *atlas = nullptr;
 	std::optional<jngl::Vec2> getPoint(const std::string &point_name) const;
 	void playAnimation(int trackIndex, const std::string &currentAnimation, bool loop, sol::function callback);
+	void stopAnimation(int trackIndex);
 	void addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, sol::function callback);
 	void onAnimationComplete(const std::string &key);
 	void setSkin(const std::string &skin);

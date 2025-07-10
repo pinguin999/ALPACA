@@ -150,6 +150,16 @@ void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimat
     }
 }
 
+
+void SpineObject::stopAnimation(int trackIndex)
+{
+    if (auto _game = game.lock()) {
+        spAnimationState_setEmptyAnimation(skeleton->state, trackIndex, 0.1);
+        animation_callback[std::to_string(trackIndex) + "<empty>"] = (*_game->lua_state)["pass"];
+    }
+}
+
+
 void SpineObject::addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, sol::function callback)
 {
     this->animation_callback[std::to_string(trackIndex) + currentAnimation] = std::move(callback);
