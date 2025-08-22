@@ -24,13 +24,20 @@ from multiprocessing import Pool, freeze_support
 from os import cpu_count, walk
 from pathlib import Path
 from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
+import pickle
 
 import requests
 from termcolor import colored
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 from collections import defaultdict
+
+
+class FileErrors(TypedDict):
+    file: str
+    errors: list[str]
+
 
 SCHNACKER_FOLDER = "data/dialog/"
 RHUBARB_OUT = "data/rhubarb/"
@@ -59,7 +66,10 @@ elif sys.platform == "win32":
     set_read_only = False
 
 
-spine_objects: dict[str, set[str]] = {"Player": {"internal"}, "Background": {"internal"}}
+spine_objects: dict[str, set[str]] = {
+    "Player": {"internal"},
+    "Background": {"internal"},
+}
 spine_animations: dict[str, set[str]] = {}
 spine_skins: dict[str, set[str]] = {}
 spine_points: dict[str, set[str]] = {}
@@ -72,18 +82,20 @@ scene_files = []  # Temp list to prevent infinite loop
 
 
 class Progress:
-    def __init__(self: Progress,
-                 initialCount: int,
-                 maxCount: int,
-                 maxTitleLength: int = 26,
-                 barLength: int = 46) -> None:
+    def __init__(
+        self: Progress,
+        initialCount: int,
+        maxCount: int,
+        maxTitleLength: int = 26,
+        barLength: int = 46,
+    ) -> None:
         self._initialCount = initialCount
         self._currentCount = initialCount
         self._maxCount = maxCount
         self._title = ""
         self._maxTitleLength = maxTitleLength
         self._barLength = barLength
-        self._errors = []
+        self._errors: list[str] = []
 
     def updateTitle(self: Progress, title: str) -> None:
         self._title = title
@@ -97,16 +109,23 @@ class Progress:
         if self._maxCount == 0:
             return
         percent = float(self._currentCount) / self._maxCount
-        printedTitle = (self._title if len(self._title) <= self._maxTitleLength
-                        else "[...]" + self._title[len(self._title) - self._maxTitleLength - 5:])
+        printedTitle = (
+            self._title
+            if len(self._title) <= self._maxTitleLength
+            else "[...]" + self._title[len(self._title) - self._maxTitleLength - 5 :]
+        )
 
         filledCount = int(self._barLength * percent)
         filled = "█" * filledCount
         unfilled = "-" * (self._barLength - filledCount)
         percentage = "%3.1f" % (percent * 100)
-        print(colored(f"\r{printedTitle} |{filled}{unfilled}| {percentage}%",
-                      "red" if len(self._errors) > 0
-                      else "blue"), end="\r")
+        print(
+            colored(
+                f"\r{printedTitle} |{filled}{unfilled}| {percentage}%",
+                "red" if len(self._errors) > 0 else "blue",
+            ),
+            end="\r",
+        )
 
     def finish(self: Progress) -> None:
         print("\n")
@@ -116,27 +135,43 @@ class Progress:
         self.print_status()
 
 
-def rhubarb_export(node_info: list[tuple[str, str]]) -> list[Any]:
+def rhubarb_export(
+    node_info: tuple[str, str, dict[str, str]],
+) -> tuple[list[Any], dict[str, str]]:
     node_id = node_info[0]
-    errors = []
+    db: dict[str, str] = node_info[2]
+    file = f"data/audio/{node_id}.ogg"
+    errors: list[str] = []
+
+    db_out: dict[str, str] = {}
+
+    with open(file, "rb") as f:
+        checksum = hashlib.file_digest(f, "sha256").hexdigest()
+        db_out[file] = checksum
+        if db.get(file, None) == checksum:
+            return errors, db_out
+
     if not RHUBARB:
-        return errors
+        return errors, {}
     rhubarb_out = Path(f"{RHUBARB_OUT}{node_id}.json")
     with contextlib.suppress(FileNotFoundError):
         if set_read_only:
             rhubarb_out.chmod(S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
-    command = [RHUBARB, f"data/audio/{node_id}.ogg", "-r", "phonetic", "-f", "json", "-o", str(rhubarb_out)]
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+    command = [RHUBARB, file, "-r", "phonetic", "-f", "json", "-o", str(rhubarb_out)]
+    p = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
     output = p.communicate()[0]
     if p.returncode != 0:
         errors.append(output.decode())
     with contextlib.suppress(FileNotFoundError):
         if set_read_only:
             rhubarb_out.chmod(S_IREAD | S_IRGRP | S_IROTH)
-    return errors
+    return errors, db_out
 
 
 def rhubarb_reexport() -> None:
+    global db
     nodes = get_notes()
 
     progress = Progress(0, len(nodes))
@@ -144,19 +179,24 @@ def rhubarb_reexport() -> None:
     results = []
     Path(RHUBARB_OUT).mkdir(parents=True, exist_ok=True)
     with Pool(SPINE_THREADS) as p:
-        for i, (errors) in enumerate(p.imap_unordered(rhubarb_export, nodes), 0):
+        for i, (errors, db_out) in enumerate(
+            p.imap_unordered(rhubarb_export, nodes), 0
+        ):
             progress.advance()
 
             if len(errors) > 0:
-                results.append({
-                    "file": nodes[i],
-                    "errors": errors,
-                })
+                results.append(
+                    {
+                        "file": nodes[i],
+                        "errors": errors,
+                    }
+                )
+            db = db | db_out
     progress.finish()
 
 
-def apply_rhubarb(character=None) -> None:
-    nodes = get_notes(character)
+def apply_rhubarb(character_in: str | None = None) -> None:
+    nodes = get_notes(character_in)
     # Group nodes by character_name
     nodes_by_character = defaultdict(list)
     for node_info in nodes:
@@ -186,11 +226,20 @@ def apply_rhubarb(character=None) -> None:
 
                     skins = [skin["name"] for skin in character["skins"]]
                     for skin in skins:
-                        animation = [{"time": cues["start"], "name": f"{skin}/mouth-{str(cues['value']).lower()}"}
-                                     for cues in mouthCues["mouthCues"]]
+                        animation = [
+                            {
+                                "time": cues["start"],
+                                "name": f"{skin}/mouth-{str(cues['value']).lower()}",
+                            }
+                            for cues in mouthCues["mouthCues"]
+                        ]
 
-                        character["animations"][f"say_{node_id}"]["slots"][f"{skin}-mouth"] = {}
-                        character["animations"][f"say_{node_id}"]["slots"][f"{skin}-mouth"]["attachment"] = animation
+                        character["animations"][f"say_{node_id}"]["slots"][
+                            f"{skin}-mouth"
+                        ] = {}
+                        character["animations"][f"say_{node_id}"]["slots"][
+                            f"{skin}-mouth"
+                        ]["attachment"] = animation
 
             character_file.seek(0)
             character_file.write(json.dumps(character, indent=4))
@@ -200,7 +249,8 @@ def apply_rhubarb(character=None) -> None:
             character_path.chmod(S_IREAD | S_IRGRP | S_IROTH)
 
 
-def get_notes(character=None) -> list[Any]:
+def get_notes(character=None) -> list[tuple[str, str, dict[str, str]]]:
+    global db
     nodes = []
     for _root, _dirs, files in walk(SCHNACKER_FOLDER):
         for file in files:
@@ -209,7 +259,9 @@ def get_notes(character=None) -> list[Any]:
                 dialogs = json.loads(dialog_file)
                 for dialog in dialogs["dialogs"]:
                     for node in dialog["nodes"]:
-                        if "character" not in node or (character and node["character"] != character):
+                        if "character" not in node or (
+                            character and node["character"] != character
+                        ):
                             continue
 
                         character_name = node["character"]
@@ -221,42 +273,56 @@ def get_notes(character=None) -> list[Any]:
                             node_id = str(node["id"]).zfill(3)
 
                             for lang_code in dialogs["locales"]:
-                                if not Path(f"data/audio/{lang_code}_{node_id}.ogg").exists():
-                                    print(colored(f"Can not load: data/audio/{lang_code}_{node_id}.ogg", "red"))
+                                if not Path(
+                                    f"data/audio/{lang_code}_{node_id}.ogg"
+                                ).exists():
+                                    print(
+                                        colored(
+                                            f"Can not load: data/audio/{lang_code}_{node_id}.ogg",
+                                            "red",
+                                        )
+                                    )
                                     continue
 
-                                nodes.append((f"{lang_code}_{node_id}", character_name))
+                                nodes.append(
+                                    (f"{lang_code}_{node_id}", character_name, db)
+                                )
     return nodes
 
 
 def spine_reexport(directorys: list[str]) -> None:
+    global db
     spinefiles = []
     for folder in directorys:
         for root, _dirs, files in walk(folder):
             for file in files:
                 if file.endswith(".spine"):
-                    spinefiles.append(root + "/" + file)
+                    spinefiles.append((root + "/" + file, db))
 
     progress = Progress(0, len(spinefiles))
     progress.updateTitle(" Re-Exporting Spine Files")
-    results = []
+    results: list[FileErrors] = []
     with Pool(SPINE_THREADS) as p:
-        for i, (errors, spine_object, spine_file) in enumerate(p.imap_unordered(spine_export, spinefiles), 0):
+        for i, (errors, spine_object, spine_file, db_out) in enumerate(
+            p.imap_unordered(spine_export, spinefiles), 0
+        ):
             progress.advance()
 
             spine_objects.update(spine_object)
             if not errors:
                 parse_spine_json(spine_file=spine_file)
             if len(errors) > 0:
-                results.append({
-                    "file": spinefiles[i],
-                    "errors": errors,
-                })
+                results.append(
+                    {
+                        "file": spinefiles[i][0],
+                        "errors": errors,
+                    }
+                )
+            db = db | db_out
     progress.finish()
 
     for result in results:
-        printErrors(
-            result["file"], result["errors"])
+        printErrors(result["file"], result["errors"])
 
 
 def printErrors(fileName: str, errors: list[str]) -> None:
@@ -291,8 +357,11 @@ def parse_spine_json(spine_file: str) -> None:
 
             for attachment in skin["attachments"]:
                 for subattachment in skin["attachments"][attachment]:
-                    if ("type" in skin["attachments"][attachment][subattachment] and
-                            skin["attachments"][attachment][subattachment]["type"] == "point"):
+                    if (
+                        "type" in skin["attachments"][attachment][subattachment]
+                        and skin["attachments"][attachment][subattachment]["type"]
+                        == "point"
+                    ):
                         point_name = subattachment
                         if point_name in spine_points:
                             spine_points[point_name].add(spine_file)
@@ -300,7 +369,6 @@ def parse_spine_json(spine_file: str) -> None:
                             spine_points[point_name] = {spine_file}
 
         for i, _skin in enumerate(spine_object["skins"]):
-
             if "attachments" not in spine_object["skins"][i]:
                 continue
 
@@ -312,42 +380,92 @@ def parse_spine_json(spine_file: str) -> None:
                     else:
                         bbname = subattachment
 
-                    if "type" in attachment_obj[attachment][subattachment] \
-                            and attachment_obj[attachment][subattachment]["type"] == "boundingbox":
-                        if bbname == "walkable_area" or bbname == "non_walkable_area":  # No scripts for navmeshes
+                    if (
+                        "type" in attachment_obj[attachment][subattachment]
+                        and attachment_obj[attachment][subattachment]["type"]
+                        == "boundingbox"
+                    ):
+                        if (
+                            bbname == "walkable_area" or bbname == "non_walkable_area"
+                        ):  # No scripts for navmeshes
                             continue
-                        if (not bbname.startswith("dlg:") and not bbname.startswith("anim:") and
-                                not Path(f"./data-src/scripts/{bbname}.lua").exists()):
+                        if (
+                            not bbname.startswith("dlg:")
+                            and not bbname.startswith("anim:")
+                            and not Path(f"./data-src/scripts/{bbname}.lua").exists()
+                        ):
                             if not Path("./data-src/scripts/").exists():
-                                Path("./data-src/scripts/").mkdir(parents=True, exist_ok=True)
-                            with Path(f"./data-src/scripts/{bbname}.lua").open("w") as f:
+                                Path("./data-src/scripts/").mkdir(
+                                    parents=True, exist_ok=True
+                                )
+                            with Path(f"./data-src/scripts/{bbname}.lua").open(
+                                "w"
+                            ) as f:
                                 f.write(f'print("{bbname}")')
-                            print(colored(f"Script {bbname}.lua was created automatically!", "blue"))
+                            print(
+                                colored(
+                                    f"Script {bbname}.lua was created automatically!",
+                                    "blue",
+                                )
+                            )
                         if bbname.startswith("dlg:") and bbname[4:] not in all_dialogs:
-                            print(colored(f"Dialog {bbname[4:]} is missing!", "red"))
+                            print(
+                                colored(
+                                    f"Dialog {bbname[4:]} is missing! Found in {spine_file}.",
+                                    "red",
+                                )
+                            )
 
 
 # there is no print allowed in this function, since this would destroy the progress bar
-def spine_export(file: str) -> tuple[list[str], dict[Any, Any], Literal[""]] | tuple[list[Any],
-                                                                                     dict[str, set[str]], str]:
+def spine_export(
+    in_tuple,
+) -> (
+    tuple[list[str], dict[Any, Any], Literal[""], dict[str, str]]
+    | tuple[list[Any], dict[str, set[str]], str, dict[str, str]]
+):
+    file: str = in_tuple[0]
+    db: dict[str, str] = in_tuple[1]
     errors = []
     if not file.endswith(".spine"):
         errors.append("invalid spine file " + file)
-        return errors, {}, ""
+        return errors, {}, "", {}
 
     if not Path(SPINE).exists():
         errors.append("spine executable '" + SPINE + "' could not be found!")
-        return errors, {}, ""
+        return errors, {}, "", {}
 
     name = Path(file).stem
-    command: list[str] = [SPINE, "-i", file, "-m", "-o",
-                          f"./data/{name}/", "-e", "./data-src/spine_export_template.export.json"]
+
+    db_out: dict[str, str] = {}
+    with open(file, "rb") as f:
+        checksum = hashlib.file_digest(f, "sha256").hexdigest()
+        db_out[file] = checksum
+        if db.get(file, None) == checksum:
+            return errors, {name: {file}}, f"./data/{name}/{name}.json", db_out
+
+    command: list[str] = [
+        SPINE,
+        "-i",
+        file,
+        "-m",
+        "-o",
+        f"./data/{name}/",
+        "-e",
+        "./data-src/spine_export_template.export.json",
+    ]
     with contextlib.suppress(Exception):
         shutil.rmtree(f"./data/{name}/", ignore_errors=True)
         if set_read_only:
-            Path(f"./data/{name}/{name}.json").chmod(S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
-            Path(f"./data/{name}/{name}.atlas").chmod(S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+            Path(f"./data/{name}/{name}.json").chmod(
+                S_IREAD | S_IRGRP | S_IROTH | S_IWUSR
+            )
+            Path(f"./data/{name}/{name}.atlas").chmod(
+                S_IREAD | S_IRGRP | S_IROTH | S_IWUSR
+            )
+    p = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
     output = p.communicate()[0]
     if p.returncode != 0:
         print(colored(output.decode(), "red"))
@@ -356,8 +474,9 @@ def spine_export(file: str) -> tuple[list[str], dict[Any, Any], Literal[""]] | t
     if not Path(f"./data/{name}/{name}.json").exists():
         errors.append(
             f"Spine export of {name} failed. No file ./data/{name}/{name}.json was created. \n"
-            f"Is the sceleton of {name}.spine named {name}?")
-        return errors, {}, ""
+            f"Is the sceleton of {name}.spine named {name}?"
+        )
+        return errors, {}, "", {}
 
     if (Path(file).parent / Path("zBufferMap")).exists():
         copy_folder(str(Path(file).parent / Path("zBufferMap")), f"./data/{name}/")
@@ -367,7 +486,7 @@ def spine_export(file: str) -> tuple[list[str], dict[Any, Any], Literal[""]] | t
             Path(f"./data/{name}/{name}.json").chmod(S_IREAD | S_IRGRP | S_IROTH)
             Path(f"./data/{name}/{name}.atlas").chmod(S_IREAD | S_IRGRP | S_IROTH)
 
-    return errors, {name: {file}}, f"./data/{name}/{name}.json"
+    return errors, {name: {file}}, f"./data/{name}/{name}.json", db_out
 
 
 def scripts_recopy(directorys: list[str]) -> None:
@@ -382,7 +501,6 @@ def rehash_scenes(directorys: str) -> None:
     for root, _dirs, files in walk(directorys):
         for file in files:
             if file.endswith(".json"):
-
                 if file in all_scenes:
                     all_scenes[file.rstrip(".json")].add("data-src")
                 else:
@@ -397,8 +515,12 @@ def rehash_scenes(directorys: str) -> None:
                         if "id" in item:
                             spine_objects.update({item["id"]: file})
 
+                    old_hash = parsed["hash"]
                     parsed["hash"] = ""
-                    parsed["hash"] = hashlib.sha1(str(parsed).encode()).hexdigest()
+                    new_hash = hashlib.sha1(str(parsed).encode()).hexdigest()
+                    if old_hash == new_hash:
+                        return
+                    parsed["hash"] = new_hash
                     with Path(src_path).open("w") as f:
                         scene_files.append(src_path)
                         f.write(json.dumps(parsed, indent=4))
@@ -411,8 +533,12 @@ def copy_script(file: str) -> None:
         return
     if file.endswith(".lua"):
         command = [LUA, "-p", file]
-        p = subprocess.Popen(command, stdout=subprocess.PIPE,
-                             stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
         output = p.communicate()[0]
         if p.returncode != 0:
             print(colored(output.decode(), "red"))
@@ -422,7 +548,9 @@ def copy_script(file: str) -> None:
 
         if set_read_only:
             with contextlib.suppress(Exception):
-                Path(f"./data/scripts/{name}").chmod(S_IREAD | S_IRGRP | S_IROTH | S_IWUSR)
+                Path(f"./data/scripts/{name}").chmod(
+                    S_IREAD | S_IRGRP | S_IROTH | S_IWUSR
+                )
         shutil.copyfile(file, f"./data/scripts/{name}")
         if set_read_only:
             Path(f"./data/scripts/{name}").chmod(S_IREAD | S_IRGRP | S_IROTH)
@@ -450,19 +578,42 @@ def copy_file(src: str, des: Path) -> None:
             Path(f"{des}/{name}").chmod(S_IREAD | S_IRGRP | S_IROTH)
 
 
+def fill_all_dialogs(path: Path, file: str) -> None:
+    data = Path(path).read_text(encoding="utf-8")
+    dialogs = json.loads(data)
+    for dialog in dialogs["dialogs"]:
+        if dialog["name"] in all_dialogs:
+            all_dialogs[dialog["name"]].add(file)
+        else:
+            all_dialogs[dialog["name"]] = {file}
+
+
+def on_moved(event) -> None:
+    print(
+        colored(
+            f"ok ok ok, someone moved {event.src_path} to {event.dest_path}", "green"
+        )
+    )
+
+
 def on_created(event) -> None:
     print(colored(f"{event.src_path} has been created!", "green"))
 
 
 def on_deleted(event) -> None:
-    print(colored(f"{event.src_path} was deleted! Please delete it manually from data.", "red"))
+    print(
+        colored(
+            f"{event.src_path} was deleted! Please delete it manually from data.", "red"
+        )
+    )
 
 
 def on_data_src_modified(event) -> None:
-    time.sleep(.5)
+    global db
+    time.sleep(0.5)
     print(colored(f"data-src file '{event.src_path}' has been modified", "green"))
     if event.src_path.endswith(".spine"):
-        (errors, spine_object, spine_file) = spine_export(event.src_path)
+        errors, spine_object, spine_file, db = spine_export((event.src_path, db))
         spine_objects.update(spine_object)
         if not errors:
             parse_spine_json(spine_file=spine_file)
@@ -471,7 +622,7 @@ def on_data_src_modified(event) -> None:
         if spine_object.keys():
             apply_rhubarb(list(spine_object.keys())[0])
     if event.src_path.endswith(".ogg"):
-        (errors) = rhubarb_export(event.src_path)
+        errors, db = rhubarb_export(node_info=(event.src_path, "", db))
         if len(errors) > 0:
             printErrors(event.src_path, errors)
     if event.src_path.endswith(".lua"):
@@ -487,8 +638,11 @@ def on_data_src_modified(event) -> None:
                     Path("./data-src/scripts/").mkdir(parents=True, exist_ok=True)
                 with Path(f"./data-src/scripts/{scene}.lua").open("w") as f:
                     f.write(f'print("{scene}")')
-                    print(colored(f"Script {scene}.lua was created automatically!"), "blue")
-            if file in all_scenes:
+                    print(
+                        colored(f"Script {scene}.lua was created automatically!"),
+                        "blue",
+                    )
+            if file.rstrip(".json") in all_scenes:
                 all_scenes[file.rstrip(".json")].add("data-src")
             else:
                 all_scenes[file.rstrip(".json")] = {"data-src"}
@@ -497,8 +651,12 @@ def on_data_src_modified(event) -> None:
         try:
             data = Path(event.src_path).read_text(encoding="utf-8")
             parsed = json.loads(data)
+            old_hash = parsed["hash"]
             parsed["hash"] = ""
-            parsed["hash"] = hashlib.sha1(str(parsed).encode()).hexdigest()
+            new_hash = hashlib.sha1(str(parsed).encode()).hexdigest()
+            if old_hash == new_hash:
+                return
+            parsed["hash"] = new_hash
             with Path(event.src_path).open("w") as f:
                 scene_files.append(event.src_path)
                 f.write(json.dumps(parsed, indent=4))
@@ -513,21 +671,6 @@ def on_data_src_modified(event) -> None:
         fill_all_dialogs(Path(f"./data-src/dialog/{file}"), file)
     if "ALPACA.lua" not in event.src_path:
         LuaDocsGen().render("lua.cpp")
-
-
-def fill_all_dialogs(path: Path, file: str) -> None:
-    data = Path(path).read_text(encoding='utf-8')
-    dialogs = json.loads(data)
-    for dialog in dialogs["dialogs"]:
-        if dialog["name"] in all_dialogs:
-            all_dialogs[dialog["name"]].add(file)
-        else:
-            all_dialogs[dialog["name"]] = {file}
-
-
-def on_moved(event) -> None:
-    print(colored(
-        f"ok ok ok, someone moved {event.src_path} to {event.dest_path}", "green"))
 
 
 @dataclass
@@ -619,28 +762,30 @@ class LuaDocsGen:
         return result.strip()
 
     def render(self: LuaDocsGen, data: str) -> str:
-
         template = ""
         result = []
-        code = None
+        codes = []
 
         code_file = Path("subprojects/ALPACA/src/" + data).absolute()
         if code_file.exists():
             with code_file.open() as f:
-                code = f.readlines()
+                codes = f.readlines()
 
-        if code is None:
-            code = requests.get("https://raw.githubusercontent.com/pinguin999/ALPACA/main/src/lua.cpp", timeout=30).text
-            code = code.split("\n")
+        if not codes:
+            code: str = requests.get(
+                "https://raw.githubusercontent.com/pinguin999/ALPACA/main/src/lua.cpp",
+                timeout=30,
+            ).text
+            codes = code.split("\n")
 
-        for i, line in enumerate(code):
+        for i, line in enumerate(codes):
             if "set_function" in line:
                 doc_obj = DocFunction()
                 doc_obj.name = self.get_name(line)
-                doc_obj.docs = self.get_docs(code, i)
-                doc_obj.parameters = self.get_parameters(code[i + 1])
-                doc_obj.copy_parameters = self.get_copy_parameters(code[i + 1])
-                doc_obj.returns = self.get_returns(code, i)
+                doc_obj.docs = self.get_docs(codes, i)
+                doc_obj.parameters = self.get_parameters(codes[i + 1])
+                doc_obj.copy_parameters = self.get_copy_parameters(codes[i + 1])
+                doc_obj.returns = self.get_returns(codes, i)
                 result.append(doc_obj)
 
         alpaca_lua = Path("data-src/scripts/ALPACA.lua")
@@ -653,7 +798,9 @@ class LuaDocsGen:
             with alpaca_lua.open("+a") as output:
                 output.write(f"\n\n---@alias {alias}")
                 for spine_object in entries.items():
-                    output.write(f"""\n---| '"{spine_object[0]}"' # Found in {spine_object[1]}""")
+                    output.write(
+                        f"""\n---| '"{spine_object[0]}"' # Found in {spine_object[1]}"""
+                    )
 
         write_alias("LuaSpineObject", spine_objects)
         write_alias("LuaSpineAnimation", spine_animations)
@@ -664,8 +811,7 @@ class LuaDocsGen:
         write_alias("LuaAudio", all_audio)
         write_alias("LuaLanguage", all_language)
 
-        with Path("data-src/scripts/ALPACA.lua").open("+a") as output:
-
+        with alpaca_lua.open("+a") as output:
             for func in result:
                 docs = f"--- {func.docs[0]}"
                 for doc in func.docs[1:]:
@@ -691,6 +837,12 @@ end
 
 if __name__ == "__main__":
     freeze_support()
+    global db
+    try:
+        with open("db", "rb") as handle:
+            db = pickle.load(handle)
+    except FileNotFoundError:
+        db = {"a": "b"}
     print(colored("Start convert", "green"))
     scripts_recopy(["./data-src/scripts/"])
     copy_folder("./data-src/config", "./data/config")
@@ -711,10 +863,12 @@ if __name__ == "__main__":
     case_sensitive = True
 
     go_recursively = True
-    data_src_event_handler = PatternMatchingEventHandler(patterns = patterns_src,
-                                                         ignore_patterns = ignore_patterns,
-                                                         ignore_directories = ignore_directories,
-                                                         case_sensitive = case_sensitive)
+    data_src_event_handler = PatternMatchingEventHandler(
+        patterns=patterns_src,
+        ignore_patterns=ignore_patterns,
+        ignore_directories=ignore_directories,
+        case_sensitive=case_sensitive,
+    )
     data_src_event_handler.on_created = on_created
     data_src_event_handler.on_deleted = on_deleted
     data_src_event_handler.on_modified = on_data_src_modified
@@ -723,9 +877,12 @@ if __name__ == "__main__":
     data_src_path = "./data-src/"
     data_src_observer = Observer()
     data_src_observer.schedule(
-        data_src_event_handler, data_src_path, recursive=go_recursively)
+        data_src_event_handler, data_src_path, recursive=go_recursively
+    )
     data_src_observer.start()
 
+    with open("db", "wb") as whandle:
+        pickle.dump(db, whandle, protocol=pickle.HIGHEST_PROTOCOL)
     print(colored("Observer Started", "green"))
 
     try:
