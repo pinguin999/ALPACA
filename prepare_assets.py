@@ -77,6 +77,8 @@ all_dialogs: dict[str, set[str]] = {}
 all_scenes: dict[str, set[str]] = {}
 all_audio: dict[str, set[str]] = {}
 all_language: dict[str, set[str]] = {}
+schnack_vars: dict[str, str] = {}
+schnack_characters_props: dict[str, str] = {}
 
 scene_files = []  # Temp list to prevent infinite loop
 
@@ -586,6 +588,13 @@ def fill_all_dialogs(path: Path, file: str) -> None:
             all_dialogs[dialog["name"]].add(file)
         else:
             all_dialogs[dialog["name"]] = {file}
+    for character in dialogs["characters"]:
+        schnack_characters_props[f"{character["canonicalName"]}"] = "{}"
+        for prop, value in character["properties"].items():
+            schnack_characters_props[f"{character["canonicalName"]}.{prop}"] = value
+
+    for variable, value in dialogs["variables"].items():
+        schnack_vars[variable] = value
 
 
 def on_moved(event) -> None:
@@ -832,6 +841,22 @@ class LuaDocsGen:
 function {func.name}({func.copy_parameters})
 end
 """)
+
+            for schnack_var, value in schnack_vars.items():
+                if value in ["{}", False, True]:
+                    output.write(f"""
+{schnack_var} = {str(value).lower()} """)
+                else:
+                    output.write(f"""
+{schnack_var} = "{value}" """)
+            for schnack_characters_prop, value in schnack_characters_props.items():
+                if value in ["{}", False, True]:
+                    output.write(f"""
+{schnack_characters_prop} = {str(value).lower()} """)
+                else:
+                    output.write(f"""
+{schnack_characters_prop} = "{value}" """)
+
         return template
 
 
