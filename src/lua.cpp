@@ -232,10 +232,16 @@ void Game::setupLuaFunctions()
 							[this]()
 							{
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								sol::optional<sol::lua_table> item = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
+								if (!item)
+								{
+									return;
+								}
+
 								obj->setSkin((*lua_state)["config"]["inventory_default_skin"]);
 								obj->setCrossScene(true);
 								obj->setVisible(false);
-								(*lua_state)["inventory_items"][obj->getId()] = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
+								(*lua_state)["inventory_items"][obj->getId()] = item;
 								(*lua_state)["inventory_items"][obj->getId()]["skin"] = (*lua_state)["config"]["inventory_default_skin"];
 								(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
@@ -248,10 +254,16 @@ void Game::setupLuaFunctions()
 							[this](const LuaSpineSkin &skin)
 							{
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								sol::optional<sol::lua_table> item = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
+								if (!item)
+								{
+									return;
+								}
+
 								obj->setSkin(skin);
 								obj->setCrossScene(true);
 								obj->setVisible(false);
-								(*lua_state)["inventory_items"][obj->getId()] = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
+								(*lua_state)["inventory_items"][obj->getId()] = item;
 								(*lua_state)["inventory_items"][obj->getId()]["skin"] = skin;
 								(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
@@ -267,10 +279,16 @@ void Game::setupLuaFunctions()
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
+									sol::optional<sol::lua_table> item = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
+									if (!item)
+									{
+										return;
+									}
+
 									obj->setSkin((*lua_state)["config"]["inventory_default_skin"]);
 									obj->setCrossScene(true);
 									obj->setVisible(false);
-									(*lua_state)["inventory_items"][obj->getId()] = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
+									(*lua_state)["inventory_items"][obj->getId()] = item;
 									(*lua_state)["inventory_items"][obj->getId()]["skin"] = (*lua_state)["config"]["inventory_default_skin"];
 									(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
@@ -288,10 +306,16 @@ void Game::setupLuaFunctions()
 								std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
+									sol::optional<sol::lua_table> item = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
+									if (!item)
+									{
+										return;
+									}
+
 									obj->setSkin(skin);
 									obj->setCrossScene(true);
 									obj->setVisible(false);
-									(*lua_state)["inventory_items"][obj->getId()] = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
+									(*lua_state)["inventory_items"][obj->getId()] = item;
 									(*lua_state)["inventory_items"][obj->getId()]["skin"] = skin;
 									(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
