@@ -882,10 +882,11 @@ scenes.{scene}.zBufferMap = """
                 scene_json = Path(f"./data-src/scenes/{scene}.json").read_text(
                     encoding="utf-8"
                 )
-                scene_object = json.loads(scene_json)
-                for item in scene_object["items"] + [{"spine": "background"}]:
-                    name = item["id"] if "id" in item else item["spine"]
-                    output.write(f"""
+                try:
+                    scene_object = json.loads(scene_json)
+                    for item in scene_object["items"] + [{"spine": "background"}]:
+                        name = item["id"] if "id" in item else item["spine"]
+                        output.write(f"""
 scenes.{scene}.items.{name} = {{}}
 scenes.{scene}.items.{name}.x = 0
 scenes.{scene}.items.{name}.loop_animation = false
@@ -899,6 +900,8 @@ scenes.{scene}.items.{name}.y = 0
 scenes.{scene}.items.{name}.cross_scene = false
 scenes.{scene}.items.{name}.skin = 0""")
 
+                except Exception:
+                    pass
             output.write("\nconfig = {}")
             output.write("""
 game = {}
