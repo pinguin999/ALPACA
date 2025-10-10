@@ -220,6 +220,7 @@ void Game::loadScene_internal()
 		std::advance(it, 1);
 	}
 	player = nullptr;
+	removeObjects();
 
 	auto newScene = std::make_shared<Scene>(nextScene, shared_from_this());
 	if (!newScene->background)
