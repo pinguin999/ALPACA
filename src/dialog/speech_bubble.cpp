@@ -35,13 +35,13 @@ void SpeechBubble::draw() const
     skeleton->draw(jngl::modelview().translate(position).rotate(getRotation()));
 
     jngl::pushMatrix();
-    jngl::translate(jngl::Vec2{jngl::getScreenSize().x / -2.0 + 50, jngl::getScreenSize().y / 3.5});
+    jngl::translate(jngl::Vec2{jngl::getScreenSize().x / -2.0 + 50, jngl::getScreenSize().y / 4.0});
     jngl::setFontColor(characterNameColor);
     characterName.draw();
     jngl::popMatrix();
 
     jngl::pushMatrix();
-    jngl::translate(jngl::Vec2{jngl::getScreenSize().x / -2.0 + 100, jngl::getScreenSize().y / 3.5 + 80});
+    jngl::translate(jngl::Vec2{jngl::getScreenSize().x / -2.0 + 100, jngl::getScreenSize().y / 4 + 80});
     jngl::setFontColor(textColor);
     text.draw();
     jngl::popMatrix();
