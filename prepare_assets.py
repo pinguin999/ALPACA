@@ -47,7 +47,7 @@ SPINE_THREADS = cpu_count()
 set_read_only = True
 # could be "linux", "linux2", "linux3", ...
 if sys.platform.startswith("linux"):
-    RHUBARB = None
+    RHUBARB = "/usr/bin/rhubarb"
     SPINE = "/usr/bin/spine"
     LUA = "luac"
 elif sys.platform == "darwin":
@@ -218,6 +218,8 @@ def apply_rhubarb(character_in: str | None = None) -> None:
 
             for node_id in node_ids:
                 rhubarb_out = Path(f"{RHUBARB_OUT}{node_id}.json")
+                if not rhubarb_out.exists():
+                    continue
                 with rhubarb_out.open() as rhubarb_outfile:
                     mouthCues = json.load(rhubarb_outfile)
 
