@@ -1,6 +1,5 @@
 #include "dialog_manager.hpp"
 #include "../game.hpp"
-#include <filesystem>
 
 constexpr int BOX_HEIGHT = 65;
 constexpr int BOX_PADDING = 20;
@@ -31,14 +30,21 @@ void DialogManager::loadDialogsFromFile(const std::string& fileName, bool initia
 
 void DialogManager::play(const std::string &dialogName, jngl::Vec2, const sol::function &callback)
 {
-    cancelDialog();
+    cancelDialog(); // if there is a current dialog, cancel the current one
 
     currentDialog = schnackFile->dialogs[dialogName];
     if (currentDialog)
     {
         currentNode = currentDialog->getEntryNode();
-        continueCurrent();
+        if(currentNode != nullptr)
+        {
+            if(!currentNode->checkPrecondition(currentDialog))
+            {
+                currentNode = nullptr;
+            }
+        }
         dialog_callback = callback;
+        continueCurrent();
     }else
     {
         jngl::error("Dialog " + dialogName + " not found.");
@@ -286,9 +292,6 @@ void DialogManager::continueCurrent()
     {
         if(currentDialog == nullptr || currentNode == nullptr)
         {
-            dialog_callback();
-            dialog_callback = (*_game->lua_state)["pass"];
-
             cancelDialog();
             return;
         }
@@ -332,6 +335,12 @@ void DialogManager::cancelDialog()
     currentDialog = nullptr;
     currentNode = nullptr;
     currentAnswers = nullptr;
+
+    if (auto _game = game.lock())
+    {
+        dialog_callback();
+        dialog_callback = (*_game->lua_state)["pass"];
+    }
 }
 
 void DialogManager::selectCurrentAnswer(int index)
