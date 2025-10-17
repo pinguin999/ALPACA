@@ -85,7 +85,6 @@ SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &s
     skeleton = std::make_unique<spine::SkeletonDrawable>(skeletonData, animationStateData);
     skeleton->state->userData = this;
     skeleton->state->listener = static_cast<spAnimationStateListener>(&this->animationStateListener);
-    playAnimation(0, (*game->lua_state)["config"]["spine_default_animation"], true, (*game->lua_state)["pass"]);
     bounds = spSkeletonBounds_create();
 
     skeleton->step();

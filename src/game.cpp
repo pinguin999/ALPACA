@@ -220,6 +220,7 @@ void Game::loadScene_internal()
 		std::advance(it, 1);
 	}
 	player = nullptr;
+	removeObjects();
 
 	auto newScene = std::make_shared<Scene>(nextScene, shared_from_this());
 	if (!newScene->background)
@@ -773,13 +774,13 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 	if (actionName.substr(0, 4) == "dlg:")
 	{
 		const std::string dialogName = actionName.substr(4);
-		script = "PlayDialog(\"" + dialogName + "\", pass)";
+		script = "PlayDialog(\"" + dialogName + "\")";
 		errorMessage = "Failed to play dialog " + dialogName + "!\n";
 	}
 	else if (actionName.substr(0, 5) == "anim:")
 	{
 		const std::string animName = actionName.substr(5);
-		script = "PlayAnimationOn(\"" + thisObject->getId() + "\", 0, \"" + animName + "\", false, pass)";
+		script = "PlayAnimationOn(\"" + thisObject->getId() + "\", 0, \"" + animName + "\", false)";
 		errorMessage = "Failed to play animation " + animName + "!\n";
 	}
 	// if there is no specific prefix, just load the according Lua file

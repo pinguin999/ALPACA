@@ -77,6 +77,8 @@ all_dialogs: dict[str, set[str]] = {}
 all_scenes: dict[str, set[str]] = {}
 all_audio: dict[str, set[str]] = {}
 all_language: dict[str, set[str]] = {}
+schnack_vars: dict[str, str] = {}
+schnack_characters_props: dict[str, str] = {}
 
 scene_files = []  # Temp list to prevent infinite loop
 
@@ -504,9 +506,9 @@ def rehash_scenes(directorys: str) -> None:
         for file in files:
             if file.endswith(".json"):
                 if file in all_scenes:
-                    all_scenes[file.rstrip(".json")].add("data-src")
+                    all_scenes[file.removesuffix(".json")].add("data-src")
                 else:
-                    all_scenes[file.rstrip(".json")] = {"data-src"}
+                    all_scenes[file.removesuffix(".json")] = {"data-src"}
 
                 src_path = root + "/" + file
                 try:
@@ -521,7 +523,7 @@ def rehash_scenes(directorys: str) -> None:
                     parsed["hash"] = ""
                     new_hash = hashlib.sha1(str(parsed).encode()).hexdigest()
                     if old_hash == new_hash:
-                        return
+                        continue
                     parsed["hash"] = new_hash
                     with Path(src_path).open("w") as f:
                         scene_files.append(src_path)
@@ -564,6 +566,8 @@ def copy_folder(src: str, des: str) -> None:
             copy_file(src=root + "/" + file, des=Path(des))
             if ".schnack" in file:
                 fill_all_dialogs(Path(root + "/" + file), file)
+            if ".ogg" in file:
+                all_audio[file] = {src}
 
 
 def copy_file(src: str, des: Path) -> None:
@@ -588,6 +592,15 @@ def fill_all_dialogs(path: Path, file: str) -> None:
             all_dialogs[dialog["name"]].add(file)
         else:
             all_dialogs[dialog["name"]] = {file}
+    for character in dialogs["characters"]:
+        schnack_characters_props[f"{character['canonicalName']}"] = "{}"
+        for prop, value in character["properties"].items():
+            schnack_characters_props[f"{character['canonicalName']}.{prop}"] = value
+
+    for variable, value in dialogs["variables"].items():
+        schnack_vars[variable] = value
+    for language in dialogs["locales"]:
+        all_language[language] = {file}
 
 
 def on_moved(event) -> None:
@@ -634,7 +647,7 @@ def on_data_src_modified(event) -> None:
         if event.src_path in scene_files:
             scene_files.remove(event.src_path)
             copy_file(f"./data-src/scenes/{file}", Path("./data/scenes"))
-            scene = file.rstrip(".json")
+            scene = file.removesuffix(".json")
             if not Path(f"./data-src/scripts/{scene}.lua").exists():
                 if not Path("./data-src/scripts/").exists():
                     Path("./data-src/scripts/").mkdir(parents=True, exist_ok=True)
@@ -644,10 +657,10 @@ def on_data_src_modified(event) -> None:
                         colored(f"Script {scene}.lua was created automatically!"),
                         "blue",
                     )
-            if file.rstrip(".json") in all_scenes:
-                all_scenes[file.rstrip(".json")].add("data-src")
+            if file.removesuffix(".json") in all_scenes:
+                all_scenes[file.removesuffix(".json")].add("data-src")
             else:
-                all_scenes[file.rstrip(".json")] = {"data-src"}
+                all_scenes[file.removesuffix(".json")] = {"data-src"}
             return
         parsed = None
         try:
@@ -803,6 +816,7 @@ class LuaDocsGen:
                     output.write(
                         f"""\n---| '"{spine_object[0]}"' # Found in {spine_object[1]}"""
                     )
+                output.write("\n")
 
         write_alias("LuaSpineObject", spine_objects)
         write_alias("LuaSpineAnimation", spine_animations)
@@ -834,6 +848,69 @@ class LuaDocsGen:
 function {func.name}({func.copy_parameters})
 end
 """)
+
+            output.write("\ninventory_items = {}\n")
+            for schnack_var, value in schnack_vars.items():
+                if value in ["{}", False, True]:
+                    output.write(f"""
+{schnack_var} = {str(value).lower()}""")
+                else:
+                    output.write(f"""
+{schnack_var} = "{value}" """)
+
+            output.write("\ncharacters = {}")
+            for schnack_characters_prop, value in schnack_characters_props.items():
+                if value in ["{}", False, True]:
+                    output.write(f"""
+characters.{schnack_characters_prop} = {str(value).lower()}""")
+                else:
+                    output.write(f"""
+characters.{schnack_characters_prop} = "{value}" """)
+
+            output.write("\nscenes = {}")
+            for scene in all_scenes.keys():
+                output.write(
+                    f"""
+scenes.{scene} = {{}}
+scenes.{scene}.items = {{}}
+scenes.{scene}.bottom_border = 0
+scenes.{scene}.hash = 0
+scenes.{scene}.left_border = 0
+scenes.{scene}.right_border = 0
+scenes.{scene}.top_border = 0
+scenes.{scene}.zBufferMap = """
+                    ""
+                )
+                scene_json = Path(f"./data-src/scenes/{scene}.json").read_text(
+                    encoding="utf-8"
+                )
+                try:
+                    scene_object = json.loads(scene_json)
+                    for item in scene_object["items"] + [{"spine": "background"}]:
+                        name = item["id"] if "id" in item else item["spine"]
+                        output.write(f"""
+scenes.{scene}.items.{name} = {{}}
+scenes.{scene}.items.{name}.x = 0
+scenes.{scene}.items.{name}.loop_animation = false
+scenes.{scene}.items.{name}.layer = 0
+scenes.{scene}.items.{name}.spine = "{name}"
+scenes.{scene}.items.{name}.scale = 1
+scenes.{scene}.items.{name}.animation = "idle"
+scenes.{scene}.items.{name}.visible = true
+scenes.{scene}.items.{name}.abs_position = false
+scenes.{scene}.items.{name}.y = 0
+scenes.{scene}.items.{name}.cross_scene = false
+scenes.{scene}.items.{name}.skin = 0""")
+
+                except Exception:
+                    pass
+            output.write("\nconfig = {}")
+            output.write("""
+game = {}
+game["old_scene"] = ""
+game["scene"] = ""
+game["interruptible"] = true""")
+
         return template
 
 

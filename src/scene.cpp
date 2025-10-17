@@ -325,11 +325,10 @@ void Scene::createObjectJSON(const YAML::Node &object) {
 
         auto interactable = createObject(spine_file, id, scale);
         interactable->layer = layer;
-        if (!animation.empty()) {
-            interactable->playAnimation(0, animation, true, (*_game->lua_state)["pass"]);
-        } else {
+        if (animation.empty()) {
             animation = (*_game->lua_state)["config"]["spine_default_animation"];
         }
+        interactable->playAnimation(0, animation, true, (*_game->lua_state)["pass"]);
 
         interactable->setPosition(jngl::Vec2((object)["x"].as<float>(), (object)["y"].as<float>()));
         interactable->setLuaIndex(id);
