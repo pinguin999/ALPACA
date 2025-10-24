@@ -68,7 +68,7 @@ void DialogManager::step()
         if(!choiceTexts.empty())
         {
             auto pointer_position = _game->pointer->getPosition();
-    
+
             size_t pos = CHOICE_BOX_TOP;
             int temp_index = 0;
             selected_index = -1;
@@ -83,13 +83,13 @@ void DialogManager::step()
                 temp_index++;
                 pos += BOX_HEIGHT;
             }
-    
+
             auto direction = _game->pointer->getMovementStep();
             if (boost::qvm::mag_sqr(direction - jngl::Vec2(0, 1)) < 0.5)
             {
                 selected_index = std::max(selected_index + 1, 0);
             }
-    
+
             if (boost::qvm::mag_sqr(direction - jngl::Vec2(0, -1)) < 0.5)
             {
                 selected_index = std::min(selected_index - 1, (int)choiceTexts.size() - 1);
@@ -110,8 +110,8 @@ void DialogManager::step()
                 // if there are no options at all
                 else if (choiceTexts.empty())
                 {
-                    continueCurrent();
                     stopCharacterVoiceAndAnimation();
+                    continueCurrent();
                     _game->pointer->setPrimaryHandled();
                 }
             }
@@ -244,6 +244,7 @@ void DialogManager::playCharacterVoice(const std::string &file)
     if (!last_played_audio.empty() && jngl::isPlaying(last_played_audio))
     {
         jngl::stop(last_played_audio);
+        last_played_audio = "";
     }
 
     try
