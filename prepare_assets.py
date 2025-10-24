@@ -932,8 +932,12 @@ if __name__ == "__main__":
     copy_folder("./data-src/dialog", "./data/dialog")
     spine_reexport(["./data-src"])
     rehash_scenes("./data-src/scenes")
-    rhubarb_reexport()
-    apply_rhubarb()
+    rhubarb_path = Path(RHUBARB)
+    if rhubarb_path.exists():
+        rhubarb_reexport()
+        apply_rhubarb()
+    else:
+        print(colored("Rhubarb was skipped, since Rhubarb path was not found", "red"))
     LuaDocsGen().render("lua.cpp")
     print(colored("Convert sucess", "green"))
     patterns_src = ["*.spine", "*.lua", "*.json", "*.schnack", "*.ogg"]
