@@ -1038,10 +1038,11 @@ void Game::onFileDrop(const std::filesystem::path& path)
 {
 	std::string spine_file = path.stem().string();
 
-    auto atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
+    auto atlas = new spine::Atlas((spine_file + "/" + spine_file + ".atlas").c_str(), &SkeletonDrawable::textureLoader);
     assert(atlas);
-    spSkeletonJson *json = spSkeletonJson_create(atlas);
-	auto skeletonData = spSkeletonJson_readSkeletonDataFile(json, (spine_file + "/" + spine_file + ".json").c_str());
+    auto *json = new spine::SkeletonJson(atlas);
+	auto skeletonData = json->readSkeletonDataFile((spine_file + "/" + spine_file + ".json").c_str());
+	delete json;
 
 	if (!skeletonData)
 	{

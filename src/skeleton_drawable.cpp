@@ -53,36 +53,26 @@ char* _spUtil_readFile(const char* path, int* length) {
 	return buf;
 }
 
-namespace spine {
+SkeletonDrawable::SkeletonDrawable(spine::SkeletonData *skeletonData, spine::AnimationStateData *stateData)
+	: skeleton(spSkeleton_create(skeletonData)), timeScale(1),
+		ownsAnimationStateData(stateData == nullptr), tempUvs(spFloatArray_create(16)), tempColors(spColorArray_create(16)), clipper(nullptr)
+{
+	spBone_setYDown(1);
+	worldVertices = MALLOC(float, SPINE_MESH_VERTEX_COUNT_MAX);
 
-    SkeletonDrawable::SkeletonDrawable(spSkeletonData *skeletonData, spAnimationStateData *stateData)
-        : skeleton(spSkeleton_create(skeletonData)), timeScale(1),
-          ownsAnimationStateData(stateData == nullptr), tempUvs(spFloatArray_create(16)), tempColors(spColorArray_create(16)), clipper(nullptr)
-    {
-        spBone_setYDown(1);
-		worldVertices = MALLOC(float, SPINE_MESH_VERTEX_COUNT_MAX);
+	if (ownsAnimationStateData)
+	{
+		stateData = new spine::AnimationStateData(skeletonData);
+	}
 
-        if (ownsAnimationStateData)
-        {
-            stateData = spAnimationStateData_create(skeletonData);
-        }
+	state = new spine::AnimationStateData(stateData);
 
-        state = spAnimationState_create(stateData);
-
-        clipper = spSkeletonClipping_create();
-    }
+	clipper = spSkeletonClipping_create();
+}
 
 SkeletonDrawable::~SkeletonDrawable() {
-	FREE(worldVertices);
-    if (ownsAnimationStateData)
-    {
-        spAnimationStateData_dispose(state->data);
-    }
-    spAnimationState_dispose(state);
-	spSkeleton_dispose(skeleton);
-	spSkeletonClipping_dispose(clipper);
-	spFloatArray_dispose(tempUvs);
-	spColorArray_dispose(tempColors);
+	delete state;
+	delete skeleton;
 }
 
 void SkeletonDrawable::step() {
@@ -167,7 +157,7 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 			{
 				float *bbvertices = worldVertices;
 
-                auto *box = reinterpret_cast<spBoundingBoxAttachment *>(attachment);
+                auto *box = reinterpret_cast<spine::BoundingBoxAttachment *>(attachment);
 
                 spVertexAttachment_computeWorldVertices(SUPER(box), slot, 0, box->super.verticesCount, bbvertices, 0, 2);
 				if(std::string(box->super.super.name) == "non_walkable_area")
@@ -234,13 +224,13 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 		spSkeletonClipping_clipEnd(clipper, slot);
 	}
 	// target.draw(*vertexArray, states);
-	spSkeletonClipping_clipEnd2(clipper);
+	clipper.clipEnd();
 
 	jngl::setSpriteColor(255, 255, 255, 255);
 }
 
 
-spBoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spSkeletonBounds *self, const std::string &name, float x, float y) {
+spine::BoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spine::SkeletonBounds *self, const std::string &name, float x, float y) {
 	int i;
 	for (i = 0; i < self->count; ++i)
 	{
@@ -255,7 +245,7 @@ spBoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spSkeletonBo
     return nullptr;
 }
 
-spBoundingBoxAttachment *spSkeletonBounds_containsPointNotMatchingName(spSkeletonBounds *self, const std::string &name, float x, float y) {
+spine::BoundingBoxAttachment *spSkeletonBounds_containsPointNotMatchingName(spine::SkeletonBounds *self, const std::string &name, float x, float y) {
 	int i;
 	for (i = 0; i < self->count; ++i)
 	{

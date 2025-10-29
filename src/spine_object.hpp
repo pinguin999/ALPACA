@@ -7,13 +7,7 @@
 #include "skeleton_drawable.hpp"
 #include <sol/sol.hpp>
 
-struct spSkeletonData;
 class Game;
-
-namespace spine
-{
-	class SkeletonDrawable;
-} // namespace spine
 
 /// Basisklasse für die Spine Objekte im Spiel
 class SpineObject : public std::enable_shared_from_this<SpineObject>
@@ -22,10 +16,10 @@ public:
 	SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, std::string id, float scale = 1);
 	virtual ~SpineObject()
 	{
-		spSkeletonBounds_dispose(bounds);
-		spAnimationStateData_dispose(animationStateData);
-		spSkeletonData_dispose(skeletonData);
-		spAtlas_dispose(atlas);
+		delete bounds;
+		delete animationStateData;
+		delete skeletonData;
+		delete atlas;
 	}
 
 	std::shared_ptr<SpineObject> getptr()
@@ -51,18 +45,18 @@ public:
 	void setScale(const float scale)
 	{
 		this->scale = scale;
-		skeleton->skeleton->scaleX = scale;
-		skeleton->skeleton->scaleY = scale;
+		skeleton->skeleton->setScaleX(scale);
+		skeleton->skeleton->setScaleY(scale);
 	}
 
 	void setVisible(bool visible) { this->visible = visible; }
 	bool getVisible() { return visible; }
 
-	std::unique_ptr<spine::SkeletonDrawable> skeleton;
-	spSkeletonBounds *bounds = nullptr;
-	spSkeletonData *skeletonData = nullptr;
-	spAnimationStateData *animationStateData = nullptr;
-	spAtlas *atlas = nullptr;
+	std::unique_ptr<SkeletonDrawable> skeleton;
+	spine::SkeletonBounds *bounds = nullptr;
+	spine::SkeletonData* skeletonData = nullptr;
+	spine::AnimationStateData *animationStateData = nullptr;
+	spine::Atlas *atlas = nullptr;
 	std::optional<jngl::Vec2> getPoint(const std::string &point_name) const;
 	void playAnimation(int trackIndex, const std::string &currentAnimation, bool loop, sol::function callback);
 	void stopAnimation(int trackIndex);
@@ -72,7 +66,6 @@ public:
 	std::vector<std::string> getPointNames() const;
 	bool abs_position = false;
 
-	static void animationStateListener(spAnimationState *state, spEventType type, spTrackEntry *entry, spEvent *event);
 	std::string collision_script = ""; // TODO protected
 	std::string getName() { return spine_name; };
 	std::string getId() { return id; };

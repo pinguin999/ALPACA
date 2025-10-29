@@ -32,9 +32,9 @@ add_executable(${PROJECT_UNIT_TESTS_NAME} ${UNIT_TESTS_SRC_FILES} ${SOURCES})
 
 if (APPLE)
     find_library(CoreServices CoreServices)
-    target_link_libraries(${PROJECT_UNIT_TESTS_NAME} PRIVATE jngl schnacker spine-c $<$<CONFIG:Debug>:${CoreServices}>)
+    target_link_libraries(${PROJECT_UNIT_TESTS_NAME} PRIVATE jngl schnacker spine-cpp $<$<CONFIG:Debug>:${CoreServices}>)
 else()
-    target_link_libraries(${PROJECT_UNIT_TESTS_NAME} jngl schnacker spine-c)
+    target_link_libraries(${PROJECT_UNIT_TESTS_NAME} jngl schnacker spine-cpp)
 endif()
 
 enable_testing()

@@ -1,76 +1,76 @@
 #include "spine_object.hpp"
 #include "game.hpp"
 
-void SpineObject::animationStateListener(spAnimationState *state, spEventType type, spTrackEntry *entry,
-                                         spEvent *event)
-{
-    if (event)
-    {
-        if (event->data->audioPath)
-        {
-            jngl::debug(event->data->audioPath);
-            jngl::play("audio/" + std::string(event->data->audioPath));
-        }
-        if (event->data->stringValue)
-        {
-            // This in Lua setzen
+// void SpineObject::animationStateListener(spAnimationState *state, spEventType type, spTrackEntry *entry,
+//                                          spEvent *event)
+// {
+//     if (event)
+//     {
+//         if (event->data->audioPath)
+//         {
+//             jngl::debug(event->data->audioPath);
+//             jngl::play("audio/" + std::string(event->data->audioPath));
+//         }
+//         if (event->data->stringValue)
+//         {
+//             // This in Lua setzen
 
-            jngl::debug(event->data->stringValue);
+//             jngl::debug(event->data->stringValue);
 
-            if (auto _game = reinterpret_cast<SpineObject *>(state->userData)->game.lock())
-            {
+//             if (auto _game = reinterpret_cast<SpineObject *>(state->userData)->game.lock())
+//             {
 
-                (*_game->lua_state)["this"] = reinterpret_cast<SpineObject *>(state->userData)->getptr();
-                std::string extension = ".lua";
-                std::string event_string = std::string(event->data->stringValue);
-                if (std::equal(extension.rbegin(), extension.rend(), event_string.rbegin()))
-                {
-                    // run lua script from file
-                     _game->runAction(event_string.erase(event_string.size() - 4), (*_game->lua_state)["this"]);
-                }
-                else
-                {
-                    _game->lua_state->script(event_string);
-                }
-            }
-        }
-    }
+//                 (*_game->lua_state)["this"] = reinterpret_cast<SpineObject *>(state->userData)->getptr();
+//                 std::string extension = ".lua";
+//                 std::string event_string = std::string(event->data->stringValue);
+//                 if (std::equal(extension.rbegin(), extension.rend(), event_string.rbegin()))
+//                 {
+//                     // run lua script from file
+//                      _game->runAction(event_string.erase(event_string.size() - 4), (*_game->lua_state)["this"]);
+//                 }
+//                 else
+//                 {
+//                     _game->lua_state->script(event_string);
+//                 }
+//             }
+//         }
+//     }
 
-    switch (type)
-    {
-    case SP_ANIMATION_INTERRUPT:
-        break;
+//     switch (type)
+//     {
+//     case SP_ANIMATION_INTERRUPT:
+//         break;
 
-    case SP_ANIMATION_COMPLETE:
-        if (!entry->loop)
-        {
-            reinterpret_cast<SpineObject *>(state->userData)->onAnimationComplete(std::to_string(entry->trackIndex) + std::string(entry->animation->name));
-        }
-        break;
-    default:
-        break;
-    }
-}
+//     case SP_ANIMATION_COMPLETE:
+//         if (!entry->loop)
+//         {
+//             reinterpret_cast<SpineObject *>(state->userData)->onAnimationComplete(std::to_string(entry->trackIndex) + std::string(entry->animation->name));
+//         }
+//         break;
+//     default:
+//         break;
+//     }
+// }
 
 SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, std::string id, float scale) : walk_callback((*game->lua_state)["pass"]), scale(scale), spine_name(spine_file), id(std::move(id)), game(game)
 {
-    atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
+    atlas = new spine::Atlas((spine_file + "/" + spine_file + ".atlas").c_str(), &SkeletonDrawable::textureLoader);
     assert(atlas);
-    spSkeletonJson *json = spSkeletonJson_create(atlas);
-    json->scale = scale;
+    auto* json = new spine::SkeletonJson(atlas);
+    json->setScale(scale);
 
 #ifndef NDEBUG
     while (true)
     {
 #endif
-        skeletonData = spSkeletonJson_readSkeletonDataFile(json, (spine_file + "/" + spine_file + ".json").c_str());
+        skeletonData = json->readSkeletonDataFile((spine_file + "/" + spine_file + ".json").c_str());
         if (!skeletonData)
         {
             jngl::error("Fatal Error loading " + spine_file + ": " + json->error);
 #ifndef NDEBUG
-            atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
-            json = spSkeletonJson_create(atlas);
-            json->scale = scale;
+            atlas = new spine::Atlas((spine_file + "/" + spine_file + ".atlas").c_str(), &SkeletonDrawable::textureLoader);
+            json = new spine::SkeletonJson(atlas);
+            json->setScale(scale);
             // assert(skeletonData);
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
@@ -79,10 +79,10 @@ SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &s
 #endif
     }
 
-    spSkeletonJson_dispose(json);
+    delete json;
 
-    animationStateData = spAnimationStateData_create(skeletonData);
-    skeleton = std::make_unique<spine::SkeletonDrawable>(skeletonData, animationStateData);
+    animationStateData = new spine::AnimationStateData(skeletonData);
+    skeleton = std::make_unique<SkeletonDrawable>(skeletonData, animationStateData);
     skeleton->state->userData = this;
     skeleton->state->listener = static_cast<spAnimationStateListener>(&this->animationStateListener);
     bounds = spSkeletonBounds_create();
@@ -138,10 +138,59 @@ void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimat
     {
         this->currentAnimation = currentAnimation;
     }
-    spAnimation *animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData, currentAnimation.c_str());
+    spine::Animation *animation = skeleton->state->getData()->getSkeletonData()->findAnimation(currentAnimation.c_str());
     if (animation)
     {
-        spAnimationState_setAnimation(skeleton->state, trackIndex, animation, static_cast<int>(loop));
+        auto entry = skeleton->state->setAnimation(trackIndex, currentAnimation.c_str(), static_cast<int>(loop));
+        entry->setListener([this](spine::AnimationState*, spine::EventType type,
+		                          spine::TrackEntry* entry, spine::Event* event) {
+			if (event)
+    {
+        if (event->getData().getAudioPath() != "")
+        {
+            jngl::debug(event->getData().getAudioPath().buffer());
+            jngl::play("audio/" + std::string(event->getData().getAudioPath().buffer()));
+        }
+        if (event->getData().getStringValue() != "")
+        {
+            // This in Lua setzen
+
+            jngl::debug(event->getData().getStringValue().buffer());
+
+            if (auto _game = this->game.lock())
+            {
+
+                (*_game->lua_state)["this"] = this->getptr();
+                std::string extension = ".lua";
+                std::string event_string = std::string(event->getData().getStringValue().buffer());
+                if (std::equal(extension.rbegin(), extension.rend(), event_string.rbegin()))
+                {
+                    // run lua script from file
+                     _game->runAction(event_string.erase(event_string.size() - 4), (*_game->lua_state)["this"]);
+                }
+                else
+                {
+                    _game->lua_state->script(event_string);
+                }
+            }
+        }
+    }
+
+    switch (type)
+    {
+    case spine::EventType_Interrupt:
+        break;
+
+    case spine::EventType_Complete:
+        if (!entry->getLoop())
+        {
+            onAnimationComplete(std::to_string(entry->getTrackIndex()) + std::string(entry->getAnimation()->getName().buffer()));
+        }
+        break;
+    default:
+        break;
+    }
+		});
     }
     else
     {
@@ -153,7 +202,7 @@ void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimat
 void SpineObject::stopAnimation(int trackIndex)
 {
     if (auto _game = game.lock()) {
-        spAnimationState_setEmptyAnimation(skeleton->state, trackIndex, 0.1);
+        skeleton->state->setEmptyAnimation(trackIndex, 0.1f);
         animation_callback[std::to_string(trackIndex) + "<empty>"] = (*_game->lua_state)["pass"];
     }
 }
@@ -166,10 +215,10 @@ void SpineObject::addAnimation(int trackIndex, const std::string &currentAnimati
     {
         this->currentAnimation = currentAnimation;
     }
-    spAnimation *animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData, currentAnimation.c_str());
+    spine::Animation *animation = skeleton->state->getData()->getSkeletonData()->findAnimation(currentAnimation.c_str());
     if (animation)
     {
-        spAnimationState_addAnimation(skeleton->state, trackIndex, animation, static_cast<int>(loop), delay);
+        skeleton->state->addAnimation(trackIndex, animation, static_cast<int>(loop), delay);
     }
     else
     {
@@ -198,8 +247,8 @@ void SpineObject::onAnimationComplete(const std::string &key)
 void SpineObject::setSkin(const std::string &skin)
 {
     this->skin = skin;
-    const int resault = spSkeleton_setSkinByName(skeleton->skeleton, skin.c_str());
-    spSkeleton_setSlotsToSetupPose(skeleton->skeleton);
+    const int resault = skeleton->skeleton->setSkin(skin.c_str());
+    skeleton->skeleton->setToSetupPose();
     if (!resault)
     {
         jngl::error("\033[1;31m The Skin " + skin + " is missing for " + spine_name + " \033[0m");
