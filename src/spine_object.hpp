@@ -67,7 +67,7 @@ public:
 	void playAnimation(int trackIndex, const std::string &currentAnimation, bool loop, sol::function callback);
 	void stopAnimation(int trackIndex);
 	void addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, sol::function callback);
-	void onAnimationComplete(const std::string &key);
+	void onAnimationComplete(int index, const std::string &animation);
 	void setSkin(const std::string &skin);
 	std::vector<std::string> getPointNames() const;
 	bool abs_position = false;

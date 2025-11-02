@@ -44,7 +44,7 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
     case SP_ANIMATION_COMPLETE:
         if (!entry->loop)
         {
-            reinterpret_cast<SpineObject *>(state->userData)->onAnimationComplete(std::to_string(entry->trackIndex) + std::string(entry->animation->name));
+            reinterpret_cast<SpineObject *>(state->userData)->onAnimationComplete(entry->trackIndex, std::string(entry->animation->name));
         }
         break;
     default:
@@ -177,11 +177,11 @@ void SpineObject::addAnimation(int trackIndex, const std::string &currentAnimati
     }
 }
 
-void SpineObject::onAnimationComplete(const std::string &key)
+void SpineObject::onAnimationComplete(const int index,  const std::string &animation)
 {
     if (auto _game = game.lock())
     {
-        if (!deleted)
+        if (!deleted && index == 0)
         {
             // Set animation back to default animation in Lua state
             const std::string lua_object = _game->getLuaPath(getId());
@@ -189,7 +189,7 @@ void SpineObject::onAnimationComplete(const std::string &key)
             (*_game->lua_state).script(lua_object + ".animation = \"" + animation + "\"");
             (*_game->lua_state).script(lua_object + ".loop_animation = true");
         }
-
+        const auto key = std::to_string(index) + animation;
         animation_callback[key]();
         animation_callback[key] = (*_game->lua_state)["pass"];
     }
