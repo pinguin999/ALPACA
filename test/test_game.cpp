@@ -122,7 +122,7 @@ suite alpaca_test_suite = []
             game->runAction(std::get<0>(actions.at(randAction)), std::get<1>(actions.at(randAction)));
 
             // Give Action time
-            for (int _i = 0; _i < 400; _i++)
+            for (int _i = 0; _i < 800; _i++)
             {
                 game->step();
                 if (game->getDialogManager()->isActive())
