@@ -150,6 +150,11 @@ void Background::draw() const
 #endif
 }
 
+double Background::getZ() const
+{
+    return std::numeric_limits<double>::lowest();
+}
+
 enum class Result {
     INTERSECTION,
     NO_INTERSECTION,

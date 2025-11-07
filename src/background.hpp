@@ -25,6 +25,7 @@ public:
     bool is_walkable(jngl::Vec2 position) const;
     bool step(bool force = false) override;
     void draw() const override;
+    double getZ() const override;
 
     std::deque<jngl::Vec2> getPathToTarget(jngl::Vec2 start, jngl::Vec2 target) const;
 #ifndef NDEBUG

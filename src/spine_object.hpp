@@ -76,7 +76,7 @@ public:
 	std::string collision_script = ""; // TODO protected
 	std::string getName() { return spine_name; };
 	std::string getId() { return id; };
-	double getZ() const;
+	virtual double getZ() const;
 	int layer = 1;
 	void setDeleted() { deleted = true; };
 	void toLuaState();
