@@ -187,8 +187,10 @@ void Game::setupLuaFunctions()
 							{
 								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->setSkin(skin);
-								const std::string lua_object = getLuaPath(obj->getId());
-								lua_state->script(lua_object + ".skin = \"" + skin + "\"");
+								const std::vector<LuaSpineSkin> skins = {skin};
+								const std::string lua_path = getLuaPath(obj->getId());
+								sol::table lua_object = lua_state->script("return " + lua_path);
+								lua_object["skin"] = sol::as_table(skins);
 							});
 
 	/// See SetSkin
@@ -201,8 +203,39 @@ void Game::setupLuaFunctions()
 								if (obj)
 								{
 									obj->setSkin(skin);
-									const std::string lua_object = getLuaPath(obj->getId());
-									lua_state->script(lua_object + ".skin = \"" + skin + "\"");
+									const std::vector<LuaSpineSkin> skins = {skin};
+									const std::string lua_path = getLuaPath(obj->getId());
+									sol::table lua_object = lua_state->script("return " + lua_path);
+									lua_object["skin"] = sol::as_table(skins);
+								}
+							});
+
+
+	/// Set a list of skins on a Spine object
+	/// table<string> skin: The name of the Spine skin
+	lua_state->set_function("SetSkins",
+							[this](const std::vector<LuaSpineSkin> &skins)
+							{
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								obj->setSkins(skins);
+								const std::string lua_path = getLuaPath(obj->getId());
+								sol::table lua_object = lua_state->script("return " + lua_path);
+								lua_object["skin"] = sol::as_table(skins);
+							});
+
+	/// See SetSkins
+	/// SpineObject object: ID of the object to affect
+	/// table<string> skin: The name of the Spine skin
+	lua_state->set_function("SetSkinsOn",
+							[this](const LuaSpineObject &object, const std::vector<LuaSpineSkin> &skins)
+							{
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
+								if (obj)
+								{
+									obj->setSkins(skins);
+									const std::string lua_path = getLuaPath(obj->getId());
+									sol::table lua_object = lua_state->script("return " + lua_path);
+									lua_object["skin"] = sol::as_table(skins);
 								}
 							});
 
@@ -244,7 +277,7 @@ void Game::setupLuaFunctions()
 								obj->setCrossScene(true);
 								obj->setVisible(false);
 								(*lua_state)["inventory_items"][obj->getId()] = item;
-								(*lua_state)["inventory_items"][obj->getId()]["skin"] = (*lua_state)["config"]["inventory_default_skin"];
+								(*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table((*lua_state)["config"]["inventory_default_skin"]);
 								(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
 								(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
@@ -262,11 +295,13 @@ void Game::setupLuaFunctions()
 									return;
 								}
 
+								const std::vector<LuaSpineSkin> skins = {skin};
+
 								obj->setSkin(skin);
 								obj->setCrossScene(true);
 								obj->setVisible(false);
 								(*lua_state)["inventory_items"][obj->getId()] = item;
-								(*lua_state)["inventory_items"][obj->getId()]["skin"] = skin;
+								(*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table(skins);
 								(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
 								(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
@@ -291,7 +326,7 @@ void Game::setupLuaFunctions()
 									obj->setCrossScene(true);
 									obj->setVisible(false);
 									(*lua_state)["inventory_items"][obj->getId()] = item;
-									(*lua_state)["inventory_items"][obj->getId()]["skin"] = (*lua_state)["config"]["inventory_default_skin"];
+									(*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table((*lua_state)["config"]["inventory_default_skin"]);
 									(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
 									(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
@@ -314,11 +349,13 @@ void Game::setupLuaFunctions()
 										return;
 									}
 
+									const std::vector<LuaSpineSkin> skins = {skin};
+
 									obj->setSkin(skin);
 									obj->setCrossScene(true);
 									obj->setVisible(false);
 									(*lua_state)["inventory_items"][obj->getId()] = item;
-									(*lua_state)["inventory_items"][obj->getId()]["skin"] = skin;
+									(*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table(skins);
 									(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
 									(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
@@ -856,10 +893,19 @@ void Game::setupLuaFunctions()
 	/// Playing an audio file.
 	/// It's much better to use Spine events to trigger the sound to keep it in sync with the animation
 	/// string file: The audio file
+	/// TODO Hier noch sagen ob es Music, Voice, Sound Effects Channel ist
 	lua_state->set_function("PlayAudio",
 							[](const LuaAudio &file)
 							{
 								jngl::play("audio/" + file);
+							});
+
+	/// Loop an audio file.
+	/// string file: The audio file
+	lua_state->set_function("LoopAudio",
+							[](const LuaAudio &file)
+							{
+								jngl::loop("audio/" + file);
 							});
 
 	/// Stop an audio file.

@@ -197,19 +197,47 @@ void SpineObject::onAnimationComplete(const int index,  const std::string &anima
 
 void SpineObject::setSkin(const std::string &skin)
 {
-    this->skin = skin;
-    const int resault = spSkeleton_setSkinByName(skeleton->skeleton, skin.c_str());
-    spSkeleton_setSlotsToSetupPose(skeleton->skeleton);
-    if (!resault)
+    this->skins = {skin};
+    if (skin.empty())
     {
-        jngl::error("\033[1;31m The Skin " + skin + " is missing for " + spine_name + " \033[0m");
+        spSkeleton_setSkinByName(skeleton->skeleton, nullptr);
+
+    }else
+    {
+        const int resault = spSkeleton_setSkinByName(skeleton->skeleton, skin.c_str());
+        spSkeleton_setSlotsToSetupPose(skeleton->skeleton);
+        if (!resault)
+        {
+            jngl::error("\033[1;31m The Skin " + skin + " is missing for " + spine_name + " \033[0m");
+        }
     }
+}
+
+void SpineObject::setSkins(const std::vector<std::string> &skins)
+{
+    this->skins = skins;
+    if (skins.size() == 1 && skins[0].empty())
+    {
+        spSkeleton_setSkinByName(skeleton->skeleton, nullptr);
+        return;
+    }
+    spSkin* newSkin = spSkin_create("temp");
+    for (auto const &skin : skins){
+
+        auto *added_skin = spSkeletonData_findSkin(skeleton->skeleton->data, skin.c_str());
+        if (added_skin)
+        {
+            spSkin_addSkin(newSkin, added_skin);
+        }
+    }
+    spSkeleton_setSkin(skeleton->skeleton, newSkin);
+    spSkeleton_setSlotsToSetupPose(skeleton->skeleton);
 }
 
 
 double SpineObject::getZ() const
 {
-    return position.y + layer * 2000.0;
+    return position.y + (layer * 2000.0);
 }
 
 
@@ -233,7 +261,7 @@ void SpineObject::toLuaState()
                 "cross_scene", cross_scene,
                 "abs_position", abs_position,
                 "layer", layer,
-                "skin", skin,
+                "skin", sol::as_table(skins),
                 "scale", scale);
     }
 }

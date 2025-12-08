@@ -723,6 +723,7 @@ class LuaDocsGen:
         result = result.replace("bool ", "boolean ")
         result = result.replace("sol::function ", "function ")
         result = result.replace("std::optional<sol::function> ", "function? ")
+        result = result.replace("std::vector<LuaSpineSkin> ", "LuaSpineSkin[] ")
 
         return result.strip()
 
@@ -741,6 +742,7 @@ class LuaDocsGen:
         result = result.replace("LuaScene ", "")
         result = result.replace("LuaAudio ", "")
         result = result.replace("LuaLanguage ", "")
+        result = result.replace("LuaSpineSkin[] ", "")
 
         return result.strip()
 
@@ -878,7 +880,7 @@ scenes.{scene}.hash = 0
 scenes.{scene}.left_border = 0
 scenes.{scene}.right_border = 0
 scenes.{scene}.top_border = 0
-scenes.{scene}.zBufferMap = """
+scenes.{scene}.zBufferMap = nil """
                     ""
                 )
                 scene_json = Path(f"./data-src/scenes/{scene}.json").read_text(

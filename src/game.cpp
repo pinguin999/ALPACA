@@ -358,8 +358,8 @@ void Game::debugStep()
 	if (jngl::keyPressed('m'))
 	{
 		if (jngl::getVolume() > 0.0)
-	{
-		jngl::setVolume(0);
+		{
+			jngl::setVolume(0);
 		}
 		else
 		{

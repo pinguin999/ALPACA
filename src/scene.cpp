@@ -101,9 +101,9 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         background->layer = 0;
         if ((*game->lua_state)["scenes"][scene]["background"]["skin"].valid())
         {
-            std::string const skin = (*game->lua_state)["scenes"][scene]["background"]["skin"];
+            std::vector<std::string> const skins = (*game->lua_state)["scenes"][scene]["background"]["skin"].get<sol::as_table_t<std::vector<std::string>>>();
 
-            background->setSkin(skin);
+            background->setSkins(skins);
         }
         std::string const animation = (*game->lua_state)["scenes"][scene]["background"]["animation"];
         bool const loop_animation = (*game->lua_state)["scenes"][scene]["background"]["loop_animation"];
@@ -164,10 +164,11 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         background->layer = 0;
         if (json["background"]["skin"])
         {
-            auto const skin = json["background"]["skin"].as<std::string>();
-            (*game->lua_state)["scenes"][scene]["background"]["skin"] = skin;
+            std::vector<std::string> skins = {};
+            skins.push_back(json["background"]["skin"].as<std::string>());
+            (*game->lua_state)["scenes"][scene]["background"]["skin"] = sol::as_table(skins);
 
-            background->setSkin(skin);
+            background->setSkins(skins);
         }
         game->add(background);
 
@@ -230,7 +231,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
                 game->player->setMaxSpeed((*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["max_speed"]);
                 float const layer = (*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["layer"];
                 game->player->layer = static_cast<int>(layer);
-                game->player->setSkin((*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"]);
+                game->player->setSkins((*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"].get<sol::as_table_t<std::vector<std::string>>>());
                 game->player->setCrossScene((*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["cross_scene"]);
                 if ((*game->lua_state)["game"].valid() && (*game->lua_state)["game"]["interruptible"].valid())
                 {
@@ -279,9 +280,9 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
 
             if ((*game->lua_state)["inventory_items"][id]["skin"].valid())
             {
-                std::string const skin = (*game->lua_state)["inventory_items"][id]["skin"];
+                std::vector<std::string> const skins = (*game->lua_state)["inventory_items"][id]["skin"].get<sol::as_table_t<std::vector<std::string>>>();
 
-                interactable->setSkin(skin);
+                interactable->setSkins(skins);
             }
             game->add(interactable);
         }
@@ -339,11 +340,12 @@ void Scene::createObjectJSON(const YAML::Node &object) {
         interactable->toLuaState();
 
         if ((object)["skin"]) {
-            auto const skin = (object)["skin"].as<std::string>();
+            std::vector<std::string> skins = {};
+            skins.push_back((object)["skin"].as<std::string>());
             (*_game->lua_state)["scenes"][scene]["items"][id]["skin"] =
-                skin;
+                sol::as_table(skins);
 
-            interactable->setSkin(skin);
+            interactable->setSkins(skins);
         }
         _game->add(interactable);
     }
@@ -385,9 +387,9 @@ void Scene::createObjectLua(std::string id, std::string scene) {
             (*_game->lua_state)["scenes"][scene]["items"][id]["object"] = std::static_pointer_cast<SpineObject>(interactable);;
 
             if ((*_game->lua_state)["scenes"][scene]["items"][id]["skin"].valid()) {
-                std::string const skin = (*_game->lua_state)["scenes"][scene]["items"][id]["skin"];
+                std::vector<std::string> const skin = (*_game->lua_state)["scenes"][scene]["items"][id]["skin"].get<sol::as_table_t<std::vector<std::string>>>();
 
-                interactable->setSkin(skin);
+                interactable->setSkins(skin);
             }
             _game->add(interactable);
         }

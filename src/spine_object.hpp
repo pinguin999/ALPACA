@@ -69,6 +69,7 @@ public:
 	void addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, sol::function callback);
 	void onAnimationComplete(int index, const std::string &animation);
 	void setSkin(const std::string &skin);
+	void setSkins(const std::vector<std::string> &skins);
 	std::vector<std::string> getPointNames() const;
 	bool abs_position = false;
 
@@ -91,7 +92,7 @@ protected:
 	bool cross_scene = false;
 	bool deleted = false;
 	bool visible = true;
-	std::string skin = "default";
+	std::vector<std::string> skins = {"default"};
 	jngl::Vec2 position;
 	float scale = 1.0;
 	float rotation = 0.0;
