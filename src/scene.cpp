@@ -340,8 +340,7 @@ void Scene::createObjectJSON(const YAML::Node &object) {
         interactable->toLuaState();
 
         if ((object)["skin"]) {
-            std::vector<std::string> skins = {};
-            skins.push_back((object)["skin"].as<std::string>());
+            std::vector<std::string> skins = {(object)["skin"].as<std::string>()};
             (*_game->lua_state)["scenes"][scene]["items"][id]["skin"] =
                 sol::as_table(skins);
 

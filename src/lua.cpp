@@ -277,8 +277,12 @@ void Game::setupLuaFunctions()
 								obj->setCrossScene(true);
 								obj->setVisible(false);
 								(*lua_state)["inventory_items"][obj->getId()] = item;
-								(*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table((*lua_state)["config"]["inventory_default_skin"]);
 								(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
+
+								const std::vector<LuaSpineSkin> skins = {(*lua_state)["config"]["inventory_default_skin"]};
+								const std::string lua_path = getLuaPath(obj->getId());
+								sol::table lua_object = lua_state->script("return " + lua_path);
+								lua_object["skin"] = sol::as_table(skins);
 
 								(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
 							});
@@ -325,8 +329,9 @@ void Game::setupLuaFunctions()
 									obj->setSkin((*lua_state)["config"]["inventory_default_skin"]);
 									obj->setCrossScene(true);
 									obj->setVisible(false);
+									const std::vector<LuaSpineSkin> skins = {(*lua_state)["config"]["inventory_default_skin"]};
 									(*lua_state)["inventory_items"][obj->getId()] = item;
-									(*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table((*lua_state)["config"]["inventory_default_skin"]);
+									(*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table(skins);
 									(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
 									(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
