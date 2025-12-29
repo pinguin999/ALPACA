@@ -16,6 +16,10 @@
 #include <filesystem>
 #endif
 
+#ifdef JNGL_RECORD
+#include <jngl/record/VideoRecorder.hpp>
+#endif
+
 using jngl::Vec2;
 using namespace std::string_literals;
 
@@ -332,7 +336,7 @@ static std::string currentDateTime()
 	tstruct = *localtime(&now);
 	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
 	// for more information about date/time format
-	strftime(buf, sizeof(buf), "%Y-%m-%d-%M-%S", &tstruct);
+	strftime(buf, sizeof(buf), "%Y-%m-%d-%H-%M-%S", &tstruct);
 
 	return buf;
 }
@@ -407,6 +411,46 @@ void Game::debugStep()
 		lua_state = std::make_shared<sol::state>();
 		lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 		init();
+	}
+
+#ifdef JNGL_RECORD
+	// Record movie
+	if (jngl::keyPressed("b"))
+	{
+		if (auto v = jngl::getJob<jngl::VideoRecorder>()) {
+			jngl::removeJob(v.get());
+			show_debug_info = true;
+		}else {
+			show_debug_info = false;
+			std::string filename = "./../";
+			filename += currentDateTime() + ".mp4";
+			jngl::debug("start recording {}", filename);
+			jngl::addJob<jngl::VideoRecorder>(filename);
+		}
+	}
+#endif
+
+	// Jump to a room
+	if (jngl::keyPressed("j"))
+	{
+		int i = 0;
+		std::string files;
+
+		const std::string path = jngl::internal::getConfigPath();
+		for (const auto & entry : std::filesystem::directory_iterator(path))
+		{
+#ifdef _WIN32
+			std::wstring wide = std::wstring(entry.path().filename());
+			std::string str( wide.begin(), wide.end() );
+			files += std::to_string(i) + " " + str + "\n";
+#else
+			files += std::to_string(i) + " " + std::string(entry.path().filename()) + "\n";
+#endif
+			i++;
+		}
+
+		debug_info.setText(files);
+		room_select_mode = true;
 	}
 
 	if (!room_select_mode)
@@ -490,29 +534,6 @@ void Game::debugStep()
 		{
 			tens = x;
 		}
-	}
-
-	// Jump to a room
-	if (jngl::keyPressed("j"))
-	{
-		int i = 0;
-		std::string files;
-
-		const std::string path = jngl::internal::getConfigPath();
-		for (const auto & entry : std::filesystem::directory_iterator(path))
-		{
-#ifdef _WIN32
-			std::wstring wide = std::wstring(entry.path().filename());
-			std::string str( wide.begin(), wide.end() );
-			files += std::to_string(i) + " " + str + "\n";
-#else
-			files += std::to_string(i) + " " + std::string(entry.path().filename()) + "\n";
-#endif
-			i++;
-		}
-
-		debug_info.setText(files);
-		room_select_mode = true;
 	}
 
 	if (recordingGif)

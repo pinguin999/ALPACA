@@ -49,6 +49,9 @@ public:
     std::string debug_text = ("Press Tab to enter editmode. \n"
 		"Press F10 to show debug draw. \n"
 		"Press F12 to start/end gif recording. \n"
+#ifdef JNGL_RECORD
+		"Press b to start/end movie recording. \n"
+#endif
 		"Press r to reload the scene. \n"
 		"Press l start the game from the beginning. \n"
 		"Press c to save the game. \n"
