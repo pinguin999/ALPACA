@@ -23,7 +23,7 @@ bool InteractableObject::step(bool force)
         if (_game->editMode  && !abs_position)
         {
             mouseOver = false;
-            if (std::optional<MouseInfo::Over> over = _game->mouseInfo.pos()) {
+            if (std::optional<jngl::MouseInfo::Over> over = _game->mouseInfo.pos()) {
                 double DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
                 mouseOver = std::sqrt((over->pos().x - position.x) * (over->pos().x - position.x) +
                                       (over->pos().y - position.y) * (over->pos().y - position.y)) <

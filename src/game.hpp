@@ -1,9 +1,5 @@
 #pragma once
 
-#ifndef NDEBUG
-#include "mouse_info.hpp"
-#endif
-
 #include <filesystem>
 #include <jngl.hpp>
 #include <vector>
@@ -38,7 +34,7 @@ public:
 #ifndef NDEBUG
     void debugStep();
     bool editMode = false;
-    MouseInfo mouseInfo;
+    jngl::MouseInfo mouseInfo;
     bool enableDebugDraw = false;
     bool enablezMapDebugDraw = false;
     bool show_debug_info = true;
