@@ -34,7 +34,6 @@ public:
 #ifndef NDEBUG
     void debugStep();
     bool editMode = false;
-    jngl::MouseInfo mouseInfo;
     bool enableDebugDraw = false;
     bool enablezMapDebugDraw = false;
     bool show_debug_info = true;

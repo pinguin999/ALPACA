@@ -291,7 +291,10 @@ void Game::step()
 	pointer->step();
 #ifndef NDEBUG
 	if (editMode) {
-		mouseInfo.setMousePos(pointer->getWorldPosition());
+		jngl::Mat3 worldToScreen;
+		worldToScreen.translate(-cameraPosition);
+		worldToScreen.scale(static_cast<float>(1. / cameraZoom));
+		jngl::input().transform(worldToScreen);
 	}
 #endif
 
