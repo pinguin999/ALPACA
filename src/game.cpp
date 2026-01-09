@@ -181,7 +181,7 @@ void Game::configToLua()
 void Game::loadSceneWithFade(const std::string &level)
 {
 	if(enable_fade){
-		jngl::setWork<SceneFade>(jngl::getWork(), [this, level]() {
+		jngl::setScene<SceneFade>(jngl::getWork(), [this, level]() {
 			loadScene(level);
 		});
 	}else{
