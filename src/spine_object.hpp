@@ -7,6 +7,8 @@
 #include "skeleton_drawable.hpp"
 #include <sol/sol.hpp>
 
+#include "lua_callback.hpp"
+
 struct spSkeletonData;
 class Game;
 
@@ -64,9 +66,9 @@ public:
 	spAnimationStateData *animationStateData = nullptr;
 	spAtlas *atlas = nullptr;
 	std::optional<jngl::Vec2> getPoint(const std::string &point_name) const;
-	void playAnimation(int trackIndex, const std::string &currentAnimation, bool loop, sol::function callback);
+	void playAnimation(int trackIndex, const std::string &currentAnimation, bool loop, std::optional<sol::function> callback = std::nullopt);
 	void stopAnimation(int trackIndex);
-	void addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, sol::function callback);
+	void addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, std::optional<sol::function> callback = std::nullopt);
 	void onAnimationComplete(int index, const std::string &animation);
 	void setSkin(const std::string &skin);
 	void setSkins(const std::vector<std::string> &skins);
@@ -86,8 +88,8 @@ public:
 
 protected:
 	std::string currentAnimation = "idle";
-	std::map<std::string, sol::function> animation_callback;
-	sol::function walk_callback;
+	std::map<std::string, LuaCallback> animation_callback;
+	std::optional<LuaCallback> walk_callback;
 
 	bool cross_scene = false;
 	bool deleted = false;

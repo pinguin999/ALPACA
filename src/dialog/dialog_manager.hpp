@@ -8,6 +8,7 @@
 #include <schnacker.hpp>
 
 #include "speech_bubble.hpp"
+#include "../lua_callback.hpp"
 
 class Game;
 
@@ -26,7 +27,7 @@ public:
     bool isSelectTextActive() const;
     bool isOverText(jngl::Vec2 mouse_pos);
 
-    void play(const std::string &characterName, jngl::Vec2 pos, const sol::function &callback); // TODO: multiple positions for different characters
+    void play(const std::string &characterName, jngl::Vec2 pos, std::optional<sol::function> callback); // TODO: multiple positions for different characters
     void continueCurrent();
     void selectCurrentAnswer(int selected_index);
     jngl::Rgba textToColor(const std::string& color_text);
@@ -56,7 +57,7 @@ private:
     std::string last_played_audio;
     std::string last_played_audio_character;
     bool wasActiveLastFrame = false;
-    sol::function dialog_callback;
+    std::optional<LuaCallback> dialog_callback;
 	const std::weak_ptr<Game> game;
 
     jngl::Rgba default_font_color;

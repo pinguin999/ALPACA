@@ -34,14 +34,6 @@ std::optional<jngl::Vec2> getPointPosition(const std::shared_ptr<Game> &game, co
 
 void Game::setupLuaFunctions()
 {
-	/// pass is a function that does nothing.
-	/// You can use it for testing or for unnecessary callbacks.
-	lua_state->set_function("pass",
-							[]()
-							{
-								// Just do nothing
-							});
-
 	/// Loads a new scene.
 	///
 	/// This door example expects a Spine point object near the door:
@@ -80,11 +72,8 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("PlayAnimation",
 							[this](int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
 								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								obj->playAnimation(trackIndex, newAnimation, loop, callback.value());
+								obj->playAnimation(trackIndex, newAnimation, loop, std::move(callback));
 								const std::string lua_object = getLuaPath(obj->getId());
 								lua_state->script(lua_object + ".animation = \"" + newAnimation + "\"");
 								if (loop)
@@ -105,11 +94,8 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("AddAnimation",
 							[this](int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, float delay, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
 								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								obj->addAnimation(trackIndex, newAnimation, loop, delay, callback.value());
+								obj->addAnimation(trackIndex, newAnimation, loop, delay, std::move(callback));
 								const std::string lua_object = getLuaPath(obj->getId());
 								lua_state->script(lua_object + ".animation = \"" + newAnimation + "\"");
 								if (loop)
@@ -131,13 +117,10 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("PlayAnimationOn",
 							[this](const LuaSpineObject &object, int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
 								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
-									obj->playAnimation(trackIndex, newAnimation, loop, callback.value());
+									obj->playAnimation(trackIndex, newAnimation, loop, std::move(callback));
 									const std::string lua_object = getLuaPath(obj->getId());
 									lua_state->script(lua_object + ".animation = \"" + newAnimation + "\"");
 									if (loop)
@@ -160,13 +143,10 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("AddAnimationOn",
 							[this](const LuaSpineObject &object, int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, float delay, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
 								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
-									obj->addAnimation(trackIndex, newAnimation, loop, delay, callback.value());
+									obj->addAnimation(trackIndex, newAnimation, loop, delay, std::move(callback));
 									const std::string lua_object = getLuaPath(obj->getId());
 									lua_state->script(lua_object + ".animation = \"" + newAnimation + "\"");
 									if (loop)
@@ -244,9 +224,6 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("PlayDialog",
 							[this](const LuaDialog &dialogName, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
 								float x = 0;
 								float y = 0;
 								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
@@ -257,7 +234,7 @@ void Game::setupLuaFunctions()
 									spPointAttachment *point = SUB_CAST(spPointAttachment, att);
 									spPointAttachment_computeWorldPosition(point, slot->bone, &x, &y);
 								}
-								getDialogManager()->play(dialogName, jngl::Vec2(x, -y) + obj->getPosition(), callback.value());
+								getDialogManager()->play(dialogName, jngl::Vec2(x, -y) + obj->getPosition(), std::move(callback));
 							});
 
 	/// Add the current item to the inventory.
@@ -477,9 +454,6 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("GoToPoint",
 							[this](const LuaSpinePoint &point_name, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
 								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								auto position = obj->getPoint(point_name);
 								if (!position)
@@ -487,7 +461,7 @@ void Game::setupLuaFunctions()
 									jngl::error("Point " + point_name + " not found.");
 									return;
 								}
-								player->addTargetPositionImmediately(obj->getPosition() + *position, callback.value());
+								player->addTargetPositionImmediately(obj->getPosition() + *position, std::move(callback));
 								pointer->setPrimaryHandled();
 								// TODO Write Players position to Lua
 							});
@@ -499,9 +473,6 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("GoToPointOn",
 							[this](const LuaSpineObject &object, const LuaSpinePoint &point_name, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
 								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
@@ -511,7 +482,7 @@ void Game::setupLuaFunctions()
 										jngl::error("Point " + point_name + " not found.");
 										return;
 									}
-									player->addTargetPositionImmediately(obj->getPosition() + *position, callback.value());
+									player->addTargetPositionImmediately(obj->getPosition() + *position, std::move(callback));
 									pointer->setPrimaryHandled();
 									// TODO Write Players position to Lua
 								}
@@ -553,7 +524,7 @@ void Game::setupLuaFunctions()
 									if (point)
 									{
 										point->setPosition(position.value());
-										point->addTargetPositionImmediately(position.value(), (*lua_state)["pass"]);
+										point->addTargetPositionImmediately(position.value(), std::nullopt);
 									}
 									obj->setPosition(position.value());
 									const std::string lua_object = getLuaPath(obj->getId());
@@ -580,7 +551,7 @@ void Game::setupLuaFunctions()
 										{
 											point->setPosition(position.value());
 											point->stop_walking();
-											point->addTargetPositionImmediately(position.value(), (*lua_state)["pass"]);
+											point->addTargetPositionImmediately(position.value(), std::nullopt);
 										}
 										obj->setPosition(position.value());
 										const std::string lua_object = getLuaPath(obj->getId());
