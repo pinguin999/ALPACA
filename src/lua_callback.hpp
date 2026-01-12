@@ -6,7 +6,7 @@ class SpineObject;
 
 class LuaCallback {
 public:
-	explicit LuaCallback(sol::function callback, std::shared_ptr<sol::state> lua_state);
+	LuaCallback(sol::function callback, std::shared_ptr<sol::state> lua_state);
 	void operator()();
 	bool calls_function(const sol::function& function);
 

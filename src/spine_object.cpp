@@ -52,7 +52,7 @@ void SpineObject::animationStateListener(spAnimationState *state, spEventType ty
     }
 }
 
-SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, std::string id, float scale) : walk_callback((*game->lua_state)["pass"]), scale(scale), spine_name(spine_file), id(std::move(id)), game(game)
+SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, std::string id, float scale) : scale(scale), spine_name(spine_file), id(std::move(id)), game(game)
 {
     atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
     assert(atlas);
@@ -131,12 +131,13 @@ std::vector<std::string> SpineObject::getPointNames() const
     return result;
 }
 
-void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimation, bool loop, sol::function callback)
+void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimation, bool loop, std::optional<sol::function> callback)
 {
 	if (auto _game = game.lock()) {
-		this->animation_callback.emplace(
-		    std::to_string(trackIndex) + currentAnimation,
-		    LuaCallback(std::move(callback), _game->lua_state));
+		if (callback) {
+			this->animation_callback.emplace(std::to_string(trackIndex) + currentAnimation,
+			                                 LuaCallback(std::move(*callback), _game->lua_state));
+		}
 		if (trackIndex == 0) {
 			this->currentAnimation = currentAnimation;
 		}
@@ -161,12 +162,13 @@ void SpineObject::stopAnimation(int trackIndex)
 }
 
 
-void SpineObject::addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, sol::function callback)
+void SpineObject::addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, std::optional<sol::function> callback)
 {
 	if (auto _game = game.lock()) {
-		this->animation_callback.emplace(
-		    std::to_string(trackIndex) + currentAnimation,
-		    LuaCallback(std::move(callback), _game->lua_state));
+		if (callback) {
+			this->animation_callback.emplace(std::to_string(trackIndex) + currentAnimation,
+			                                 LuaCallback(std::move(*callback), _game->lua_state));
+		}
 		if (trackIndex == 0) {
 			this->currentAnimation = currentAnimation;
 		}

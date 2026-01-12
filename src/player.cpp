@@ -38,7 +38,7 @@ void Player::setDirection()
             currentAnimation = (*_game->lua_state)["config"]["player_walk_animation"];
             (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["animation"] = currentAnimation;
             (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["loop_animation"] = true;
-            playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
+            playAnimation(0, currentAnimation, true);
         }
 
 #ifndef NDEBUG
@@ -69,7 +69,7 @@ void Player::addTargetPosition(jngl::Vec2 target)
     path.push_back(target);
 }
 
-void Player::addTargetPositionImmediately(jngl::Vec2 target, const sol::function &callback)
+void Player::addTargetPositionImmediately(jngl::Vec2 target, std::optional<sol::function> callback)
 {
     if (auto _game = game.lock())
     {
@@ -83,11 +83,11 @@ void Player::addTargetPositionImmediately(jngl::Vec2 target, const sol::function
             newPath = _game->currentScene->background->getPathToTarget(position, target);
 
             path.insert(path.end(), newPath.begin(), newPath.end());
-			this->walk_callback = LuaCallback(callback, _game->lua_state);
-		} else {
-			this->walk_callback = LuaCallback(callback, _game->lua_state);
-			walk_callback();
-			walk_callback = (*_game->lua_state)["pass"];
+			if (callback) {
+				this->walk_callback = LuaCallback(std::move(*callback), _game->lua_state);
+			}
+		} else if (callback) {
+			(*callback)(); // we're already at target position, call the callback immediately
 		}
 	}
 }
@@ -131,11 +131,14 @@ bool Player::step(bool /*force*/)
             currentAnimation = (*_game->lua_state)["config"]["player_idle_animation"];
             // Callback to Lua
             auto old_callback = walk_callback;
-            walk_callback(); // walk_callback can be changed in here.
+            if (walk_callback)
+            {
+                (*walk_callback)(); // walk_callback can be changed in here.
+            }
             if (old_callback == walk_callback)
             {
                 // only adjust the walk_callback if the Lua script itself hasn't changed it since
-                walk_callback = (*_game->lua_state)["pass"];
+                walk_callback = std::nullopt;
             }
 
             if (currentAnimation == (*_game->lua_state)["config"]["player_idle_animation"])
@@ -143,7 +146,7 @@ bool Player::step(bool /*force*/)
                 (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["animation"] = currentAnimation;
                 (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["loop_animation"] = true;
 
-                playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
+                playAnimation(0, currentAnimation, true);
             }
         }
 
@@ -182,7 +185,7 @@ bool Player::step(bool /*force*/)
 
 		if (_game->pointer->primaryDown() && !path.empty() && interruptible &&
 		    !_game->pointer->isPrimaryAlreadyHandled() &&
-		    walk_callback.calls_function((*_game->lua_state)["pass"])) {
+		    !walk_callback) {
 			const jngl::Vec2 click_position = _game->pointer->getWorldPosition();
 
 			if (boost::qvm::mag_sqr(target_position - click_position) > 5)
@@ -226,7 +229,7 @@ bool Player::step(bool /*force*/)
             }
 
             newPath = _game->currentScene->background->getPathToTarget(position, click_position);
-            walk_callback = (*_game->lua_state)["pass"];
+            walk_callback = std::nullopt;
 
             path.insert(path.end(), newPath.begin(), newPath.end());
             if (!path.empty())
@@ -238,15 +241,15 @@ bool Player::step(bool /*force*/)
             if (max_speed > 0.0 && _game->currentScene->background->is_walkable(click_position) && time - last_click_time < double_click_time && click_distance < max_click_distance)
             {
                 path.clear();
-                walk_callback = (*_game->lua_state)["pass"];
+                walk_callback = std::nullopt;
                 path.push_back(click_position);
                 position = click_position;
                 setTargentPosition(click_position);
                 currentAnimation = (*_game->lua_state)["config"]["player_beam_animation"];
                 (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["animation"] = currentAnimation;
                 (*_game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["loop_animation"] = false;
-                playAnimation(0, currentAnimation, false, (*_game->lua_state)["pass"]);
-                addAnimation(0, (*_game->lua_state)["config"]["player_idle_animation"], true, 0, (*_game->lua_state)["pass"]);
+                playAnimation(0, currentAnimation, false);
+                addAnimation(0, (*_game->lua_state)["config"]["player_idle_animation"], true, 0);
             }
             last_click_time = time;
             last_click_position = click_position;

@@ -11,7 +11,6 @@ DialogManager::DialogManager(std::shared_ptr<Game> game)
     : dialogFont((*game->lua_state)["config"]["default_font"], 25),
       bubble(nullptr),
       selected_index(-1),
-      dialog_callback((*game->lua_state)["pass"]),
       game(game),
       default_font_color(textToColor((*game->lua_state)["config"]["default_font_color"])),
       default_font_selected_color(textToColor((*game->lua_state)["config"]["default_font_selected_color"])),
@@ -28,7 +27,7 @@ void DialogManager::loadDialogsFromFile(const std::string& fileName, bool initia
     }
 }
 
-void DialogManager::play(const std::string &dialogName, jngl::Vec2, const sol::function &callback)
+void DialogManager::play(const std::string &dialogName, jngl::Vec2, std::optional<sol::function> callback)
 {
     cancelDialog(); // if there is a current dialog, cancel the current one
 
@@ -41,7 +40,9 @@ void DialogManager::play(const std::string &dialogName, jngl::Vec2, const sol::f
 					currentNode = nullptr;
 				}
 			}
-			dialog_callback = LuaCallback(callback, _game->lua_state);
+            if (callback) {
+			    dialog_callback = LuaCallback(std::move(*callback), _game->lua_state);
+            }
 			continueCurrent();
 		} else {
 			jngl::error("Dialog " + dialogName + " not found.");
@@ -279,7 +280,7 @@ void DialogManager::playCharacterAnimation(const std::string &character, const s
         if (spine_character)
         {
             auto animation = "say_" + _game->language + "_" + std::string(n_zero - std::min(n_zero, id.length()), '0') + id;
-            spine_character->playAnimation(SPINE_MOUTH_TRACK, animation, false, (*_game->lua_state)["pass"]);
+            spine_character->playAnimation(SPINE_MOUTH_TRACK, animation, false);
             last_played_audio_character = character;
         }
     }
@@ -337,8 +338,10 @@ void DialogManager::cancelDialog()
 
     if (auto _game = game.lock())
     {
-        dialog_callback();
-        dialog_callback = (*_game->lua_state)["pass"];
+        if (dialog_callback) {
+            (*dialog_callback)();
+        }
+        dialog_callback = std::nullopt;
     }
 }
 
