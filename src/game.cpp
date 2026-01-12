@@ -624,10 +624,7 @@ void Game::draw() const
 		{
 			continue;
 		}
-		if (obj->getVisible())
-		{
-			obj->draw();
-		}
+		obj->draw();
 	}
 	jngl::popMatrix();
 

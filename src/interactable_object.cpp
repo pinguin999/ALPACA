@@ -36,7 +36,7 @@ bool InteractableObject::step(bool force)
         }
         if (mouseDown) {
             position = mouseDown->newPos();
-            jngl::debug("{}", position);
+            jngl::debug("{} \"{}\"", position, luaIndex);
             _game->currentScene->updateObjectPosition(id, position);
             if (mouseDown->released()) {
                 mouseDown = std::nullopt;
@@ -102,11 +102,6 @@ void InteractableObject::registerToDelete()
 
 void InteractableObject::draw() const
 {
-    if (!visible)
-    {
-        return;
-    }
-
     auto mv = jngl::modelview();
     if (abs_position)
     {
@@ -122,14 +117,17 @@ void InteractableObject::draw() const
     }
     mv.rotate(getRotation());
 
-#ifndef NDEBUG
-    if (auto _game = game.lock())
+    if (visible)
     {
-        skeleton->debugdraw = _game->enableDebugDraw;
-    }
+#ifndef NDEBUG
+        if (auto _game = game.lock())
+        {
+            skeleton->debugdraw = _game->enableDebugDraw;
+        }
 #endif
 
-    skeleton->draw(mv);
+        skeleton->draw(mv);
+    }
 
 #ifndef NDEBUG
     if (auto _game = game.lock())
