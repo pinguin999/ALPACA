@@ -32,23 +32,21 @@ void DialogManager::play(const std::string &dialogName, jngl::Vec2, const sol::f
 {
     cancelDialog(); // if there is a current dialog, cancel the current one
 
-    currentDialog = schnackFile->dialogs[dialogName];
-    if (currentDialog)
-    {
-        currentNode = currentDialog->getEntryNode();
-        if(currentNode != nullptr)
-        {
-            if(!currentNode->checkPrecondition(currentDialog))
-            {
-                currentNode = nullptr;
-            }
-        }
-        dialog_callback = callback;
-        continueCurrent();
-    }else
-    {
-        jngl::error("Dialog " + dialogName + " not found.");
-    }
+	if (auto _game = game.lock()) {
+		currentDialog = schnackFile->dialogs[dialogName];
+		if (currentDialog) {
+			currentNode = currentDialog->getEntryNode();
+			if (currentNode != nullptr) {
+				if (!currentNode->checkPrecondition(currentDialog)) {
+					currentNode = nullptr;
+				}
+			}
+			dialog_callback = LuaCallback(callback, _game->lua_state);
+			continueCurrent();
+		} else {
+			jngl::error("Dialog " + dialogName + " not found.");
+		}
+	}
 }
 
 void DialogManager::step()

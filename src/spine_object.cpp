@@ -133,48 +133,53 @@ std::vector<std::string> SpineObject::getPointNames() const
 
 void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimation, bool loop, sol::function callback)
 {
-    this->animation_callback[std::to_string(trackIndex) + currentAnimation] = std::move(callback);
-    if (trackIndex == 0)
-    {
-        this->currentAnimation = currentAnimation;
-    }
-    spAnimation *animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData, currentAnimation.c_str());
-    if (animation)
-    {
-        spAnimationState_setAnimation(skeleton->state, trackIndex, animation, static_cast<int>(loop));
-    }
-    else
-    {
-        jngl::error("\033[1;31m The animation " + currentAnimation + " is missing for " + spine_name + " \033[0m");
-    }
+	if (auto _game = game.lock()) {
+		this->animation_callback.emplace(
+		    std::to_string(trackIndex) + currentAnimation,
+		    LuaCallback(std::move(callback), _game->lua_state));
+		if (trackIndex == 0) {
+			this->currentAnimation = currentAnimation;
+		}
+		spAnimation* animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData,
+		                                                      currentAnimation.c_str());
+		if (animation) {
+			spAnimationState_setAnimation(skeleton->state, trackIndex, animation,
+			                              static_cast<int>(loop));
+		} else {
+			jngl::error("\033[1;31m The animation " + currentAnimation + " is missing for " +
+			            spine_name + " \033[0m");
+		}
+	}
 }
-
 
 void SpineObject::stopAnimation(int trackIndex)
 {
     if (auto _game = game.lock()) {
         spAnimationState_setEmptyAnimation(skeleton->state, trackIndex, 0.1);
-        animation_callback[std::to_string(trackIndex) + "<empty>"] = (*_game->lua_state)["pass"];
-    }
+		animation_callback.erase(std::to_string(trackIndex) + "<empty>");
+	}
 }
 
 
 void SpineObject::addAnimation(int trackIndex, const std::string &currentAnimation, bool loop, float delay, sol::function callback)
 {
-    this->animation_callback[std::to_string(trackIndex) + currentAnimation] = std::move(callback);
-    if (trackIndex == 0)
-    {
-        this->currentAnimation = currentAnimation;
-    }
-    spAnimation *animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData, currentAnimation.c_str());
-    if (animation)
-    {
-        spAnimationState_addAnimation(skeleton->state, trackIndex, animation, static_cast<int>(loop), delay);
-    }
-    else
-    {
-        jngl::error("\033[1;31m The animation " + currentAnimation + " is missing for " + spine_name + " \033[0m");
-    }
+	if (auto _game = game.lock()) {
+		this->animation_callback.emplace(
+		    std::to_string(trackIndex) + currentAnimation,
+		    LuaCallback(std::move(callback), _game->lua_state));
+		if (trackIndex == 0) {
+			this->currentAnimation = currentAnimation;
+		}
+		spAnimation* animation = spSkeletonData_findAnimation(skeleton->state->data->skeletonData,
+		                                                      currentAnimation.c_str());
+		if (animation) {
+			spAnimationState_addAnimation(skeleton->state, trackIndex, animation,
+			                              static_cast<int>(loop), delay);
+		} else {
+			jngl::error("\033[1;31m The animation " + currentAnimation + " is missing for " +
+			            spine_name + " \033[0m");
+		}
+	}
 }
 
 void SpineObject::onAnimationComplete(const int index,  const std::string &animation)
@@ -190,9 +195,12 @@ void SpineObject::onAnimationComplete(const int index,  const std::string &anima
             (*_game->lua_state).script(lua_object + ".loop_animation = true");
         }
         const auto key = std::to_string(index) + animation;
-        animation_callback[key]();
-        animation_callback[key] = (*_game->lua_state)["pass"];
-    }
+		auto it = animation_callback.find(key);
+		if (it != animation_callback.end()) {
+			it->second();
+			animation_callback.erase(it);
+		}
+	}
 }
 
 void SpineObject::setSkin(const std::string &skin)

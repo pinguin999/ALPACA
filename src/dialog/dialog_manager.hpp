@@ -8,6 +8,7 @@
 #include <schnacker.hpp>
 
 #include "speech_bubble.hpp"
+#include "../lua_callback.hpp"
 
 class Game;
 
@@ -56,7 +57,7 @@ private:
     std::string last_played_audio;
     std::string last_played_audio_character;
     bool wasActiveLastFrame = false;
-    sol::function dialog_callback;
+    LuaCallback dialog_callback;
 	const std::weak_ptr<Game> game;
 
     jngl::Rgba default_font_color;

@@ -7,6 +7,8 @@
 #include "skeleton_drawable.hpp"
 #include <sol/sol.hpp>
 
+#include "lua_callback.hpp"
+
 struct spSkeletonData;
 class Game;
 
@@ -86,8 +88,8 @@ public:
 
 protected:
 	std::string currentAnimation = "idle";
-	std::map<std::string, sol::function> animation_callback;
-	sol::function walk_callback;
+	std::map<std::string, LuaCallback> animation_callback;
+	LuaCallback walk_callback;
 
 	bool cross_scene = false;
 	bool deleted = false;

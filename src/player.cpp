@@ -83,15 +83,13 @@ void Player::addTargetPositionImmediately(jngl::Vec2 target, const sol::function
             newPath = _game->currentScene->background->getPathToTarget(position, target);
 
             path.insert(path.end(), newPath.begin(), newPath.end());
-            this->walk_callback = callback;
-        }
-        else
-        {
-            this->walk_callback = callback;
-            walk_callback();
-            walk_callback = (*_game->lua_state)["pass"];
-        }
-    }
+			this->walk_callback = LuaCallback(callback, _game->lua_state);
+		} else {
+			this->walk_callback = LuaCallback(callback, _game->lua_state);
+			walk_callback();
+			walk_callback = (*_game->lua_state)["pass"];
+		}
+	}
 }
 
 void Player::stop_walking()
@@ -182,11 +180,12 @@ bool Player::step(bool /*force*/)
             _game->pointer->attachedObjects.clear();
         }
 
-        if (_game->pointer->primaryDown() && !path.empty() && interruptible && !_game->pointer->isPrimaryAlreadyHandled() && walk_callback == (*_game->lua_state)["pass"] )
-        {
-            const jngl::Vec2 click_position = _game->pointer->getWorldPosition();
+		if (_game->pointer->primaryDown() && !path.empty() && interruptible &&
+		    !_game->pointer->isPrimaryAlreadyHandled() &&
+		    walk_callback.calls_function((*_game->lua_state)["pass"])) {
+			const jngl::Vec2 click_position = _game->pointer->getWorldPosition();
 
-            if (boost::qvm::mag_sqr(target_position - click_position) > 5)
+			if (boost::qvm::mag_sqr(target_position - click_position) > 5)
             {
                 path.clear();
                 newPath = _game->currentScene->background->getPathToTarget(position, click_position);
@@ -197,11 +196,11 @@ bool Player::step(bool /*force*/)
                     setTargentPosition(path.front());
                 }
             }
-        }
+		}
 
-        if (_game->pointer->primaryPressed() && interruptible && !_game->pointer->isPrimaryAlreadyHandled())
-        {
-            const jngl::Vec2 click_position = _game->pointer->getWorldPosition();
+		if (_game->pointer->primaryPressed() && interruptible &&
+		    !_game->pointer->isPrimaryAlreadyHandled()) {
+			const jngl::Vec2 click_position = _game->pointer->getWorldPosition();
             auto *collision = spSkeletonBounds_containsPoint(bounds,
                                                              static_cast<float>(click_position.x) - static_cast<float>(position.x),
                                                              static_cast<float>(click_position.y) - static_cast<float>(position.y));
@@ -251,9 +250,9 @@ bool Player::step(bool /*force*/)
             }
             last_click_time = time;
             last_click_position = click_position;
-        }
+		}
 
-        _game->setCameraPosition(calcCamPos(), 0, 0);
+		_game->setCameraPosition(calcCamPos(), 0, 0);
     }
 
     return false;
