@@ -1,57 +1,6 @@
 #include "spine_object.hpp"
 #include "game.hpp"
 
-// void SpineObject::animationStateListener(spAnimationState *state, spEventType type, spTrackEntry *entry,
-//                                          spEvent *event)
-// {
-//     if (event)
-//     {
-//         if (event->data->audioPath)
-//         {
-//             jngl::debug(event->data->audioPath);
-//             jngl::play("audio/" + std::string(event->data->audioPath));
-//         }
-//         if (event->data->stringValue)
-//         {
-//             // This in Lua setzen
-
-//             jngl::debug(event->data->stringValue);
-
-//             if (auto _game = reinterpret_cast<SpineObject *>(state->userData)->game.lock())
-//             {
-
-//                 (*_game->lua_state)["this"] = reinterpret_cast<SpineObject *>(state->userData)->getptr();
-//                 std::string extension = ".lua";
-//                 std::string event_string = std::string(event->data->stringValue);
-//                 if (std::equal(extension.rbegin(), extension.rend(), event_string.rbegin()))
-//                 {
-//                     // run lua script from file
-//                      _game->runAction(event_string.erase(event_string.size() - 4), (*_game->lua_state)["this"]);
-//                 }
-//                 else
-//                 {
-//                     _game->lua_state->script(event_string);
-//                 }
-//             }
-//         }
-//     }
-
-//     switch (type)
-//     {
-//     case SP_ANIMATION_INTERRUPT:
-//         break;
-
-//     case SP_ANIMATION_COMPLETE:
-//         if (!entry->loop)
-//         {
-//             reinterpret_cast<SpineObject *>(state->userData)->onAnimationComplete(std::to_string(entry->trackIndex) + std::string(entry->animation->name));
-//         }
-//         break;
-//     default:
-//         break;
-//     }
-// }
-
 SpineObject::SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, std::string id, float scale) : walk_callback((*game->lua_state)["pass"]), scale(scale), spine_name(spine_file), id(std::move(id)), game(game)
 {
 	atlas = std::make_unique<spine::Atlas>((spine_file + "/" + spine_file + ".atlas").c_str(),

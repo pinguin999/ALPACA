@@ -17,7 +17,7 @@ bool InteractableObject::step(bool force)
         skeleton->step();
         skeleton->skeleton->update(1.0/60.0);
         skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
-        // spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
+        bounds->update(*skeleton->skeleton, true);
 
 #ifndef NDEBUG
         if (_game->editMode  && !abs_position)
@@ -70,7 +70,7 @@ bool InteractableObject::step(bool force)
             auto *collision = bounds->containsPoint(static_cast<float>(click_position.x) - static_cast<float>(position.x), static_cast<float>(click_position.y) - static_cast<float>(position.y));
             if (collision)
             {
-                collision_script = "collision->super.super.name";
+                collision_script = collision->getName().buffer();
                 if (collision_script != "non_walkable_area") {
                     jngl::debug("clicked interactable item {}", collision_script);
                     _game->pointer->setPrimaryHandled();

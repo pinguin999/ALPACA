@@ -16,7 +16,7 @@ void Background::stepSpineAndNavigation()
     skeleton->step();
     skeleton->skeleton->update(1.0/60.0);
     skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
-    // spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
+    bounds->update(*skeleton->skeleton, true);
     corners = getCorners();
     forbidden_corners = getForbiddenCorners();
 }
@@ -48,18 +48,17 @@ bool Background::stepClickableRegions(bool force)
 
         if (_game->pointer && _game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
         {
-            const jngl::Vec2 mousePos = _game->pointer->getWorldPosition();
-			auto collision = false;
-			// spine::spSkeletonBounds_containsPointNotMatchingName(bounds,
-			// "walkable_area", static_cast<float>(mousePos.x) -
-			// static_cast<float>(position.x), static_cast<float>(mousePos.y) -
-			// static_cast<float>(position.y));
+			const jngl::Vec2 mousePos = _game->pointer->getWorldPosition();
+			auto* collision = spSkeletonBounds_containsPointNotMatchingName(
+			    bounds.get(), "walkable_area",
+			    static_cast<float>(mousePos.x) - static_cast<float>(position.x),
+			    static_cast<float>(mousePos.y) - static_cast<float>(position.y));
 			// TODO Double Click on Regions
 			if (collision) {
-				// collision_script = collision->super.super.name;
-				// jngl::debug("clicked interactable region {}", collision_script);
-				// _game->pointer->setPrimaryHandled();
-				// _game->runAction(collision_script, getptr());
+				collision_script = collision->getName().buffer();
+				jngl::debug("clicked interactable region {}", collision_script);
+				_game->pointer->setPrimaryHandled();
+				_game->runAction(collision_script, getptr());
 			}
 		}
 	}
@@ -417,29 +416,28 @@ std::vector<std::vector<jngl::Vec2>> Background::getForbiddenCorners() const
     return result;
 }
 
-bool Background::is_walkable(jngl::Vec2 /* position */) const
+bool Background::is_walkable(jngl::Vec2 position) const
 {
-    return true;
-    // const auto walkableResult = spine::spSkeletonBounds_containsPointMatchingName(bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
-    // if (!walkableResult)
-    // {
-    //     return false;
-    // }
+    const auto walkableResult = spSkeletonBounds_containsPointMatchingName(bounds.get(), "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
+    if (!walkableResult)
+    {
+        return false;
+    }
 
-    // if (auto _game = game.lock())
-    // {
-    //     for (const auto &obj : _game->gameObjects)
-    //     {
-    //         auto *non_walkable = spine::spSkeletonBounds_containsPointMatchingName(obj->bounds, "non_walkable_area", static_cast<float>(position.x) - static_cast<float>(obj->getPosition().x), static_cast<float>(position.y) - static_cast<float>(obj->getPosition().y));
-    //         if (non_walkable)
-    //         {
-    //             return false;
-    //         }
-    //     }
-    // }
+    if (auto _game = game.lock())
+    {
+        for (const auto &obj : _game->gameObjects)
+        {
+            auto *non_walkable = spSkeletonBounds_containsPointMatchingName(obj->bounds.get(), "non_walkable_area", static_cast<float>(position.x) - static_cast<float>(obj->getPosition().x), static_cast<float>(position.y) - static_cast<float>(obj->getPosition().y));
+            if (non_walkable)
+            {
+                return false;
+            }
+        }
+    }
 
-    // // if there is an interactable region and a walkable spot,
-    // // just interact, don't walk there
-    // return spine::spSkeletonBounds_containsPointNotMatchingName(
-    //            bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y)) == nullptr;
+    // if there is an interactable region and a walkable spot,
+    // just interact, don't walk there
+    return spSkeletonBounds_containsPointNotMatchingName(
+               bounds.get(), "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y)) == nullptr;
 }

@@ -90,16 +90,16 @@ bool Pointer::step(bool)
             auto world_pos = getWorldPosition();
             for (auto obj : _game->gameObjects)
             {
-                // if (obj->getVisible() &&
-                //     !(_game->getInactivLayerBorder() > obj->layer) &&
-                //     obj->bounds &&
-                //     bool(spSkeletonBounds_containsPointNotMatchingName(obj->bounds, "walkable_area", (float)world_pos.x - (float)obj->getPosition().x, (float)world_pos.y - (float)obj->getPosition().y)) &&
-                //     bool(spSkeletonBounds_containsPointNotMatchingName(obj->bounds, "non_walkable_area", (float)world_pos.x - (float)obj->getPosition().x, (float)world_pos.y - (float)obj->getPosition().y)))
-                // {
-                //     over = true;
-                //     vibrate();
-                //     break;
-                // }
+                if (obj->getVisible() &&
+                    !(_game->getInactivLayerBorder() > obj->layer) &&
+                    obj->bounds &&
+                    bool(spSkeletonBounds_containsPointNotMatchingName(obj->bounds.get(), "walkable_area", (float)world_pos.x - (float)obj->getPosition().x, (float)world_pos.y - (float)obj->getPosition().y)) &&
+                    bool(spSkeletonBounds_containsPointNotMatchingName(obj->bounds.get(), "non_walkable_area", (float)world_pos.x - (float)obj->getPosition().x, (float)world_pos.y - (float)obj->getPosition().y)))
+                {
+                    over = true;
+                    vibrate();
+                    break;
+                }
             }
         }
 

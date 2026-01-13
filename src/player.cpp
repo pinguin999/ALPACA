@@ -116,7 +116,7 @@ bool Player::step(bool /*force*/)
             skeleton->step();
             skeleton->skeleton->update(1.0/60.0);
             skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
-            // spSkeletonBounds_update(bounds, skeleton->skeleton, true);
+            bounds->update(*skeleton->skeleton, true);
             return false;
         }
 
@@ -157,11 +157,11 @@ bool Player::step(bool /*force*/)
         }
         position += tmp_target_position;
 
-        // spSkeleton_physicsTranslate(skeleton->skeleton, tmp_target_position.x * 2.0, tmp_target_position.y * 2.0);
+        skeleton->skeleton->physicsTranslate(tmp_target_position.x * 2.0, tmp_target_position.y * 2.0);
         skeleton->step();
         skeleton->skeleton->update(1.0/60.0);
         skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
-        // bounds->update(skeleton->skeleton, true);
+        bounds->update(*skeleton->skeleton, true);
 
         // TODO it's still possible to walk outside of the nav mesh. We have to fix that soon.
         // #ifndef NDEBUG
