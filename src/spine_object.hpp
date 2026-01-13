@@ -16,10 +16,6 @@ public:
 	SpineObject(const std::shared_ptr<Game> &game, const std::string &spine_file, std::string id, float scale = 1);
 	virtual ~SpineObject()
 	{
-		delete bounds;
-		delete animationStateData;
-		delete skeletonData;
-		delete atlas;
 	}
 
 	std::shared_ptr<SpineObject> getptr()
@@ -53,10 +49,9 @@ public:
 	bool getVisible() { return visible; }
 
 	std::unique_ptr<SkeletonDrawable> skeleton;
-	spine::SkeletonBounds *bounds = nullptr;
-	spine::SkeletonData* skeletonData = nullptr;
-	spine::AnimationStateData *animationStateData = nullptr;
-	spine::Atlas *atlas = nullptr;
+	std::unique_ptr<spine::SkeletonBounds> bounds;
+	std::unique_ptr<spine::SkeletonData> skeletonData;
+	std::unique_ptr<spine::Atlas> atlas;
 	std::optional<jngl::Vec2> getPoint(const std::string &point_name) const;
 	void playAnimation(int trackIndex, const std::string &currentAnimation, bool loop, sol::function callback);
 	void stopAnimation(int trackIndex);

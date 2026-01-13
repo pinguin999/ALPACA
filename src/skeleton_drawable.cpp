@@ -1,30 +1,16 @@
 #include "skeleton_drawable.hpp"
 
-#ifndef SPINE_MESH_VERTEX_COUNT_MAX
-#define SPINE_MESH_VERTEX_COUNT_MAX 1000
-#endif
-
-static bool operator==(const spColor& lhs, const spColor& rhs)
-{
-    return lhs.a == rhs.a && lhs.r == rhs.r &&lhs.g == rhs.g &&lhs.b == rhs.b;
-}
-
-_SP_ARRAY_IMPLEMENT_TYPE(spColorArray, spColor)
-
 #ifndef NDEBUG
 void pac_unload_file(const char* path);
 
 #endif
 
-void _spAtlasPage_createTexture(spAtlasPage* self, const char* path) {
-	jngl::Sprite* texture;
+spine::SpineExtension* spine::getDefaultExtension() {
+	return new spine::DefaultSpineExtension();
+}
 
-#ifndef NDEBUG
-	pac_unload_file(path);
-#endif
-	texture = new jngl::Sprite(path);
-
-	texture->setPos(0, 0);
+void TextureLoader::load(spine::AtlasPage& page, const spine::String& path) {
+	auto texture = new jngl::Sprite(path.buffer());
 	// if (!texture->loadFromFile(path)) return;
 
 	// TODO
@@ -32,69 +18,44 @@ void _spAtlasPage_createTexture(spAtlasPage* self, const char* path) {
 	// if (self->uWrap == SP_ATLAS_REPEAT && self->vWrap == SP_ATLAS_REPEAT)
 	// texture->setRepeated(true);
 
-	self->rendererObject = texture;
+	page.texture = texture;
 	// Vector2u size = texture->getSize();
-	self->width = texture->getWidth();
-	self->height = texture->getHeight();
+	page.width = texture->getWidth();
+	page.height = texture->getHeight();
 }
 
-void _spAtlasPage_disposeTexture(spAtlasPage* self) {
-    delete static_cast<jngl::Sprite *>(self->rendererObject);
+void TextureLoader::unload(void* texture) {
+	delete (jngl::Sprite*)texture;
 }
 
-char* _spUtil_readFile(const char* path, int* length) {
-	const auto str = jngl::readAsset(path).str();
-	if (length) {
-		*length = static_cast<int>(str.length());
-	}
-	char* buf = static_cast<char*>(malloc(str.length() + 1));
-	std::copy(str.begin(), str.end(), buf);
-	buf[str.length()] = '\0';
-	return buf;
-}
+TextureLoader SkeletonDrawable::textureLoader;
 
-SkeletonDrawable::SkeletonDrawable(spine::SkeletonData *skeletonData, spine::AnimationStateData *stateData)
-	: skeleton(spSkeleton_create(skeletonData)), timeScale(1),
-		ownsAnimationStateData(stateData == nullptr), tempUvs(spFloatArray_create(16)), tempColors(spColorArray_create(16)), clipper(nullptr)
-{
-	spBone_setYDown(1);
-	worldVertices = MALLOC(float, SPINE_MESH_VERTEX_COUNT_MAX);
+SkeletonDrawable::SkeletonDrawable(spine::SkeletonData& skeletonData,
+                                   std::unique_ptr<spine::AnimationStateData> animationStateData)
+: timeScale(1), animationStateData(std::move(animationStateData)) {
+	quadIndices.add(0);
+	quadIndices.add(1);
+	quadIndices.add(2);
+	quadIndices.add(2);
+	quadIndices.add(3);
+	quadIndices.add(0);
+	spine::Bone::setYDown(true);
+	skeleton = std::make_unique<spine::Skeleton>(&skeletonData);
 
-	if (ownsAnimationStateData)
-	{
-		stateData = new spine::AnimationStateData(skeletonData);
+	if (!this->animationStateData) {
+		this->animationStateData = std::make_unique<spine::AnimationStateData>(&skeletonData);
 	}
 
-	state = new spine::AnimationStateData(stateData);
-
-	clipper = spSkeletonClipping_create();
+	state = std::make_unique<spine::AnimationState>(this->animationStateData.get());
 }
 
-SkeletonDrawable::~SkeletonDrawable() {
-	delete state;
-	delete skeleton;
-}
+SkeletonDrawable::~SkeletonDrawable() = default;
 
 void SkeletonDrawable::step() {
     const float deltaTime = 1.f / static_cast<float>(jngl::getStepsPerSecond());
-    spAnimationState_update(state, deltaTime * timeScale);
-	spAnimationState_apply(state, skeleton);
-	spSkeleton_update(skeleton, deltaTime);
-	spSkeleton_updateWorldTransform(skeleton, SP_PHYSICS_UPDATE);
-}
-
-void SkeletonDrawable::endAnimation(int trackIndex) const
-{
-    auto *animation = spAnimationState_getCurrent(state, trackIndex);
-    if (!animation)
-    {
-        return;
-    }
-    float const deltaTime = spTrackEntry_getTrackComplete(animation);
-    spAnimationState_update(state, deltaTime);
-	spAnimationState_apply(state, skeleton);
-	spSkeleton_update(skeleton, deltaTime);
-	spSkeleton_updateWorldTransform(skeleton, SP_PHYSICS_UPDATE);
+	state->update(deltaTime * timeScale);
+	state->apply(*skeleton);
+	skeleton->updateWorldTransform(spine::Physics_Update);
 }
 
 void SkeletonDrawable::setAlpha(float alpha) {
@@ -102,143 +63,145 @@ void SkeletonDrawable::setAlpha(float alpha) {
 }
 
 void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
-	unsigned short quadIndices[6] = { 0, 1, 2, 2, 3, 0 };
 
-    static auto *blancColor = new spColor();
+	static auto* blancColor = new spine::Color();
 
-    jngl::Sprite* texture = nullptr;
-	for (int j = 0; j < skeleton->slotsCount; ++j) {
-		spSlot* slot = skeleton->drawOrder[j];
-		spAttachment* attachment = slot->attachment;
-        if (!attachment)
-        {
-            continue;
-        }
-
-        float* vertices = worldVertices;
-		int verticesCount = 0;
-		float* uvs = nullptr;
-		unsigned short* indices = nullptr;
-		int indicesCount = 0;
-		spColor* attachmentColor = nullptr;
-
-		if (attachment->type == SP_ATTACHMENT_REGION) {
-            auto *regionAttachment = reinterpret_cast<spRegionAttachment *>(attachment);
-            spRegionAttachment_computeWorldVertices(regionAttachment, slot, vertices, 0, 2);
-			verticesCount = 4;
-			uvs = regionAttachment->uvs;
-			indices = quadIndices;
-			indicesCount = 6;
-            texture = static_cast<jngl::Sprite *>((static_cast<spAtlasRegion *>(regionAttachment->rendererObject))
-                                                      ->page->rendererObject);
-            attachmentColor = &regionAttachment->color;
-
-		} else if (attachment->type == SP_ATTACHMENT_MESH) {
-            auto *mesh = reinterpret_cast<spMeshAttachment *>(attachment);
-            if (mesh->super.worldVerticesLength > SPINE_MESH_VERTEX_COUNT_MAX)
-            {
-                continue;
-            }
-            texture = static_cast<jngl::Sprite *>((static_cast<spAtlasRegion *>(mesh->rendererObject))->page->rendererObject);
-            spVertexAttachment_computeWorldVertices(
-			    SUPER(mesh), slot, 0, mesh->super.worldVerticesLength, worldVertices, 0, 2);
-			verticesCount = mesh->super.worldVerticesLength >> 1;
-			uvs = mesh->uvs;
-			indices = mesh->triangles;
-			indicesCount = mesh->trianglesCount;
-			attachmentColor = &mesh->color;
-		} else if (attachment->type == SP_ATTACHMENT_CLIPPING) {
-            auto *clip = reinterpret_cast<spClippingAttachment *>(slot->attachment);
-            spSkeletonClipping_clipStart(clipper, slot, clip);
+	jngl::Sprite* texture = nullptr;
+	for (int j = 0; j < skeleton->getSlots().size(); ++j) {
+		spine::Slot& slot = *skeleton->getDrawOrder()[j];
+		spine::Attachment* attachment = slot.getAttachment();
+		if (!attachment) {
 			continue;
-		}else if(attachment->type == SP_ATTACHMENT_BOUNDING_BOX){
-#ifndef NDEBUG
-			if (debugdraw)
-			{
-				float *bbvertices = worldVertices;
+		}
 
-                auto *box = reinterpret_cast<spine::BoundingBoxAttachment *>(attachment);
+		spine::Vector<float>* vertices = &worldVertices;
+		int verticesCount = 0;
+		spine::Vector<float>* uvs = nullptr;
+		spine::Vector<unsigned short>* indices = nullptr;
+		int indicesCount = 0;
+		spine::Color* attachmentColor = nullptr;
 
-                spVertexAttachment_computeWorldVertices(SUPER(box), slot, 0, box->super.verticesCount, bbvertices, 0, 2);
-				if(std::string(box->super.super.name) == "non_walkable_area")
-				{
+		if (attachment->getRTTI().isExactly(spine::RegionAttachment::rtti)) {
+			auto* regionAttachment = reinterpret_cast<spine::RegionAttachment*>(attachment);
 
-				}else{
-					for (int i = 0; i < box->super.verticesCount - 2; i += 2)
-					{
-						jngl::drawLine(modelview, {bbvertices[i], bbvertices[i + 1]}, {bbvertices[i + 2], bbvertices[i + 3]});
-					}
-					jngl::drawLine(modelview, {bbvertices[box->super.verticesCount - 2], bbvertices[box->super.verticesCount - 1]}, {bbvertices[0], bbvertices[1]});
-				}
-				jngl::Text bbname;
-				bbname.setText(box->super.super.name);
-				bbname.setAlign(jngl::Alignment::CENTER);
-				bbname.setCenter(bbvertices[0], bbvertices[1]);
-				jngl::setFontColor(jngl::Rgba(0,1,0,1));
-				bbname.draw(modelview);
+			vertices->setSize(8, 0);
+			regionAttachment->computeWorldVertices(slot, *vertices, 0, 2);
+			verticesCount = 4;
+			uvs = &regionAttachment->getUVs();
+			indices = &quadIndices;
+			indicesCount = 6;
+			texture =
+			    reinterpret_cast<jngl::Sprite*>(regionAttachment->getRegion()->rendererObject);
+			attachmentColor = &regionAttachment->getColor();
+
+		} else if (attachment->getRTTI().isExactly(spine::MeshAttachment::rtti)) {
+			auto* mesh = reinterpret_cast<spine::MeshAttachment*>(attachment);
+			attachmentColor = &mesh->getColor();
+
+			// Early out if the slot color is 0
+			if (attachmentColor->a == 0) {
+				clipper.clipEnd(slot);
+				continue;
 			}
-#endif
-        }
-        else
-        {
-            continue;
-        }
 
-		if (attachmentColor == nullptr)
-		{
+			texture = static_cast<jngl::Sprite*>(mesh->getRegion()->rendererObject);
+			vertices->setSize(mesh->getWorldVerticesLength(), 0);
+			mesh->computeWorldVertices(slot, 0, mesh->getWorldVerticesLength(), vertices->buffer(),
+			                           0, 2);
+			verticesCount = mesh->getWorldVerticesLength() >> 1;
+			uvs = &mesh->getUVs();
+			indices = &mesh->getTriangles();
+			indicesCount = indices->size();
+		} else if (attachment->getRTTI().isExactly(spine::ClippingAttachment::rtti)) {
+			auto* clip = reinterpret_cast<spine::ClippingAttachment*>(slot.getAttachment());
+			clipper.clipStart(slot, clip);
+			continue;
+		} else {
+			continue;
+		}
+
+		if (attachmentColor == nullptr) {
 			attachmentColor = blancColor;
 		}
-		const auto r = static_cast<uint8_t>(skeleton->color.r * slot->color.r * attachmentColor->r * 255);
-		const auto g = static_cast<uint8_t>(skeleton->color.g * slot->color.g * attachmentColor->g * 255);
-		const auto b = static_cast<uint8_t>(skeleton->color.b * slot->color.b * attachmentColor->b * 255);
-		const auto a = static_cast<uint8_t>(skeleton->color.a * slot->color.a * attachmentColor->a * 255);
+		const auto r = static_cast<uint8_t>(skeleton->getColor().r * slot.getColor().r *
+		                                    attachmentColor->r * 255);
+		const auto g = static_cast<uint8_t>(skeleton->getColor().g * slot.getColor().g *
+		                                    attachmentColor->g * 255);
+		const auto b = static_cast<uint8_t>(skeleton->getColor().b * slot.getColor().b *
+		                                    attachmentColor->b * 255);
+		const auto a = static_cast<uint8_t>(skeleton->getColor().a * slot.getColor().a *
+		                                    attachmentColor->a * 255);
 
-		if (spSkeletonClipping_isClipping(clipper)) {
-			spSkeletonClipping_clipTriangles(clipper, vertices, verticesCount << 1, indices, indicesCount, uvs, 2);
-			vertices = clipper->clippedVertices->items;
-			verticesCount = clipper->clippedVertices->size >> 1;
-			uvs = clipper->clippedUVs->items;
-			indices = clipper->clippedTriangles->items;
-			indicesCount = clipper->clippedTriangles->size;
+		if (clipper.isClipping()) {
+			clipper.clipTriangles(*vertices, *indices, *uvs, 2);
+			vertices = &clipper.getClippedVertices();
+			verticesCount = clipper.getClippedVertices().size() >> 1;
+			uvs = &clipper.getClippedUVs();
+			indices = &clipper.getClippedTriangles();
+			indicesCount = clipper.getClippedTriangles().size();
 		}
 
-			std::vector<jngl::Vertex> vertexArray;
-			for (int i = 0; i < indicesCount; ++i) {
-                int const index = indices[i] << 1;
-                vertexArray.push_back(jngl::Vertex{
-				    vertices[index], vertices[index + 1],
-				    uvs[index],     // * size.x
-				    uvs[index + 1], // * size.y
-				});
-			}
-			if (r < 250 || g < 250 || b < 250) {
-				jngl::setSpriteColor(r, g, b);
-			}
-			if (texture)
-			{
-				jngl::setSpriteColor(r, g, b, a * alpha);
-				texture->drawMesh(modelview, vertexArray);
-				jngl::setSpriteColor(255, 255, 255, 255);
-			}
+		std::vector<jngl::Vertex> vertexArray;
+		for (int i = 0; i < indicesCount; ++i) {
+			int const index = (*indices)[i] << 1;
+			vertexArray.push_back(jngl::Vertex{
+			    (*vertices)[index], (*vertices)[index + 1],
+			    (*uvs)[index],     // * size.x
+			    (*uvs)[index + 1], // * size.y
+			});
+		}
+		if (r < 250 || g < 250 || b < 250) {
+			jngl::setSpriteColor(r, g, b);
+		}
+		if (texture) {
+			jngl::setSpriteColor(r, g, b, a * alpha);
+			texture->drawMesh(modelview, vertexArray);
+			jngl::setSpriteColor(255, 255, 255, 255);
+		}
 
-		spSkeletonClipping_clipEnd(clipper, slot);
+		clipper.clipEnd(slot);
 	}
 	// target.draw(*vertexArray, states);
 	clipper.clipEnd();
 
 	jngl::setSpriteColor(255, 255, 255, 255);
+
+	// Alternative simpler method:
+	// spine::RenderCommand* command = SkeletonRenderer::handle().spine.render(*skeleton);
+	// while (command) {
+	// 	std::vector<jngl::Vertex> vertices;
+	// 	float* positions = command->positions;
+	// 	float* uvs = command->uvs;
+	// 	uint32_t* colors = command->colors;
+	// 	uint16_t* indices = command->indices;
+	// 	jngl::Sprite* texture = (jngl::Sprite*)command->texture;
+	// 	for (int i = 0, n = command->numIndices; i < n; ++i) {
+	// 		int ii = indices[i];
+	// 		int index = ii << 1;
+	// 		jngl::Vertex vertex;
+	// 		vertex.x = positions[index];
+	// 		vertex.y = positions[index + 1];
+	// 		vertex.u = uvs[index];
+	// 		vertex.v = uvs[index + 1];
+	// 		//  vertex.color = colors[i];
+	// 		vertices.push_back(vertex);
+	// 	}
+	// 	//   BlendMode blendMode = command->blendMode; // Spine blend mode equals engine blend mode
+	// 	texture->drawMesh(vertices);
+	// 	command = command->next;
+	// }
 }
 
-
 spine::BoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spine::SkeletonBounds *self, const std::string &name, float x, float y) {
-	int i;
-	for (i = 0; i < self->count; ++i)
+	spine::Vector<spine::BoundingBoxAttachment*>& boundingBoxes = self->getBoundingBoxes();
+	spine::Vector<spine::Polygon*>& polygons = self->getPolygons();
+	for (size_t i = 0; i < boundingBoxes.size(); ++i)
 	{
-        if (std::string(self->boundingBoxes[i]->super.super.name) == name)
+        if (std::string(boundingBoxes[i]->getName().buffer()) == name)
         {
-            if (spPolygon_containsPoint(self->polygons[i], x, y))
+            if (self->containsPoint(polygons[i], x, y))
             {
-                return self->boundingBoxes[i];
+                return boundingBoxes[i];
             }
         }
     }
@@ -246,18 +209,17 @@ spine::BoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spine::
 }
 
 spine::BoundingBoxAttachment *spSkeletonBounds_containsPointNotMatchingName(spine::SkeletonBounds *self, const std::string &name, float x, float y) {
-	int i;
-	for (i = 0; i < self->count; ++i)
+	spine::Vector<spine::BoundingBoxAttachment*>& boundingBoxes = self->getBoundingBoxes();
+	spine::Vector<spine::Polygon*>& polygons = self->getPolygons();
+	for (size_t i = 0; i < boundingBoxes.size(); ++i)
 	{
-        if (std::string(self->boundingBoxes[i]->super.super.name) != name)
+        if (std::string(boundingBoxes[i]->getName().buffer()) != name)
         {
-            if (spPolygon_containsPoint(self->polygons[i], x, y))
+            if (self->containsPoint(polygons[i], x, y))
             {
-                return self->boundingBoxes[i];
+                return boundingBoxes[i];
             }
         }
     }
     return nullptr;
 }
-
-} // namespace spine
