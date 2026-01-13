@@ -89,61 +89,49 @@ void SpineObject::playAnimation(int trackIndex, const std::string &currentAnimat
         this->currentAnimation = currentAnimation;
     }
     spine::Animation *animation = skeleton->state->getData()->getSkeletonData()->findAnimation(currentAnimation.c_str());
-    if (animation)
-    {
-        auto entry = skeleton->state->setAnimation(trackIndex, currentAnimation.c_str(), static_cast<int>(loop));
+    if (animation) {
+        auto *entry = skeleton->state->setAnimation(trackIndex, currentAnimation.c_str(), static_cast<int>(loop));
         entry->setListener([this](spine::AnimationState*, spine::EventType type,
-		                          spine::TrackEntry* entry, spine::Event* event) {
-			if (event)
-    {
-        if (event->getData().getAudioPath() != "")
-        {
-            jngl::debug(event->getData().getAudioPath().buffer());
-            jngl::play("audio/" + std::string(event->getData().getAudioPath().buffer()));
-        }
-        if (event->getData().getStringValue() != "")
-        {
-            // This in Lua setzen
-
-            jngl::debug(event->getData().getStringValue().buffer());
-
-            if (auto _game = this->game.lock())
-            {
-
-                (*_game->lua_state)["this"] = this->getptr();
-                std::string extension = ".lua";
-                std::string event_string = std::string(event->getData().getStringValue().buffer());
-                if (std::equal(extension.rbegin(), extension.rend(), event_string.rbegin()))
-                {
-                    // run lua script from file
-                     _game->runAction(event_string.erase(event_string.size() - 4), (*_game->lua_state)["this"]);
+                                    spine::TrackEntry* entry, spine::Event* event) {
+            if (event) {
+                if (event->getData().getAudioPath() != nullptr) {
+                    jngl::debug(std::string(event->getData().getAudioPath().buffer()));
+                    jngl::play("audio/" + std::string(event->getData().getAudioPath().buffer()));
                 }
-                else
-                {
-                    _game->lua_state->script(event_string);
+                if (event->getData().getStringValue() != nullptr) {
+                    // This in Lua setzen
+
+                    jngl::debug(event->getData().getStringValue().buffer());
+
+                    if (auto _game = this->game.lock()) {
+
+                        (*_game->lua_state)["this"] = this->getptr();
+                        std::string extension = ".lua";
+                        std::string event_string = std::string(event->getData().getStringValue().buffer());
+                        if (std::equal(extension.rbegin(), extension.rend(), event_string.rbegin())) {
+                            // run lua script from file
+                            _game->runAction(event_string.erase(event_string.size() - 4), (*_game->lua_state)["this"]);
+                        } else {
+                            _game->lua_state->script(event_string);
+                        }
+                    }
                 }
             }
-        }
-    }
 
-    switch (type)
-    {
-    case spine::EventType_Interrupt:
-        break;
+            switch (type) {
+            case spine::EventType_Interrupt:
+                break;
 
-    case spine::EventType_Complete:
-        if (!entry->getLoop())
-        {
-            onAnimationComplete(std::to_string(entry->getTrackIndex()) + std::string(entry->getAnimation()->getName().buffer()));
-        }
-        break;
-    default:
-        break;
-    }
-		});
-    }
-    else
-    {
+            case spine::EventType_Complete:
+                if (!entry->getLoop()) {
+                    onAnimationComplete(std::to_string(entry->getTrackIndex()) + std::string(entry->getAnimation()->getName().buffer()));
+                }
+                break;
+            default:
+                break;
+            }
+        });
+    } else {
         jngl::error("\033[1;31m The animation " + currentAnimation + " is missing for " + spine_name + " \033[0m");
     }
 }
