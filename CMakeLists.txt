@@ -26,8 +26,29 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	SET(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif()
 
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/jngl/CMakeLists.txt")
+	execute_process(
+		COMMAND git submodule update --init subprojects/jngl
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMAND_ERROR_IS_FATAL ANY
+	)
+endif()
 add_subdirectory(subprojects/jngl)
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/spine-runtimes/spine-cpp")
+	execute_process(
+		COMMAND git submodule update --init subprojects/spine-runtimes
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMAND_ERROR_IS_FATAL ANY
+	)
+endif()
 add_subdirectory(subprojects/spine-runtimes/spine-c)
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/schnacker/CMakeLists.txt")
+	execute_process(
+		COMMAND git submodule update --init --recursive subprojects/schnacker
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMAND_ERROR_IS_FATAL ANY
+	)
+endif()
 add_subdirectory(subprojects/schnacker/)
 
 set(PAC_SANITIZE_ADDRESS_DEFAULT ON)
@@ -47,6 +68,13 @@ file(GLOB SOURCES CONFIGURE_DEPENDS
 )
 
 if (NOT CMAKE_BUILD_TYPE MATCHES "Release" AND NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+	if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/gifanimcplusplus/gifanim.h")
+		execute_process(
+			COMMAND git submodule update --init --recursive subprojects/gifanimcplusplus
+			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+			COMMAND_ERROR_IS_FATAL ANY
+		)
+	endif()
 	file(GLOB SOURCESGIF CONFIGURE_DEPENDS
 		subprojects/gifanimcplusplus/*.cpp)
 	list (APPEND SOURCES ${SOURCESGIF})
