@@ -17,7 +17,7 @@ public:
     void draw() const override;
 
     void addTargetPosition(jngl::Vec2 target);
-    void addTargetPositionImmediately(jngl::Vec2 target, const sol::function &callback);
+    void addTargetPositionImmediately(jngl::Vec2 target, std::optional<sol::function> callback);
     void stop_walking();
 
     float getMaxSpeed() const;

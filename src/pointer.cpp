@@ -108,7 +108,7 @@ bool Pointer::step(bool)
             if (currentAnimation != (*_game->lua_state)["config"]["pointer_over_animation"])
             {
                 currentAnimation = (*_game->lua_state)["config"]["pointer_over_animation"];
-                playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
+                playAnimation(0, currentAnimation, true);
                 this->setSkin("active");
             }
         }
@@ -117,7 +117,7 @@ bool Pointer::step(bool)
             if (currentAnimation != (*_game->lua_state)["config"]["pointer_idle_animation"])
             {
                 currentAnimation = (*_game->lua_state)["config"]["pointer_idle_animation"];
-                playAnimation(0, currentAnimation, true, (*_game->lua_state)["pass"]);
+                playAnimation(0, currentAnimation, true);
                 this->setSkin("inactive");
             }
         }

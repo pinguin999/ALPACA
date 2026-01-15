@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "game.hpp"
 #include "interactable_object.hpp"
 
@@ -10,7 +12,8 @@ using LuaScene = std::string;
 using LuaAudio = std::string;
 using LuaLanguage = std::string;
 
-static std::optional<jngl::Vec2> getPointPosition(std::shared_ptr<Game> game, const std::string &pointName)
+namespace {
+std::optional<jngl::Vec2> getPointPosition(const std::shared_ptr<Game> &game, const std::string &pointName)
 {
 	std::optional<jngl::Vec2> position;
 	// first look for the point in the "this" object,
@@ -29,17 +32,10 @@ static std::optional<jngl::Vec2> getPointPosition(std::shared_ptr<Game> game, co
 	}
 	return position;
 }
+} // anonymous namespace
 
 void Game::setupLuaFunctions()
 {
-	/// pass is a function that does nothing.
-	/// You can use it for testing or for unnecessary callbacks.
-	lua_state->set_function("pass",
-							[]()
-							{
-								// Just do nothing
-							});
-
 	/// Loads a new scene.
 	///
 	/// This door example expects a Spine point object near the door:
@@ -78,12 +74,9 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("PlayAnimation",
 							[this](int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								obj->playAnimation(trackIndex, newAnimation, loop, callback.value());
-								std::string lua_object = getLuaPath(obj->getId());
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								obj->playAnimation(trackIndex, newAnimation, loop, std::move(callback));
+								const std::string lua_object = getLuaPath(obj->getId());
 								lua_state->script(lua_object + ".animation = \"" + newAnimation + "\"");
 								if (loop)
 								{
@@ -103,12 +96,9 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("AddAnimation",
 							[this](int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, float delay, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								obj->addAnimation(trackIndex, newAnimation, loop, delay, callback.value());
-								std::string lua_object = getLuaPath(obj->getId());
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								obj->addAnimation(trackIndex, newAnimation, loop, delay, std::move(callback));
+								const std::string lua_object = getLuaPath(obj->getId());
 								lua_state->script(lua_object + ".animation = \"" + newAnimation + "\"");
 								if (loop)
 								{
@@ -129,14 +119,11 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("PlayAnimationOn",
 							[this](const LuaSpineObject &object, int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
-									obj->playAnimation(trackIndex, newAnimation, loop, callback.value());
-									std::string lua_object = getLuaPath(obj->getId());
+									obj->playAnimation(trackIndex, newAnimation, loop, std::move(callback));
+									const std::string lua_object = getLuaPath(obj->getId());
 									lua_state->script(lua_object + ".animation = \"" + newAnimation + "\"");
 									if (loop)
 									{
@@ -158,14 +145,11 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("AddAnimationOn",
 							[this](const LuaSpineObject &object, int trackIndex, const LuaSpineAnimation &newAnimation, bool loop, float delay, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
-									obj->addAnimation(trackIndex, newAnimation, loop, delay, callback.value());
-									std::string lua_object = getLuaPath(obj->getId());
+									obj->addAnimation(trackIndex, newAnimation, loop, delay, std::move(callback));
+									const std::string lua_object = getLuaPath(obj->getId());
 									lua_state->script(lua_object + ".animation = \"" + newAnimation + "\"");
 									if (loop)
 									{
@@ -183,10 +167,12 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetSkin",
 							[this](const LuaSpineSkin &skin)
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->setSkin(skin);
-								std::string lua_object = getLuaPath(obj->getId());
-								lua_state->script(lua_object + ".skin = \"" + skin + "\"");
+								const std::vector<LuaSpineSkin> skins = {skin};
+								const std::string lua_path = getLuaPath(obj->getId());
+								sol::table lua_object = lua_state->script("return " + lua_path);
+								lua_object["skin"] = sol::as_table(skins);
 							});
 
 	/// See SetSkin
@@ -195,12 +181,43 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetSkinOn",
 							[this](const LuaSpineObject &object, const LuaSpineSkin &skin)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									obj->setSkin(skin);
-									std::string lua_object = getLuaPath(obj->getId());
-									lua_state->script(lua_object + ".skin = \"" + skin + "\"");
+									const std::vector<LuaSpineSkin> skins = {skin};
+									const std::string lua_path = getLuaPath(obj->getId());
+									sol::table lua_object = lua_state->script("return " + lua_path);
+									lua_object["skin"] = sol::as_table(skins);
+								}
+							});
+
+
+	/// Set a list of skins on a Spine object
+	/// table<string> skin: The name of the Spine skin
+	lua_state->set_function("SetSkins",
+							[this](const std::vector<LuaSpineSkin> &skins)
+							{
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								obj->setSkins(skins);
+								const std::string lua_path = getLuaPath(obj->getId());
+								sol::table lua_object = lua_state->script("return " + lua_path);
+								lua_object["skin"] = sol::as_table(skins);
+							});
+
+	/// See SetSkins
+	/// SpineObject object: ID of the object to affect
+	/// table<string> skin: The name of the Spine skin
+	lua_state->set_function("SetSkinsOn",
+							[this](const LuaSpineObject &object, const std::vector<LuaSpineSkin> &skins)
+							{
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
+								if (obj)
+								{
+									obj->setSkins(skins);
+									const std::string lua_path = getLuaPath(obj->getId());
+									sol::table lua_object = lua_state->script("return " + lua_path);
+									lua_object["skin"] = sol::as_table(skins);
 								}
 							});
 
@@ -209,13 +226,10 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("PlayDialog",
 							[this](const LuaDialog &dialogName, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
 								float x = 0;
 								float y = 0;
 								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								getDialogManager()->play(dialogName, jngl::Vec2(x, -y) + obj->getPosition(), callback.value());
+								getDialogManager()->play(dialogName, jngl::Vec2(x, -y) + obj->getPosition(), std::move(callback));
 							});
 
 	/// Add the current item to the inventory.
@@ -224,7 +238,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("AddToInventory",
 							[this]()
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								sol::optional<sol::lua_table> item = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
 								if (!item)
 								{
@@ -235,8 +249,12 @@ void Game::setupLuaFunctions()
 								obj->setCrossScene(true);
 								obj->setVisible(false);
 								(*lua_state)["inventory_items"][obj->getId()] = item;
-								(*lua_state)["inventory_items"][obj->getId()]["skin"] = (*lua_state)["config"]["inventory_default_skin"];
 								(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
+
+								const std::vector<LuaSpineSkin> skins = {(*lua_state)["config"]["inventory_default_skin"]};
+								const std::string lua_path = getLuaPath(obj->getId());
+								sol::table lua_object = lua_state->script("return " + lua_path);
+								lua_object["skin"] = sol::as_table(skins);
 
 								(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
 							});
@@ -246,18 +264,20 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("AddToInventoryWithSkin",
 							[this](const LuaSpineSkin &skin)
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								sol::optional<sol::lua_table> item = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
 								if (!item)
 								{
 									return;
 								}
 
+								const std::vector<LuaSpineSkin> skins = {skin};
+
 								obj->setSkin(skin);
 								obj->setCrossScene(true);
 								obj->setVisible(false);
 								(*lua_state)["inventory_items"][obj->getId()] = item;
-								(*lua_state)["inventory_items"][obj->getId()]["skin"] = skin;
+								(*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table(skins);
 								(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
 								(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
@@ -269,7 +289,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("AddToInventoryOn",
 							[this](const LuaSpineObject &object)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									sol::optional<sol::lua_table> item = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
@@ -281,8 +301,9 @@ void Game::setupLuaFunctions()
 									obj->setSkin((*lua_state)["config"]["inventory_default_skin"]);
 									obj->setCrossScene(true);
 									obj->setVisible(false);
+									const std::vector<LuaSpineSkin> skins = {(*lua_state)["config"]["inventory_default_skin"]};
 									(*lua_state)["inventory_items"][obj->getId()] = item;
-									(*lua_state)["inventory_items"][obj->getId()]["skin"] = (*lua_state)["config"]["inventory_default_skin"];
+									(*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table(skins);
 									(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
 									(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
@@ -296,7 +317,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("AddToInventoryWithSkinOn",
 							[this](const LuaSpineObject &object, const LuaSpineSkin &skin)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									sol::optional<sol::lua_table> item = (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()];
@@ -305,11 +326,13 @@ void Game::setupLuaFunctions()
 										return;
 									}
 
+									const std::vector<LuaSpineSkin> skins = {skin};
+
 									obj->setSkin(skin);
 									obj->setCrossScene(true);
 									obj->setVisible(false);
 									(*lua_state)["inventory_items"][obj->getId()] = item;
-									(*lua_state)["inventory_items"][obj->getId()]["skin"] = skin;
+									(*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table(skins);
 									(*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
 
 									(*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
@@ -320,7 +343,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("RemoveFromInventory",
 							[this]()
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								lua_state->script("inventory_items[\"" + obj->getId() + "\"] = nil");
 								obj->setCrossScene(false);
 							});
@@ -329,7 +352,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("RemoveFromInventoryOn",
 							[this](const LuaSpineObject &object)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									lua_state->script("inventory_items[\"" + object + "\"] = nil");
@@ -342,7 +365,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetDeleted",
 							[this]()
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								auto inter = std::static_pointer_cast<InteractableObject>(obj);
 								obj->setParent(nullptr);
 								for (auto it = pointer->attachedObjects.begin(); it != pointer->attachedObjects.end();)
@@ -357,7 +380,9 @@ void Game::setupLuaFunctions()
 									}
 								}
 								if (inter)
+								{
 									inter->registerToDelete();
+								}
 							});
 
 	/// See SetDeleted
@@ -366,7 +391,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetDeletedOn",
 							[this](const LuaSpineObject &object)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									auto inter = std::static_pointer_cast<InteractableObject>(obj);
@@ -383,7 +408,9 @@ void Game::setupLuaFunctions()
 										}
 									}
 									if (inter)
+									{
 										inter->registerToDelete();
+									}
 								}
 							});
 
@@ -392,7 +419,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("GetPointNames",
 							[this]()
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								return obj->getPointNames();
 							});
 
@@ -408,7 +435,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("GetPointNamesOn",
 							[this](const LuaSpineObject &object)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									return sol::as_table(obj->getPointNames());
@@ -422,17 +449,14 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("GoToPoint",
 							[this](const LuaSpinePoint &point_name, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								auto position = obj->getPoint(point_name);
 								if (!position)
 								{
 									jngl::error("Point " + point_name + " not found.");
 									return;
 								}
-								player->addTargetPositionImmediately(obj->getPosition() + *position, callback.value());
+								player->addTargetPositionImmediately(obj->getPosition() + *position, std::move(callback));
 								pointer->setPrimaryHandled();
 								// TODO Write Players position to Lua
 							});
@@ -444,10 +468,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("GoToPointOn",
 							[this](const LuaSpineObject &object, const LuaSpinePoint &point_name, std::optional<sol::function> callback)
 							{
-								if (!callback) {
-									callback = (*lua_state)["pass"];
-								}
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									auto position = obj->getPoint(point_name);
@@ -456,7 +477,7 @@ void Game::setupLuaFunctions()
 										jngl::error("Point " + point_name + " not found.");
 										return;
 									}
-									player->addTargetPositionImmediately(obj->getPosition() + *position, callback.value());
+									player->addTargetPositionImmediately(obj->getPosition() + *position, std::move(callback));
 									pointer->setPrimaryHandled();
 									// TODO Write Players position to Lua
 								}
@@ -477,7 +498,9 @@ void Game::setupLuaFunctions()
 							{
 								auto position = getPointPosition(shared_from_this(), point_name);
 								if (position)
+								{
 									return std::tuple(position->x, position->y);
+								}
 
 								return std::tuple(0.0, 0.0);
 							});
@@ -487,19 +510,19 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetPositionToPoint",
 							[this](const LuaSpinePoint &point_name)
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								auto position = getPointPosition(shared_from_this(), point_name);
 
 								if (position)
 								{
-									std::shared_ptr<Player> point = std::dynamic_pointer_cast<Player>(obj);
+									const std::shared_ptr<Player> point = std::dynamic_pointer_cast<Player>(obj);
 									if (point)
 									{
 										point->setPosition(position.value());
-										point->addTargetPositionImmediately(position.value(), (*lua_state)["pass"]);
+										point->addTargetPositionImmediately(position.value(), std::nullopt);
 									}
 									obj->setPosition(position.value());
-									std::string lua_object = getLuaPath(obj->getId());
+									const std::string lua_object = getLuaPath(obj->getId());
 									lua_state->script(lua_object + ".x = " + std::to_string(position->x) + "");
 									lua_state->script(lua_object + ".y = " + std::to_string(position->y) + "");
 								}
@@ -511,22 +534,22 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetPositionToPointOn",
 							[this](const LuaSpineObject &object, const LuaSpinePoint &point_name)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
-									std::shared_ptr<SpineObject> self = (*lua_state)["this"];
+									const std::shared_ptr<SpineObject> self = (*lua_state)["this"];
 									auto position = getPointPosition(shared_from_this(), point_name);
 									if (position)
 									{
-										std::shared_ptr<Player> point = std::dynamic_pointer_cast<Player>(obj);
+										const std::shared_ptr<Player> point = std::dynamic_pointer_cast<Player>(obj);
 										if ( point != nullptr)
 										{
 											point->setPosition(position.value());
 											point->stop_walking();
-											point->addTargetPositionImmediately(position.value(), (*lua_state)["pass"]);
+											point->addTargetPositionImmediately(position.value(), std::nullopt);
 										}
 										obj->setPosition(position.value());
-										std::string lua_object = getLuaPath(obj->getId());
+										const std::string lua_object = getLuaPath(obj->getId());
 										lua_state->script(lua_object + ".x = " + std::to_string(position->x) + "");
 										lua_state->script(lua_object + ".y = " + std::to_string(position->y) + "");
 									}
@@ -540,8 +563,8 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetOnToPointFrom",
 							[this](const LuaSpineObject &object, const LuaSpineObject &from, const LuaSpinePoint &point_name)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
-								std::shared_ptr<SpineObject> frm = getObjectById(from);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> frm = getObjectById(from);
 								if (frm)
 								{
 									auto position = frm->getPoint(point_name);
@@ -553,7 +576,7 @@ void Game::setupLuaFunctions()
 									if (obj && position)
 									{
 										obj->setPosition(frm->getPosition() + position.value());
-										std::string lua_object = getLuaPath(obj->getId());
+										const std::string lua_object = getLuaPath(obj->getId());
 										lua_state->script(lua_object + ".x = " + std::to_string(frm->getPosition().x + position->x) + "");
 										lua_state->script(lua_object + ".y = " + std::to_string(frm->getPosition().y + position->y) + "");
 									}
@@ -564,9 +587,9 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetHidden",
 							[this]()
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->setVisible(false);
-								std::string lua_object = getLuaPath(obj->getId());
+								const std::string lua_object = getLuaPath(obj->getId());
 								lua_state->script(lua_object + ".visible = false");
 							});
 
@@ -575,11 +598,11 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetHiddenOn",
 							[this](const LuaSpineObject &object)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									obj->setVisible(false);
-									std::string lua_object = getLuaPath(obj->getId());
+									const std::string lua_object = getLuaPath(obj->getId());
 									lua_state->script(lua_object + ".visible = false");
 								}
 							});
@@ -588,9 +611,9 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetVisible",
 							[this]()
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->setVisible(true);
-								std::string lua_object = getLuaPath(obj->getId());
+								const std::string lua_object = getLuaPath(obj->getId());
 								lua_state->script(lua_object + ".visible = true");
 							});
 
@@ -599,11 +622,11 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetVisibleOn",
 							[this](const LuaSpineObject &object)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									obj->setVisible(true);
-									std::string lua_object = getLuaPath(obj->getId());
+									const std::string lua_object = getLuaPath(obj->getId());
 									lua_state->script(lua_object + ".visible = true");
 								}
 							});
@@ -614,9 +637,9 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetLayer",
 							[this](int layer)
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->layer = layer;
-								std::string lua_object = getLuaPath(obj->getId());
+								const std::string lua_object = getLuaPath(obj->getId());
 								if (!lua_object.empty())
 								{
 									lua_state->script(lua_object + ".layer = " + std::to_string(layer));
@@ -628,11 +651,11 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetLayerOn",
 							[this](const LuaSpineObject &object, int layer)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									obj->layer = layer;
-									std::string lua_object = getLuaPath(obj->getId());
+									const std::string lua_object = getLuaPath(obj->getId());
 									if (!lua_object.empty())
 									{
 										lua_state->script(lua_object + ".layer = " + std::to_string(layer));
@@ -652,7 +675,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("AttachToPointer",
 							[this]()
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->setParent(pointer);
 								pointer->attachedObjects.push_back(obj);
 							});
@@ -662,7 +685,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("AttachToPointerOn",
 							[this](const LuaSpineObject &object)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									obj->setParent(pointer);
@@ -686,7 +709,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("DeattachFromPointer",
 							[this]()
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->setParent(nullptr);
 
 								for (auto it = pointer->attachedObjects.begin(); it != pointer->attachedObjects.end();)
@@ -707,7 +730,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("DeattachFromPointerOn",
 							[this](const LuaSpineObject &object)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									obj->setParent(nullptr);
@@ -731,7 +754,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("IsAttachedToPointer",
 							[this]()
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								auto parent = obj->getParent();
 								return parent != nullptr;
 							});
@@ -742,7 +765,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("IsAttachedToPointerOn",
 							[this](const LuaSpineObject &object)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									auto parent = obj->getParent();
@@ -756,7 +779,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("IsSomethingAttachedToPointer",
 							[this]()
 							{
-								return pointer->attachedObjects.size() != 0;
+								return !pointer->attachedObjects.empty();
 							});
 
 	/// Rote a Spine object
@@ -764,7 +787,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetRotation",
 							[this](const float rotation)
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->setRotation(rotation);
 							});
 
@@ -774,7 +797,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetRotationOn",
 							[this](const LuaSpineObject &object, const float rotation)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									obj->setRotation(rotation);
@@ -786,9 +809,9 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetScale",
 							[this](const float scale)
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->setScale(scale);
-								std::string lua_object = getLuaPath(obj->getId());
+								const std::string lua_object = getLuaPath(obj->getId());
 								lua_state->script(lua_object + ".scale = \"" + std::to_string(scale) + "\"");
 							});
 
@@ -798,11 +821,11 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetScaleOn",
 							[this](const LuaSpineObject &object, const float scale)
 							{
-								std::shared_ptr<SpineObject> obj = getObjectById(object);
+								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
 								{
 									obj->setScale(scale);
-									std::string lua_object = getLuaPath(obj->getId());
+									const std::string lua_object = getLuaPath(obj->getId());
 									lua_state->script(lua_object + ".scale = \"" + std::to_string(scale) + "\"");
 								}
 							});
@@ -830,7 +853,7 @@ void Game::setupLuaFunctions()
 	/// string id
 	/// float scale
 	lua_state->set_function("CreateObject",
-							[this](std::string spine_file, std::string id, float scale)
+							[this](const std::string &spine_file, const  std::string &id, float scale)
 							{
 								auto interactable = currentScene->createObject(spine_file, id, scale);
 								interactable->toLuaState();
@@ -841,10 +864,19 @@ void Game::setupLuaFunctions()
 	/// Playing an audio file.
 	/// It's much better to use Spine events to trigger the sound to keep it in sync with the animation
 	/// string file: The audio file
+	/// TODO Hier noch sagen ob es Music, Voice, Sound Effects Channel ist
 	lua_state->set_function("PlayAudio",
 							[](const LuaAudio &file)
 							{
 								jngl::play("audio/" + file);
+							});
+
+	/// Loop an audio file.
+	/// string file: The audio file
+	lua_state->set_function("LoopAudio",
+							[](const LuaAudio &file)
+							{
+								jngl::loop("audio/" + file);
 							});
 
 	/// Stop an audio file.
@@ -869,7 +901,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("GetID",
 							[this]()
 							{
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								return obj->getId();
 							});
 
@@ -886,8 +918,8 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetLanguage",
 							[this](const LuaLanguage &language)
 							{
-								std::vector<std::string> languages =  (*lua_state)["config"]["supportedLanguages"].get<std::vector<std::string>>();
-								for (auto supported_language : languages)
+								const std::vector<std::string> languages =  (*lua_state)["config"]["supportedLanguages"].get<std::vector<std::string>>();
+								for (const auto &supported_language : languages)
 								{
 									if (language == supported_language)
 									{

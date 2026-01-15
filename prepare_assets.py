@@ -47,7 +47,7 @@ SPINE_THREADS = cpu_count()
 set_read_only = True
 # could be "linux", "linux2", "linux3", ...
 if sys.platform.startswith("linux"):
-    RHUBARB = None
+    RHUBARB = "/usr/bin/rhubarb"
     SPINE = "/usr/bin/spine"
     LUA = "luac"
 elif sys.platform == "darwin":
@@ -220,6 +220,8 @@ def apply_rhubarb(character_in: str | None = None) -> None:
 
             for node_id in node_ids:
                 rhubarb_out = Path(f"{RHUBARB_OUT}{node_id}.json")
+                if not rhubarb_out.exists():
+                    continue
                 with rhubarb_out.open() as rhubarb_outfile:
                     mouthCues = json.load(rhubarb_outfile)
 
@@ -721,6 +723,7 @@ class LuaDocsGen:
         result = result.replace("bool ", "boolean ")
         result = result.replace("sol::function ", "function ")
         result = result.replace("std::optional<sol::function> ", "function? ")
+        result = result.replace("std::vector<LuaSpineSkin> ", "LuaSpineSkin[] ")
 
         return result.strip()
 
@@ -739,6 +742,7 @@ class LuaDocsGen:
         result = result.replace("LuaScene ", "")
         result = result.replace("LuaAudio ", "")
         result = result.replace("LuaLanguage ", "")
+        result = result.replace("LuaSpineSkin[] ", "")
 
         return result.strip()
 
@@ -876,7 +880,7 @@ scenes.{scene}.hash = 0
 scenes.{scene}.left_border = 0
 scenes.{scene}.right_border = 0
 scenes.{scene}.top_border = 0
-scenes.{scene}.zBufferMap = """
+scenes.{scene}.zBufferMap = nil """
                     ""
                 )
                 scene_json = Path(f"./data-src/scenes/{scene}.json").read_text(
@@ -930,8 +934,12 @@ if __name__ == "__main__":
     copy_folder("./data-src/dialog", "./data/dialog")
     spine_reexport(["./data-src"])
     rehash_scenes("./data-src/scenes")
-    rhubarb_reexport()
-    apply_rhubarb()
+    rhubarb_path = Path(RHUBARB)
+    if rhubarb_path.exists():
+        rhubarb_reexport()
+        apply_rhubarb()
+    else:
+        print(colored("Rhubarb was skipped, since Rhubarb path was not found", "red"))
     LuaDocsGen().render("lua.cpp")
     print(colored("Convert sucess", "green"))
     patterns_src = ["*.spine", "*.lua", "*.json", "*.schnack", "*.ogg"]

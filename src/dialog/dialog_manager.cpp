@@ -1,8 +1,9 @@
 #include "dialog_manager.hpp"
 #include "../game.hpp"
-#include <filesystem>
 
-constexpr int BOX_HEIGHT = 75;
+constexpr int BOX_HEIGHT = 65;
+constexpr int BOX_PADDING = 20;
+constexpr double CHOICE_BOX_TOP = 280;
 constexpr int SPINE_MOUTH_TRACK = 5;
 
 
@@ -10,7 +11,6 @@ DialogManager::DialogManager(std::shared_ptr<Game> game)
     : dialogFont((*game->lua_state)["config"]["default_font"], 25),
       bubble(nullptr),
       selected_index(-1),
-      dialog_callback((*game->lua_state)["pass"]),
       game(game),
       default_font_color(textToColor((*game->lua_state)["config"]["default_font_color"])),
       default_font_selected_color(textToColor((*game->lua_state)["config"]["default_font_selected_color"])),
@@ -27,20 +27,27 @@ void DialogManager::loadDialogsFromFile(const std::string& fileName, bool initia
     }
 }
 
-void DialogManager::play(const std::string &dialogName, jngl::Vec2, const sol::function &callback)
+void DialogManager::play(const std::string &dialogName, jngl::Vec2, std::optional<sol::function> callback)
 {
-    cancelDialog();
+    cancelDialog(); // if there is a current dialog, cancel the current one
 
-    currentDialog = schnackFile->dialogs[dialogName];
-    if (currentDialog)
-    {
-        currentNode = currentDialog->getEntryNode();
-        continueCurrent();
-        dialog_callback = callback;
-    }else
-    {
-        jngl::error("Dialog " + dialogName + " not found.");
-    }
+	if (auto _game = game.lock()) {
+		currentDialog = schnackFile->dialogs[dialogName];
+		if (currentDialog) {
+			currentNode = currentDialog->getEntryNode();
+			if (currentNode != nullptr) {
+				if (!currentNode->checkPrecondition(currentDialog)) {
+					currentNode = nullptr;
+				}
+			}
+            if (callback) {
+			    dialog_callback = LuaCallback(std::move(*callback), _game->lua_state);
+            }
+			continueCurrent();
+		} else {
+			jngl::error("Dialog " + dialogName + " not found.");
+		}
+	}
 }
 
 void DialogManager::step()
@@ -57,48 +64,53 @@ void DialogManager::step()
     }
     if (auto _game = game.lock())
     {
-        auto pointer_position = _game->pointer->getPosition();
-
-        size_t pos = BOX_HEIGHT * (choiceTexts.size() -1);
-        int temp_index = 0;
-        for (auto text = choiceTexts.begin(); text != choiceTexts.end(); text++)
+        if(!choiceTexts.empty())
         {
-            if (pointer_position.y > 1080/2 - BOX_HEIGHT - pos && pointer_position.y < 1080/2 - BOX_HEIGHT - pos + BOX_HEIGHT)
+            auto pointer_position = _game->pointer->getPosition();
+
+            size_t pos = CHOICE_BOX_TOP;
+            int temp_index = 0;
+            selected_index = -1;
+            for (auto text = choiceTexts.begin(); text != choiceTexts.end(); text++)
             {
-                selected_index = temp_index;
-                break;
+                if (pointer_position.y > pos - BOX_PADDING
+                    && pointer_position.y < pos + BOX_HEIGHT - BOX_PADDING)
+                {
+                    selected_index = temp_index;
+                    break;
+                }
+                temp_index++;
+                pos += BOX_HEIGHT;
             }
-            temp_index++;
-            pos -= BOX_HEIGHT;
-        }
 
-        if(selected_index >= 0)
-        {
             auto direction = _game->pointer->getMovementStep();
             if (boost::qvm::mag_sqr(direction - jngl::Vec2(0, 1)) < 0.5)
             {
-                selected_index = std::max(selected_index - 1, 0);
+                selected_index = std::max(selected_index + 1, 0);
             }
 
             if (boost::qvm::mag_sqr(direction - jngl::Vec2(0, -1)) < 0.5)
             {
-                selected_index = std::min(selected_index + 1, (int)choiceTexts.size() - 1);
+                selected_index = std::min(selected_index - 1, (int)choiceTexts.size() - 1);
             }
         }
 
+        // mouse click
         if(_game->pointer->primaryPressed() && !_game->pointer->isPrimaryAlreadyHandled())
         {
             if (!wasActiveLastFrame && isActive())
             {
+                // if there is an option selected, take it
                 if (selected_index != -1)
                 {
                     selectCurrentAnswer(selected_index);
                     _game->pointer->setPrimaryHandled();
                 }
-                else
+                // if there are no options at all
+                else if (choiceTexts.empty())
                 {
-                    continueCurrent();
                     stopCharacterVoiceAndAnimation();
+                    continueCurrent();
                     _game->pointer->setPrimaryHandled();
                 }
             }
@@ -146,7 +158,7 @@ bool DialogManager::isActive()
 void DialogManager::showChoices(std::shared_ptr<schnacker::AnswersStepResult> answers)
 {
     choiceTexts.clear();
-    size_t pos = BOX_HEIGHT * (answers->answers.size() -1);
+    size_t pos = CHOICE_BOX_TOP;// BOX_HEIGHT * (answers->answers.size() -1);
     for (auto answerResult = answers->answers.begin(); answerResult != answers->answers.end(); ++answerResult)
     {
         schnacker::NodeId id;
@@ -157,8 +169,9 @@ void DialogManager::showChoices(std::shared_ptr<schnacker::AnswersStepResult> an
         choiceText.setFont(dialogFont);
         choiceText.setText(text);
         choiceText.setAlign(jngl::Alignment::LEFT);
-        choiceText.setCenter(choiceText.getWidth() / 2.0 - 910, 1040/2 - pos);
-        pos -= BOX_HEIGHT;
+        choiceText.setY(pos);
+        choiceText.setX(-900);
+        pos += BOX_HEIGHT;
         choiceTexts.push_back(choiceText);
     }
 
@@ -230,6 +243,7 @@ void DialogManager::playCharacterVoice(const std::string &file)
     if (!last_played_audio.empty() && jngl::isPlaying(last_played_audio))
     {
         jngl::stop(last_played_audio);
+        last_played_audio = "";
     }
 
     try
@@ -266,7 +280,7 @@ void DialogManager::playCharacterAnimation(const std::string &character, const s
         if (spine_character)
         {
             auto animation = "say_" + _game->language + "_" + std::string(n_zero - std::min(n_zero, id.length()), '0') + id;
-            spine_character->playAnimation(SPINE_MOUTH_TRACK, animation, false, (*_game->lua_state)["pass"]);
+            spine_character->playAnimation(SPINE_MOUTH_TRACK, animation, false);
             last_played_audio_character = character;
         }
     }
@@ -278,9 +292,6 @@ void DialogManager::continueCurrent()
     {
         if(currentDialog == nullptr || currentNode == nullptr)
         {
-            dialog_callback();
-            dialog_callback = (*_game->lua_state)["pass"];
-
             cancelDialog();
             return;
         }
@@ -324,6 +335,11 @@ void DialogManager::cancelDialog()
     currentDialog = nullptr;
     currentNode = nullptr;
     currentAnswers = nullptr;
+
+    if (dialog_callback) {
+        (*dialog_callback)();
+    }
+    dialog_callback = std::nullopt;
 }
 
 void DialogManager::selectCurrentAnswer(int index)

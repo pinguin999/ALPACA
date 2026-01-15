@@ -17,7 +17,7 @@ void SceneFade::step() {
         alpha -= 0.05f;
         if (alpha < 0) {
             alpha = 0;
-            jngl::setWork(std::move(game));
+            jngl::setScene(std::move(game));
         }
     }
 }

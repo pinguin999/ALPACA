@@ -23,19 +23,20 @@ bool InteractableObject::step(bool force)
         if (_game->editMode  && !abs_position)
         {
             mouseOver = false;
-            if (std::optional<MouseInfo::Over> over = _game->mouseInfo.pos()) {
+            for (auto cursor : jngl::input().cursors()) {
                 double DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
-                mouseOver = std::sqrt((over->pos().x - position.x) * (over->pos().x - position.x) +
-                                      (over->pos().y - position.y) * (over->pos().y - position.y)) <
+                mouseOver = std::sqrt((cursor.pos().x - position.x) * (cursor.pos().x - position.x) +
+                                      (cursor.pos().y - position.y) * (cursor.pos().y - position.y)) <
                             DEBUG_GRAP_DISTANCE;
                 if (mouseOver) {
-                    mouseDown = over->pressed(position);
+                    mouseDown = cursor.pressed(position);
+                    break;
                 }
             }
         }
         if (mouseDown) {
             position = mouseDown->newPos();
-            jngl::debug("{}", position);
+            jngl::debug("{} \"{}\"", position, luaIndex);
             _game->currentScene->updateObjectPosition(id, position);
             if (mouseDown->released()) {
                 mouseDown = std::nullopt;
@@ -101,11 +102,6 @@ void InteractableObject::registerToDelete()
 
 void InteractableObject::draw() const
 {
-    if (!visible)
-    {
-        return;
-    }
-
     auto mv = jngl::modelview();
     if (abs_position)
     {
@@ -121,14 +117,17 @@ void InteractableObject::draw() const
     }
     mv.rotate(getRotation());
 
-#ifndef NDEBUG
-    if (auto _game = game.lock())
+    if (visible)
     {
-        skeleton->debugdraw = _game->enableDebugDraw;
-    }
+#ifndef NDEBUG
+        if (auto _game = game.lock())
+        {
+            skeleton->debugdraw = _game->enableDebugDraw;
+        }
 #endif
 
-    skeleton->draw(mv);
+        skeleton->draw(mv);
+    }
 
 #ifndef NDEBUG
     if (auto _game = game.lock())
