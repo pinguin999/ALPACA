@@ -119,37 +119,32 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 
 		} else if (attachment->getRTTI().isExactly(spine::BoundingBoxAttachment::rtti)) {
 #ifndef NDEBUG
-			if (debugdraw) {
-				// float* bbvertices = worldVertices;
-				// spVertexAttachment_computeWorldVertices(SUPER(box), slot, 0,
-				// box->super.verticesCount, bbvertices, 0, 2); 				if
-				auto* boundingBox =
-				    reinterpret_cast<spine::BoundingBoxAttachment*>(slot.getAttachment());
-				if (std::string(boundingBox->getName().buffer()) == "non_walkable_area") {
+            if (debugdraw) {
+                auto* box = reinterpret_cast<spine::BoundingBoxAttachment*>(attachment);
 
-				} else {
-					for (int i = 0; i < boundingBox->getVertices().size() - 2; i += 2) {
-						jngl::drawLine(
-						    modelview,
-						    { boundingBox->getVertices()[i], -boundingBox->getVertices()[i + 1] },
-						    { boundingBox->getVertices()[i + 2],
-						      -boundingBox->getVertices()[i + 3] });
-					}
-					jngl::drawLine(
-					    modelview,
-					    { boundingBox->getVertices()[boundingBox->getVertices().size() - 2],
-					      -boundingBox->getVertices()[boundingBox->getVertices().size() - 1] },
-					    { boundingBox->getVertices()[0], -boundingBox->getVertices()[1] });
-				}
-				jngl::Text bbname;
-				bbname.setText(boundingBox->getName().buffer());
-				bbname.setAlign(jngl::Alignment::CENTER);
-				bbname.setCenter(boundingBox->getVertices()[0], boundingBox->getVertices()[1]);
-				jngl::setFontColor(jngl::Rgba(0, 1, 0, 1));
-				bbname.draw(modelview);
-			}
+                worldVertices.setSize(box->getWorldVerticesLength(), 0);
+                box->computeWorldVertices(slot, 0, box->getWorldVerticesLength(), worldVertices.buffer(), 0, 2);
+
+                float* bbvertices = worldVertices.buffer();
+                int vertexCount = box->getWorldVerticesLength();
+
+                if (std::string(box->getName().buffer()) == "non_walkable_area") {
+
+                } else {
+                    for (int i = 0; i < vertexCount - 2; i += 2) {
+                        jngl::drawLine(modelview, { bbvertices[i], bbvertices[i + 1] }, { bbvertices[i + 2], bbvertices[i + 3] });
+                    }
+                    jngl::drawLine(modelview, { bbvertices[vertexCount - 2], bbvertices[vertexCount - 1] }, { bbvertices[0], bbvertices[1] });
+                }
+                jngl::Text bbname;
+                bbname.setText(box->getName().buffer());
+                bbname.setAlign(jngl::Alignment::CENTER);
+                bbname.setCenter(bbvertices[0], bbvertices[1]);
+                jngl::setFontColor(jngl::Rgba(0, 1, 0, 1));
+                bbname.draw(modelview);
+            }
 #endif
-			continue;
+            continue;
 		} else {
 			continue;
 		}
