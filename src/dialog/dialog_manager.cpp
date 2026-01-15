@@ -218,8 +218,9 @@ jngl::Rgba DialogManager::textToColor(const std::string& color_text)
 void DialogManager::showCharacterText(std::shared_ptr<schnacker::TextStepResult> text)
 {
     // TODO: use player pos in order to determine direction preference for bubble
-    auto bubbleText = jngl::Text(text->text);
+    jngl::Text bubbleText;
     bubbleText.setFont(dialogFont);
+    bubbleText.setText(text->text, 1720);
 
     auto characterName = jngl::Text(text->character->displayName);
     characterName.setFont(dialogFont);
