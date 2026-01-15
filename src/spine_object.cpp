@@ -271,7 +271,12 @@ void SpineObject::setSkins(const std::vector<std::string>& skins) {
 
 	auto* newSkin = new spine::Skin("new-skin"); // 1. Create a new empty skin
 	for (auto const& skin : skins) {
-		newSkin->addSkin(skeletonData->findSkin(skin.c_str()));
+		auto* skinPtr = skeletonData->findSkin(skin.c_str());
+		if (!skinPtr) {
+			jngl::error("The Skin " + skin + " is missing for " + spine_name);
+			continue;
+		}
+		newSkin->addSkin(skinPtr);
 	}
 	skeleton->skeleton->setSkin(newSkin);
 	skeleton->skeleton->setSlotsToSetupPose();
