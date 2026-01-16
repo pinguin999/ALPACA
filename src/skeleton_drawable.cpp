@@ -10,8 +10,12 @@ spine::SpineExtension* spine::getDefaultExtension() {
 }
 
 void TextureLoader::load(spine::AtlasPage& page, const spine::String& path) {
-	auto texture = new jngl::Sprite(path.buffer());
-	// if (!texture->loadFromFile(path)) return;
+#ifndef NDEBUG
+    pac_unload_file(path.buffer());
+#endif
+
+    auto texture = new jngl::Sprite(path.buffer());
+    // if (!texture->loadFromFile(path)) return;
 
 	// TODO
 	// if (self->magFilter == SP_ATLAS_LINEAR) texture->setSmooth(true);
