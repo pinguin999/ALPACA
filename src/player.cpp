@@ -269,14 +269,15 @@ void Player::draw() const
         mv.scale(_game->currentScene->getScale(position));
     }
 
+    if (visible) {
 #ifndef NDEBUG
-    if (auto _game = game.lock())
-    {
-        skeleton->debugdraw = _game->enableDebugDraw;
-    }
+        if (auto _game = game.lock()) {
+            skeleton->debugdraw = _game->enableDebugDraw;
+        }
 #endif
 
-    skeleton->draw(mv);
+        skeleton->draw(mv);
+    }
 }
 
 void Player::setTargentPosition(jngl::Vec2 position)
