@@ -350,6 +350,7 @@ void Game::debugStep()
 {
 	// Reload Scene
     if (jngl::keyPressed("r") || reload) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
         auto dialogFilePath = (*lua_state)["config"]["dialog"];
         getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
         loadScene(currentScene->getSceneName());
