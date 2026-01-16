@@ -349,20 +349,18 @@ static std::string currentDateTime()
 void Game::debugStep()
 {
 	// Reload Scene
-	if (jngl::keyPressed("r") || reload)
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		auto dialogFilePath = (*lua_state)["config"]["dialog"];
-		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
-		loadScene(currentScene->getSceneName());
-		reload = false;
-	}
+    if (jngl::keyPressed("r") || reload) {
+        auto dialogFilePath = (*lua_state)["config"]["dialog"];
+        getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
+        loadScene(currentScene->getSceneName());
+        reload = false;
+        jngl::resetFrameLimiter();
+    }
 
-	if (jngl::keyPressed(jngl::key::F10))
-	{
-		enableDebugDraw = !enableDebugDraw;
-	}
-	if (jngl::keyPressed('m'))
+    if (jngl::keyPressed(jngl::key::F10)) {
+        enableDebugDraw = !enableDebugDraw;
+    }
+    if (jngl::keyPressed('m'))
 	{
 		if (jngl::getVolume() > 0.0)
 		{
@@ -1072,8 +1070,7 @@ void Game::onFileDrop(const std::filesystem::path& path)
 		return;
 	}
 	currentScene->addToFile(spine_file);
-	currentScene->writeToFile();
-	std::this_thread::sleep_for(std::chrono::milliseconds(500));
-	reload = true;
+    currentScene->writeToFile();
+    reload = true;
 }
 #endif

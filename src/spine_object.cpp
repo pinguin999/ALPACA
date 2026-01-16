@@ -78,10 +78,9 @@ SpineObject::SpineObject(const std::shared_ptr<Game>& game, const std::string& s
 			    std::make_unique<spine::Atlas>((spine_file + "/" + spine_file + ".atlas").c_str(),
 			                                   &SkeletonDrawable::textureLoader);
 			json = std::make_unique<spine::SkeletonJson>(atlas.get());
-			json->setScale(scale);
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			continue;
-		}
+            json->setScale(scale);
+            continue;
+        }
 		break;
 #endif
 	}
