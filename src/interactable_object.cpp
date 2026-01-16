@@ -22,9 +22,9 @@ bool InteractableObject::step(bool force)
 #ifndef NDEBUG
         if (_game->editMode  && !abs_position)
         {
+            const float DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
             mouseOver = false;
             for (auto cursor : jngl::input().cursors()) {
-                double DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
                 mouseOver = std::sqrt((cursor.pos().x - position.x) * (cursor.pos().x - position.x) +
                                       (cursor.pos().y - position.y) * (cursor.pos().y - position.y)) <
                             DEBUG_GRAP_DISTANCE;
