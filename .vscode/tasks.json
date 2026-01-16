@@ -5,11 +5,11 @@
 		"args": ["-lc", "([ -f build/Makefile ] || (mkdir build && cd build && cmake -G'MSYS Makefiles' -DCMAKE_BUILD_TYPE=Debug .. && cd ..)) && cd build pac && make -j8"]
 	},
 	"linux": {
-		"args": ["-lc", "cd \"\"${workspaceRoot}\"\" && ([ -d build ] || (mkdir build && cd build && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug ..)) && make -C build pac && $@"],
+		"args": ["-lc", "cd \"\"${workspaceRoot}\"\" && ([ -f build/Makefile ] || (cmake -Bbuild -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug)) && make -j$(nproc) -C build pac && $@"],
 		"command": "/bin/bash"
 	},
 	"osx": {
-		"args": ["-lc", "cd \"\"${workspaceRoot}\"\" && ([ -d build ] || (mkdir build && cd build && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug ..)) && make -C build pac && $@"],
+		"args": ["-lc", "cd \"\"${workspaceRoot}\"\" && ([ -f build/Makefile ] || (cmake -Bbuild -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug)) && make -C build pac && $@"],
 		"command": "/bin/bash"
 	},
 	"options": {
@@ -74,7 +74,6 @@
 			},
 			"group": {
 				"kind": "build",
-				"isDefault": true
 			}
 		},
 		{
