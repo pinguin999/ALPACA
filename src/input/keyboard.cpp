@@ -90,14 +90,12 @@ jngl::Vec2 Keyboard::getSecondaryMovement() const
 	return direction;
 }
 
-bool Keyboard::primary() const
-{
-	return jngl::keyDown(jngl::key::Return) || jngl::keyDown(jngl::key::Space) || jngl::keyDown('e');
+bool Keyboard::primary() const {
+    return jngl::keyPressed(jngl::key::Return) || jngl::keyPressed(jngl::key::Space) || jngl::keyPressed('e');
 }
 
-bool Keyboard::secondary() const
-{
-	return jngl::keyDown(jngl::key::BackSpace);
+bool Keyboard::secondary() const {
+    return jngl::keyPressed(jngl::key::BackSpace);
 }
 
 bool Keyboard::lTrigger() const
