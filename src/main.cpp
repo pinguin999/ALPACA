@@ -27,6 +27,10 @@ jngl::AppParameters jnglInit()
 {
 
 	jngl::AppParameters params;
+	auto args = jngl::getArgs();
+	if (args.size() == 1 && args[0] == "--fullscreen") {
+		params.fullscreen = true;
+	}
 	std::srand(std::time(nullptr));
 
 	std::optional<YAML::Node> config;
