@@ -27,9 +27,9 @@ Game::Game(const YAML::Node &config) : config(config),
 									   cameraPosition(jngl::Vec2(0, 0)),
 									   targetCameraPosition(jngl::Vec2(0, 0))
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
-									   ,
-									   gifGameFrame(0),
-									   gifTime(0.0)
+                                       ,
+                                       gifGameFrame(0),
+                                       gifTime(0.0)
 #endif
 {
 
@@ -39,9 +39,11 @@ Game::Game(const YAML::Node &config) : config(config),
 	cameraZoom = 1.0 / std::max(zoomx, zoomy);
 
 #ifndef NDEBUG
-	debug_info.setText(debug_text);
+    debug_info.setFont(jngl::OutlinedFont(config["default_font"].as<std::string>(), 12, 9.f)
+                           .bake(0x000000ff_rgba, 0xccccccff_rgba));
+    debug_info.setText(debug_text);
 
-	debug_info.setPos(jngl::Vec2(-screensize.x / 2, -screensize.y / 2));
+    debug_info.setPos(jngl::Vec2(-screensize.x / 2, -screensize.y / 2) + jngl::Vec2(5, 10));
 #endif
 
 	bool language_supportet = false;
