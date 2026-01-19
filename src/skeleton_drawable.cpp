@@ -59,6 +59,7 @@ void SkeletonDrawable::step() {
     const float deltaTime = 1.f / static_cast<float>(jngl::getStepsPerSecond());
 	state->update(deltaTime * timeScale);
 	state->apply(*skeleton);
+	skeleton->update(deltaTime * timeScale);
 	skeleton->updateWorldTransform(spine::Physics_Update);
 }
 
