@@ -3,44 +3,42 @@
 #include <jngl.hpp>
 
 #include <spine/spine.h>
-#include <spine/extension.h>
 
-_SP_ARRAY_DECLARE_TYPE(spColorArray, spColor)
+class TextureLoader : public spine::TextureLoader {
+public:
+	void load(spine::AtlasPage& page, const spine::String& path) override;
+	void unload(void* texture) override;
+};
 
-namespace spine {
 
 class SkeletonDrawable {
 public:
-	spSkeleton* skeleton;
-	spAnimationState* state;
+	static TextureLoader textureLoader;
+	std::unique_ptr<spine::Skeleton> skeleton;
+	std::unique_ptr<spine::AnimationState> state;
 	float timeScale;
 
-	explicit SkeletonDrawable(spSkeletonData* skeleton, spAnimationStateData* stateData = 0);
+	explicit SkeletonDrawable(spine::SkeletonData& skeleton,
+	                          std::unique_ptr<spine::AnimationStateData> = nullptr);
 	~SkeletonDrawable();
 
-    void endAnimation(int trackIndex) const;
-
     void step();
+	void setAlpha(float);
 
 	void draw(const jngl::Mat3& modelview = jngl::modelview()) const;
-
-	void setAlpha(float);
 
 #ifndef NDEBUG
 	bool debugdraw = false;
 #endif
 
 private:
+	std::unique_ptr<spine::AnimationStateData> animationStateData;
+	mutable spine::Vector<float> worldVertices;
+	mutable spine::Vector<unsigned short> quadIndices;
+	mutable spine::SkeletonClipping clipper;
 	float alpha = 1.f;
-	bool ownsAnimationStateData;
-	float* worldVertices;
-	spFloatArray* tempUvs;
-	spColorArray* tempColors;
-	spSkeletonClipping* clipper;
 };
 
 
-spBoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spSkeletonBounds *self, const std::string &name, float x, float y);
-spBoundingBoxAttachment *spSkeletonBounds_containsPointNotMatchingName(spSkeletonBounds *self, const std::string &name, float x, float y);
-
-} // namespace spine
+spine::BoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spine::SkeletonBounds *self, const std::string &name, float x, float y);
+spine::BoundingBoxAttachment *spSkeletonBounds_containsPointNotMatchingName(spine::SkeletonBounds *self, const std::string &name, float x, float y);

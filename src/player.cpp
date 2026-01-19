@@ -112,9 +112,9 @@ bool Player::step(bool /*force*/)
         if (_game->getDialogManager()->isActive() || _game->getInactivLayerBorder() > layer)
         {
             skeleton->step();
-            spSkeleton_update(skeleton->skeleton, 1.0/60.0);
-            spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_UPDATE);
-            spSkeletonBounds_update(bounds, skeleton->skeleton, true);
+            skeleton->skeleton->update(1.0/60.0);
+            skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
+            bounds->update(*skeleton->skeleton, true);
             return false;
         }
 
@@ -158,11 +158,11 @@ bool Player::step(bool /*force*/)
         }
         position += tmp_target_position;
 
-        spSkeleton_physicsTranslate(skeleton->skeleton, tmp_target_position.x * 2.0, tmp_target_position.y * 2.0);
+        skeleton->skeleton->physicsTranslate(tmp_target_position.x * 2.0, tmp_target_position.y * 2.0);
         skeleton->step();
-        spSkeleton_update(skeleton->skeleton, 1.0/60.0);
-        spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_UPDATE);
-        spSkeletonBounds_update(bounds, skeleton->skeleton, true);
+        skeleton->skeleton->update(1.0/60.0);
+        skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
+        bounds->update(*skeleton->skeleton, true);
 
         // TODO it's still possible to walk outside of the nav mesh. We have to fix that soon.
         // #ifndef NDEBUG
@@ -201,15 +201,15 @@ bool Player::step(bool /*force*/)
             }
 		}
 
-		if (_game->pointer->primaryPressed() && interruptible &&
-		    !_game->pointer->isPrimaryAlreadyHandled()) {
-			const jngl::Vec2 click_position = _game->pointer->getWorldPosition();
-            auto *collision = spSkeletonBounds_containsPoint(bounds,
+        if (_game->pointer->primaryPressed() && interruptible && !_game->pointer->isPrimaryAlreadyHandled())
+        {
+            const jngl::Vec2 click_position = _game->pointer->getWorldPosition();
+            auto *collision = bounds->containsPoint(
                                                              static_cast<float>(click_position.x) - static_cast<float>(position.x),
                                                              static_cast<float>(click_position.y) - static_cast<float>(position.y));
             if (collision)
             {
-                collision_script = collision->super.super.name;
+                collision_script = collision->getName().buffer();
 
                 jngl::debug("clicked player");
                 _game->pointer->setPrimaryHandled();
@@ -269,14 +269,15 @@ void Player::draw() const
         mv.scale(_game->currentScene->getScale(position));
     }
 
+    if (visible) {
 #ifndef NDEBUG
-    if (auto _game = game.lock())
-    {
-        skeleton->debugdraw = _game->enableDebugDraw;
-    }
+        if (auto _game = game.lock()) {
+            skeleton->debugdraw = _game->enableDebugDraw;
+        }
 #endif
 
-    skeleton->draw(mv);
+        skeleton->draw(mv);
+    }
 }
 
 void Player::setTargentPosition(jngl::Vec2 position)

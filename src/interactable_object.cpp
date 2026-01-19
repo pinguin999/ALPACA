@@ -15,16 +15,16 @@ bool InteractableObject::step(bool force)
     if (auto _game = game.lock())
     {
         skeleton->step();
-        spSkeleton_update(skeleton->skeleton, 1.0f/60.0f);
-        spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_UPDATE);
-        spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
+        skeleton->skeleton->update(1.0/60.0);
+        skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
+        bounds->update(*skeleton->skeleton, true);
 
 #ifndef NDEBUG
         if (_game->editMode  && !abs_position)
         {
+            const float DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
             mouseOver = false;
             for (auto cursor : jngl::input().cursors()) {
-                double DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
                 mouseOver = std::sqrt((cursor.pos().x - position.x) * (cursor.pos().x - position.x) +
                                       (cursor.pos().y - position.y) * (cursor.pos().y - position.y)) <
                             DEBUG_GRAP_DISTANCE;
@@ -68,10 +68,10 @@ bool InteractableObject::step(bool force)
                 click_position = _game->pointer->getPosition();
             }
 
-            auto *collision = spSkeletonBounds_containsPoint(bounds, static_cast<float>(click_position.x) - static_cast<float>(position.x), static_cast<float>(click_position.y) - static_cast<float>(position.y));
+            auto *collision = bounds->containsPoint(static_cast<float>(click_position.x) - static_cast<float>(position.x), static_cast<float>(click_position.y) - static_cast<float>(position.y));
             if (collision)
             {
-                collision_script = collision->super.super.name;
+                collision_script = collision->getName().buffer();
                 if (collision_script != "non_walkable_area") {
                     jngl::debug("clicked interactable item {}", collision_script);
                     _game->pointer->setPrimaryHandled();

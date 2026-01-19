@@ -31,7 +31,7 @@ void pac_unload_file(const char* path)
 
 const int SEED = 0;
 const int MAX_STEPS = 10000;
-
+const int ACTION_TIME = 800;
 
 using namespace boost::ut;
 suite alpaca_test_suite = []
@@ -96,47 +96,47 @@ suite alpaca_test_suite = []
                     continue;
                 }
 
-                if (obj->getVisible() && obj->bounds && obj->bounds->boundingBoxes)
-                {
-                    for (int j = 0; j < obj->bounds->count; j++)
-                    {
-                        if (std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "walkable_area" &&
-                            std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "non_walkable_area" &&
-                            std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setDE" &&
-                            std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setEN")
-                        {
-                            options += std::string(obj->bounds->boundingBoxes[j]->super.super.name) + ", ";
-                            actions.emplace_back(std::string(obj->bounds->boundingBoxes[j]->super.super.name), obj);
+                if (obj->getVisible() && obj->bounds) {
+                    auto& boundingBoxes = obj->bounds->getBoundingBoxes();
+                    for (size_t j = 0; j < boundingBoxes.size(); j++) {
+                        spine::BoundingBoxAttachment* bbox = boundingBoxes[j];
+                        std::string bboxName(bbox->getName().buffer());
+
+                        if (bboxName != "walkable_area" &&
+                            bboxName != "non_walkable_area" &&
+                            bboxName != "setDE" &&
+                            bboxName != "setEN") {
+                            options += bboxName + ", ";
+                            actions.emplace_back(bboxName, obj);
                         }
                     }
                 }
             }
             jngl::debug("OPTIONS {}", options);
 
-
-            int const min = 0;
-            int const max = actions.size() - 1;
-            int const randAction = std::abs(int(gen())) % (max - min + 1) + min;
+            if (actions.empty()) {
+                continue;
+            }
+            size_t const randAction = std::abs(static_cast<int>(gen())) % actions.size();
 
             jngl::debug("RUN: {}", std::get<0>(actions.at(randAction)));
-            game->runAction(std::get<0>(actions.at(randAction)), std::get<1>(actions.at(randAction)));
+            game->runAction(std::get<0>(actions.at(randAction)),
+            std::get<1>(actions.at(randAction)));
 
             // Give Action time
-            for (int _i = 0; _i < 800; _i++)
-            {
+            for (int _i = 0; _i < ACTION_TIME; _i++) {
                 game->step();
                 if (game->getDialogManager()->isActive())
                 {
                     if (game->getDialogManager()->isSelectTextActive())
                     {
                         auto choices = game->getDialogManager()->getChoiceTextsSize();
-                        int const min = 0;
-                        int const max = choices - 1;
-                        int const choice = std::abs(int(gen())) % (max - min + 1) + min;
-                        game->getDialogManager()->selectCurrentAnswer(choice);
-                    }
-                    else
-                    {
+                        if (choices > 0) {
+                            int const randGen = std::abs(static_cast<int>(gen()));
+                            int const choice = randGen % choices;
+                            game->getDialogManager()->selectCurrentAnswer(choice);
+                        }
+                    } else {
                         game->getDialogManager()->continueCurrent();
                     }
                 }
@@ -211,43 +211,46 @@ suite alpaca_test_suite = []
                     continue;
                 }
 
-                if (obj->getVisible() && obj->bounds && obj->bounds->boundingBoxes)
-                {
-                    for (int j = 0; j < obj->bounds->count; j++)
-                    {
-                        if (std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "walkable_area" &&
-                            std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "non_walkable_area" &&
-                            std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setDE" &&
-                            std::string(obj->bounds->boundingBoxes[j]->super.super.name) != "setEN")
-                        {
-                            options += std::string(obj->bounds->boundingBoxes[j]->super.super.name) + ", ";
-                            actions.emplace_back(std::string(obj->bounds->boundingBoxes[j]->super.super.name), obj);
+                if (obj->getVisible() && obj->bounds) {
+                    auto& boundingBoxes = obj->bounds->getBoundingBoxes();
+                    for (size_t j = 0; j < boundingBoxes.size(); j++) {
+                        spine::BoundingBoxAttachment* bbox = boundingBoxes[j];
+                        std::string bboxName(bbox->getName().buffer());
+
+                        if (bboxName != "walkable_area" &&
+                            bboxName != "non_walkable_area" &&
+                            bboxName != "setDE" &&
+                            bboxName != "setEN") {
+                            options += bboxName + ", ";
+                            actions.emplace_back(bboxName, obj);
                         }
                     }
                 }
             }
             jngl::debug("OPTIONS: {}", options);
 
-            int const min = 0;
-            int const max = actions.size() - 1;
-            int const randAction = std::abs(int(gen())) % (max - min + 1) + min;
+            if (actions.empty()) {
+                continue;
+            }
+            size_t const randAction = std::abs(static_cast<int>(gen())) % actions.size();
 
             jngl::debug("RUN: {}", std::get<0>(actions.at(randAction)));
-            game->runAction(std::get<0>(actions.at(randAction)), std::get<1>(actions.at(randAction)));
+            game->runAction(std::get<0>(actions.at(randAction)),
+            std::get<1>(actions.at(randAction)));
 
             // Give Action time
-            for (int _i = 0; _i < 400; _i++)
-            {
+            for (int _i = 0; _i < ACTION_TIME; _i++) {
                 game->step();
                 if (game->getDialogManager()->isActive())
                 {
                     if (game->getDialogManager()->isSelectTextActive())
                     {
                         auto choices = game->getDialogManager()->getChoiceTextsSize();
-                        int const min = 0;
-                        int const max = choices - 1;
-                        int const choice = std::abs(int(gen())) % (max - min + 1) + min;
-                        game->getDialogManager()->selectCurrentAnswer(choice);
+                        if (choices > 0) {
+                            int const randGen = std::abs(static_cast<int>(gen()));
+                            int const choice = randGen % choices;
+                            game->getDialogManager()->selectCurrentAnswer(choice);
+                        }
                     }
                     else
                     {

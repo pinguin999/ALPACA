@@ -351,20 +351,19 @@ static std::string currentDateTime()
 void Game::debugStep()
 {
 	// Reload Scene
-	if (jngl::keyPressed("r") || reload)
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		auto dialogFilePath = (*lua_state)["config"]["dialog"];
-		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
-		loadScene(currentScene->getSceneName());
-		reload = false;
-	}
+    if (jngl::keyPressed("r") || reload) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        auto dialogFilePath = (*lua_state)["config"]["dialog"];
+        getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
+        loadScene(currentScene->getSceneName());
+        reload = false;
+        jngl::resetFrameLimiter();
+    }
 
-	if (jngl::keyPressed(jngl::key::F10))
-	{
-		enableDebugDraw = !enableDebugDraw;
-	}
-	if (jngl::keyPressed('m'))
+    if (jngl::keyPressed(jngl::key::F10)) {
+        enableDebugDraw = !enableDebugDraw;
+    }
+    if (jngl::keyPressed('m'))
 	{
 		if (jngl::getVolume() > 0.0)
 		{
@@ -1062,10 +1061,11 @@ void Game::onFileDrop(const std::filesystem::path& path)
 {
 	std::string spine_file = path.stem().string();
 
-    auto atlas = spAtlas_createFromFile((spine_file + "/" + spine_file + ".atlas").c_str(), nullptr);
+    auto atlas = new spine::Atlas((spine_file + "/" + spine_file + ".atlas").c_str(), &SkeletonDrawable::textureLoader);
     assert(atlas);
-    spSkeletonJson *json = spSkeletonJson_create(atlas);
-	auto skeletonData = spSkeletonJson_readSkeletonDataFile(json, (spine_file + "/" + spine_file + ".json").c_str());
+    auto *json = new spine::SkeletonJson(atlas);
+	auto skeletonData = json->readSkeletonDataFile((spine_file + "/" + spine_file + ".json").c_str());
+	delete json;
 
 	if (!skeletonData)
 	{
@@ -1073,8 +1073,7 @@ void Game::onFileDrop(const std::filesystem::path& path)
 		return;
 	}
 	currentScene->addToFile(spine_file);
-	currentScene->writeToFile();
-	std::this_thread::sleep_for(std::chrono::milliseconds(500));
-	reload = true;
+    currentScene->writeToFile();
+    reload = true;
 }
 #endif

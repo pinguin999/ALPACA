@@ -41,7 +41,9 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/spine-runtimes/spine-cpp"
 		COMMAND_ERROR_IS_FATAL ANY
 	)
 endif()
-add_subdirectory(subprojects/spine-runtimes/spine-c)
+set(SPINE_SET_COMPILER_FLAGS OFF CACHE BOOL "Set compiler flags" FORCE)
+add_compile_definitions(SPINE_USE_STD_FUNCTION)
+add_subdirectory(subprojects/spine-runtimes/spine-cpp)
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/schnacker/CMakeLists.txt")
 	execute_process(
 		COMMAND git submodule update --init --recursive subprojects/schnacker
@@ -111,7 +113,7 @@ if (APPLE)
 endif()
 
 target_link_libraries(pac PRIVATE
-	jngl spine-c schnacker
+	jngl spine-cpp schnacker
 )
 
 # Add Tests
@@ -154,7 +156,7 @@ file(GLOB GFX_FILES RELATIVE ${CMAKE_SOURCE_DIR}/data CONFIGURE_DEPENDS data/*.w
 file(GLOB SFX_FILES RELATIVE ${CMAKE_SOURCE_DIR}/data data/sfx/*.ogg)
 # configure_file(src/engine/datafiles.hpp.in include/datafiles.hpp @ONLY)
 target_include_directories(pac PRIVATE ${CMAKE_BINARY_DIR}/include
-										subprojects/spine-runtimes/spine-c/spine-c/include
+										# subprojects/spine-runtimes/spine-cpp/spine-cpp/include
 										subprojects/schnacker/src)
 if (NOT CMAKE_BUILD_TYPE MATCHES "Release" AND NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	target_include_directories(pac PRIVATE subprojects/gifanimcplusplus)
@@ -177,7 +179,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 	if(lto_supported)
 		message(STATUS "IPO / LTO enabled")
 		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-		set_property(TARGET pac jngl spine-c schnacker PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+		set_property(TARGET pac jngl spine-cpp schnacker PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 	else()
 		message(STATUS "IPO / LTO not supported: <${error}>")
 	endif()

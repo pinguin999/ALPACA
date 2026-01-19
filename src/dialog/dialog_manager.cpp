@@ -337,13 +337,10 @@ void DialogManager::cancelDialog()
     currentNode = nullptr;
     currentAnswers = nullptr;
 
-    if (auto _game = game.lock())
-    {
-        if (dialog_callback) {
-            (*dialog_callback)();
-        }
-        dialog_callback = std::nullopt;
+    if (dialog_callback) {
+        (*dialog_callback)();
     }
+    dialog_callback = std::nullopt;
 }
 
 void DialogManager::selectCurrentAnswer(int index)

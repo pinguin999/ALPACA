@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "game.hpp"
 #include "interactable_object.hpp"
 
@@ -226,14 +228,7 @@ void Game::setupLuaFunctions()
 							{
 								float x = 0;
 								float y = 0;
-								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								const auto *slot = spSkeleton_findSlot(obj->skeleton->skeleton, "head");
-								if (slot)
-								{
-									auto *att = spSkeleton_getAttachmentForSlotName((obj)->skeleton->skeleton, "head", "head");
-									spPointAttachment *point = SUB_CAST(spPointAttachment, att);
-									spPointAttachment_computeWorldPosition(point, slot->bone, &x, &y);
-								}
+								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								getDialogManager()->play(dialogName, jngl::Vec2(x, -y) + obj->getPosition(), std::move(callback));
 							});
 
@@ -915,7 +910,7 @@ void Game::setupLuaFunctions()
 	lua_state->set_function("SetPlayerScaleX",
 							[this](const float scale)
 							{
-								player->skeleton->skeleton->scaleX = scale;
+								player->skeleton->skeleton->setScaleX(scale);
 							});
 
 	/// Set the language

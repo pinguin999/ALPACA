@@ -14,9 +14,9 @@ Background::Background(const std::shared_ptr<Game> &game, const std::string &spi
 void Background::stepSpineAndNavigation()
 {
     skeleton->step();
-    spSkeleton_update(skeleton->skeleton, 1.0/60.0);
-    spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_UPDATE);
-    spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
+    skeleton->skeleton->update(1.0/60.0);
+    skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
+    bounds->update(*skeleton->skeleton, true);
     corners = getCorners();
     forbidden_corners = getForbiddenCorners();
 }
@@ -48,20 +48,22 @@ bool Background::stepClickableRegions(bool force)
 
         if (_game->pointer && _game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
         {
-            const jngl::Vec2 mousePos = _game->pointer->getWorldPosition();
-            auto *collision = spine::spSkeletonBounds_containsPointNotMatchingName(bounds, "walkable_area", static_cast<float>(mousePos.x) - static_cast<float>(position.x), static_cast<float>(mousePos.y) - static_cast<float>(position.y));
-            // TODO Double Click on Regions
-            if (collision)
-            {
-                collision_script = collision->super.super.name;
-                jngl::debug("clicked interactable region {}", collision_script);
-                _game->pointer->setPrimaryHandled();
-                _game->runAction(collision_script, getptr());
-            }
-        }
-    }
+			const jngl::Vec2 mousePos = _game->pointer->getWorldPosition();
+			auto* collision = spSkeletonBounds_containsPointNotMatchingName(
+			    bounds.get(), "walkable_area",
+			    static_cast<float>(mousePos.x) - static_cast<float>(position.x),
+			    static_cast<float>(mousePos.y) - static_cast<float>(position.y));
+			// TODO Double Click on Regions
+			if (collision) {
+				collision_script = collision->getName().buffer();
+				jngl::debug("clicked interactable region {}", collision_script);
+				_game->pointer->setPrimaryHandled();
+				_game->runAction(collision_script, getptr());
+			}
+		}
+	}
 
-    return deleted;
+	return deleted;
 }
 
 void Background::draw() const
@@ -361,22 +363,24 @@ bool Background::hasPathTo(jngl::Vec2 start, jngl::Vec2 target) const
 std::vector<jngl::Vec2> Background::getCorners() const
 {
     std::vector<jngl::Vec2> result;
-    if (bounds->count == 0)
+    spine::Vector<spine::BoundingBoxAttachment*>& boundingBoxes = bounds->getBoundingBoxes();
+    spine::Vector<spine::Polygon*>& polygons = bounds->getPolygons();
+    if (boundingBoxes.size() == 0)
     {
         return result;
     }
-    for (int iPoly = 0; iPoly < bounds->count; iPoly++)
+    for (size_t iPoly = 0; iPoly < boundingBoxes.size(); iPoly++)
     {
-        const auto *polygonName = bounds->boundingBoxes[iPoly]->super.super.name;
+        const auto *polygonName = boundingBoxes[iPoly]->getName().buffer();
         if (polygonName == std::string("walkable_area"))
         {
             // bounds->polygons
-            for (int i = 0; i < (bounds->polygons[iPoly])->count; i += 2)
+            for (size_t i = 0; i < polygons[iPoly]->_vertices.size(); i += 2)
             {
-                result.emplace_back((bounds->polygons[iPoly])->vertices[i + 0], (bounds->polygons[iPoly])->vertices[i + 1]);
+                result.emplace_back(polygons[iPoly]->_vertices[i + 0], polygons[iPoly]->_vertices[i + 1]);
             }
             // Add first to the back again.
-            result.emplace_back((bounds->polygons[iPoly])->vertices[0], (bounds->polygons[iPoly])->vertices[1]);
+            result.emplace_back(polygons[iPoly]->_vertices[0], polygons[iPoly]->_vertices[1]);
             break;
         }
     }
@@ -394,18 +398,20 @@ std::vector<std::vector<jngl::Vec2>> Background::getForbiddenCorners() const
     {
         for (const auto &obj : _game->gameObjects)
         {
-            for (int iPoly = 0; iPoly < obj->bounds->count; iPoly++)
+            spine::Vector<spine::BoundingBoxAttachment*>& boundingBoxes = obj->bounds->getBoundingBoxes();
+            spine::Vector<spine::Polygon*>& polygons = obj->bounds->getPolygons();
+            for (size_t iPoly = 0; iPoly < boundingBoxes.size(); iPoly++)
             {
-                const auto *polygonName = obj->bounds->boundingBoxes[iPoly]->super.super.name;
+                const auto *polygonName = boundingBoxes[iPoly]->getName().buffer();
                 if (polygonName == std::string("non_walkable_area"))
                 {
                     // obj->bounds->polygons
-                    for (int i = 0; i < (obj->bounds->polygons[iPoly])->count; i += 2)
+                    for (size_t i = 0; i < polygons[iPoly]->_vertices.size(); i += 2)
                     {
-                        forbidden_area.emplace_back(((obj->bounds->polygons[iPoly])->vertices[i + 0]) + obj->getPosition().x, ((obj->bounds->polygons[iPoly])->vertices[i + 1]) + obj->getPosition().y);
+                        forbidden_area.emplace_back((polygons[iPoly]->_vertices[i + 0]) + obj->getPosition().x, (polygons[iPoly]->_vertices[i + 1]) + obj->getPosition().y);
                     }
                     // Add first to the back again.
-                    forbidden_area.emplace_back(((obj->bounds->polygons[iPoly])->vertices[0]) + obj->getPosition().x, ((obj->bounds->polygons[iPoly])->vertices[1]) + obj->getPosition().y);
+                    forbidden_area.emplace_back((polygons[iPoly]->_vertices[0]) + obj->getPosition().x, (polygons[iPoly]->_vertices[1]) + obj->getPosition().y);
                     result.emplace_back(forbidden_area);
                     forbidden_area.clear();
                 }
@@ -417,7 +423,7 @@ std::vector<std::vector<jngl::Vec2>> Background::getForbiddenCorners() const
 
 bool Background::is_walkable(jngl::Vec2 position) const
 {
-    const auto walkableResult = spine::spSkeletonBounds_containsPointMatchingName(bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
+    const auto walkableResult = spSkeletonBounds_containsPointMatchingName(bounds.get(), "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
     if (!walkableResult)
     {
         return false;
@@ -427,7 +433,7 @@ bool Background::is_walkable(jngl::Vec2 position) const
     {
         for (const auto &obj : _game->gameObjects)
         {
-            auto *non_walkable = spine::spSkeletonBounds_containsPointMatchingName(obj->bounds, "non_walkable_area", static_cast<float>(position.x) - static_cast<float>(obj->getPosition().x), static_cast<float>(position.y) - static_cast<float>(obj->getPosition().y));
+            auto *non_walkable = spSkeletonBounds_containsPointMatchingName(obj->bounds.get(), "non_walkable_area", static_cast<float>(position.x) - static_cast<float>(obj->getPosition().x), static_cast<float>(position.y) - static_cast<float>(obj->getPosition().y));
             if (non_walkable)
             {
                 return false;
@@ -437,6 +443,6 @@ bool Background::is_walkable(jngl::Vec2 position) const
 
     // if there is an interactable region and a walkable spot,
     // just interact, don't walk there
-    return spine::spSkeletonBounds_containsPointNotMatchingName(
-               bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y)) == nullptr;
+    return spSkeletonBounds_containsPointNotMatchingName(
+               bounds.get(), "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y)) == nullptr;
 }
