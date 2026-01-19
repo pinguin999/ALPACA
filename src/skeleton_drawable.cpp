@@ -68,9 +68,6 @@ void SkeletonDrawable::setAlpha(float alpha) {
 }
 
 void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
-
-	static auto* blancColor = new spine::Color();
-
 	jngl::Sprite* texture = nullptr;
 	for (int j = 0; j < skeleton->getSlots().size(); ++j) {
 		spine::Slot& slot = *skeleton->getDrawOrder()[j];
@@ -155,7 +152,8 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 		}
 
 		if (attachmentColor == nullptr) {
-			attachmentColor = blancColor;
+			static spine::Color blancColor;
+			attachmentColor = &blancColor;
 		}
 		const auto r = static_cast<uint8_t>(skeleton->getColor().r * slot.getColor().r *
 		                                    attachmentColor->r * 255);
