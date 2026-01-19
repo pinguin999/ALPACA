@@ -31,6 +31,7 @@ void pac_unload_file(const char* path)
 
 const int SEED = 0;
 const int MAX_STEPS = 10000;
+const int ACTION_TIME = 800;
 
 using namespace boost::ut;
 suite alpaca_test_suite = []
@@ -123,8 +124,7 @@ suite alpaca_test_suite = []
             std::get<1>(actions.at(randAction)));
 
             // Give Action time
-            for (int _i = 0; _i < 400; _i++)
-            {
+            for (int _i = 0; _i < ACTION_TIME; _i++) {
                 game->step();
                 if (game->getDialogManager()->isActive())
                 {
@@ -239,8 +239,7 @@ suite alpaca_test_suite = []
             std::get<1>(actions.at(randAction)));
 
             // Give Action time
-            for (int _i = 0; _i < 400; _i++)
-            {
+            for (int _i = 0; _i < ACTION_TIME; _i++) {
                 game->step();
                 if (game->getDialogManager()->isActive())
                 {
