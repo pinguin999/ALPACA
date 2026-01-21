@@ -15,6 +15,7 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -65,6 +66,9 @@ elif sys.platform == "win32":
     LUA = (mod_path / "windows_bin\\luac.exe").resolve()
     set_read_only = False
 
+if not os.path.exists(SPINE):
+    print(colored(f"Spine executable '{SPINE}' could not be found!", "red"))
+    sys.exit(1)
 
 spine_objects: dict[str, set[str]] = {
     "Player": {"internal"},
