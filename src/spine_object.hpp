@@ -83,6 +83,7 @@ protected:
 	bool deleted = false;
 	bool visible = true;
 	std::vector<std::string> skins = {"default"};
+	std::unique_ptr<spine::Skin> combinedSkin;
 	jngl::Vec2 position;
 	float scale = 1.0;
 	float rotation = 0.0;

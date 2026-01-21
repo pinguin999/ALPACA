@@ -265,12 +265,13 @@ void SpineObject::setSkin(const std::string& skin) {
 void SpineObject::setSkins(const std::vector<std::string>& skins) {
 	this->skins = skins;
 	if (skins.size() == 1 && skins[0].empty()) {
-		skeleton->skeleton->setSkin((spine::Skin*)nullptr);
+		skeleton->skeleton->setSkin(nullptr);
+		combinedSkin.reset();
 		return;
 	}
 
-	auto* newSkin = new spine::Skin("new-skin"); // 1. Create a new empty skin
-	for (auto const& skin : skins) {
+    auto newSkin = std::make_unique<spine::Skin>("new-skin"); // 1. Create a new empty skin
+    for (auto const& skin : skins) {
 		auto* skinPtr = skeletonData->findSkin(skin.c_str());
 		if (!skinPtr) {
 			jngl::error("The Skin " + skin + " is missing for " + spine_name);
@@ -278,7 +279,8 @@ void SpineObject::setSkins(const std::vector<std::string>& skins) {
 		}
 		newSkin->addSkin(skinPtr);
 	}
-	skeleton->skeleton->setSkin(newSkin);
+	skeleton->skeleton->setSkin(newSkin.get());
+	combinedSkin = std::move(newSkin);
 	skeleton->skeleton->setSlotsToSetupPose();
 }
 
