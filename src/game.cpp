@@ -105,7 +105,7 @@ Game::Game(const YAML::Node &config) : config(config),
         }
 
         // OSC 8 hyperlink
-        jngl::log("lua", "\033]8;;file://{}/../data-src/{}:{}\033\\{}\033]8;;\033\\", std::filesystem::current_path().string(), source, line, output);
+        jngl::log("lua", "\033]8;;file://{}/data-src/{}:{}\033\\{}\033]8;;\033\\", std::filesystem::current_path().parent_path().string(), source, line, output);
     };
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
