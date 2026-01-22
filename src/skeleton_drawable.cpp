@@ -69,7 +69,7 @@ void SkeletonDrawable::setAlpha(float alpha) {
 
 void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 	jngl::Sprite* texture = nullptr;
-	for (int j = 0; j < skeleton->getSlots().size(); ++j) {
+	for (size_t j = 0; j < skeleton->getSlots().size(); ++j) {
 		spine::Slot& slot = *skeleton->getDrawOrder()[j];
 		spine::Attachment* attachment = slot.getAttachment();
 		if (!attachment) {
@@ -77,7 +77,6 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 		}
 
 		spine::Vector<float>* vertices = &worldVertices;
-		int verticesCount = 0;
 		spine::Vector<float>* uvs = nullptr;
 		spine::Vector<unsigned short>* indices = nullptr;
 		int indicesCount = 0;
@@ -88,7 +87,6 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 
 			vertices->setSize(8, 0);
 			regionAttachment->computeWorldVertices(slot, *vertices, 0, 2);
-			verticesCount = 4;
 			uvs = &regionAttachment->getUVs();
 			indices = &quadIndices;
 			indicesCount = 6;
@@ -110,7 +108,6 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 			vertices->setSize(mesh->getWorldVerticesLength(), 0);
 			mesh->computeWorldVertices(slot, 0, mesh->getWorldVerticesLength(), vertices->buffer(),
 			                           0, 2);
-			verticesCount = mesh->getWorldVerticesLength() >> 1;
 			uvs = &mesh->getUVs();
 			indices = &mesh->getTriangles();
 			indicesCount = indices->size();
@@ -167,7 +164,6 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 		if (clipper.isClipping()) {
 			clipper.clipTriangles(*vertices, *indices, *uvs, 2);
 			vertices = &clipper.getClippedVertices();
-			verticesCount = clipper.getClippedVertices().size() >> 1;
 			uvs = &clipper.getClippedUVs();
 			indices = &clipper.getClippedTriangles();
 			indicesCount = clipper.getClippedTriangles().size();

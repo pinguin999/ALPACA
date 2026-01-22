@@ -367,7 +367,7 @@ void Background::updateCorners() {
     for (size_t i = 0; i < boundingBoxes.size(); i++) {
         const auto* polygonName = boundingBoxes[i]->getName().buffer();
         if (polygonName == std::string("walkable_area")) {
-            for (size_t j = 0; j < polygons[i]->_count; j += 2) {
+            for (int j = 0; j < polygons[i]->_count; j += 2) {
                 corners.emplace_back(polygons[i]->_vertices[j + 0], polygons[i]->_vertices[j + 1]);
             }
             // Add first to the back again.
