@@ -861,19 +861,16 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
 	}
 }
 
-void Game::saveLuaState(const std::string &savefile)
-{
-	if (savefile.empty())
-	{
-		return;
-	}
-	// jngl::debug("Backup all globals start");
-	const sol::table &globals = lua_state->globals();
+void Game::saveLuaState(const std::string& savefile) {
+    if (savefile.empty()) {
+        return;
+    }
+    // jngl::debug("Backup all globals start");
+    const sol::table& globals = lua_state->globals();
 
-	const std::string backup = backupLuaTable(globals, "");
-	jngl::debug("Backup all globals end: \n" + backup);
+    const std::string backup = backupLuaTable(globals, "");
 
-	jngl::writeConfig(savefile, backup);
+    jngl::writeConfig(savefile, backup);
 }
 
 void Game::loadLuaState(const std::optional<std::string> &savefile)
