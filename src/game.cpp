@@ -16,10 +16,6 @@
 #include <filesystem>
 #endif
 
-#ifdef JNGL_RECORD
-#include <jngl/record/VideoRecorder.hpp>
-#endif
-
 using jngl::Vec2;
 using namespace std::string_literals;
 
@@ -874,18 +870,19 @@ void Game::saveLuaState(const std::string& savefile) {
 
 void Game::loadLuaState(const std::optional<std::string> &savefile)
 {
-	jngl::debug("Load all globals");
 	if (savefile) {
 		const std::string state = jngl::readConfig(savefile.value());
-		auto result = lua_state->safe_script(state, sol::script_pass_on_error, savefile.value());
+        jngl::debug("Load lua state with savefile ({} KB)", state.size() / 1024);
+        auto result = lua_state->safe_script(state, sol::script_pass_on_error, savefile.value());
 
 		if (!result.valid())
 		{
 			const sol::error err = result;
-			std::cerr << "Failed to load savgame " + savefile.value() + " \n"
-					<< err.what()
-					<< std::endl;
+			jngl::error("Failed to load savgame {}\n{}", savefile.value(),
+					err.what());
 		}
+	} else {
+		jngl::debug("Load lua state");
 	}
 
 	const std::string dialogFilePath = (*lua_state)["config"]["dialog"];
