@@ -125,9 +125,10 @@ void Game::init()
 	if (config["auto_load_savegame"].as<bool>(true))
 	{
 		loadLuaState();
-	}else{
-		loadLuaState(std::nullopt);
-	}
+    } else {
+        loadLuaState(std::nullopt);
+    }
+    jngl::resetFrameLimiter();
 }
 
 void Game::configToLua()
@@ -407,15 +408,15 @@ void Game::debugStep()
 		init();
 	}
 
-	// Restart Game
-	if (jngl::keyPressed("l"))
-	{
-		jngl::writeConfig("savegame", "");
-		reset();
-		lua_state = std::make_shared<sol::state>();
+    // Restart Game
+    if (jngl::keyPressed("l")) {
+        jngl::writeConfig("savegame.bak", jngl::readConfig("savegame"));
+        jngl::writeConfig("savegame", "");
+        reset();
+        lua_state = std::make_shared<sol::state>();
 		lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 		init();
-	}
+    }
 
 #ifdef JNGL_RECORD
 	// Record movie
