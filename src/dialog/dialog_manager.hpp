@@ -30,7 +30,7 @@ public:
     void play(const std::string &characterName, jngl::Vec2 pos, std::optional<sol::function> callback); // TODO: multiple positions for different characters
     void continueCurrent();
     void selectCurrentAnswer(int selected_index);
-    jngl::Rgba textToColor(const std::string& color_text);
+    const jngl::Rgba textToColor(const std::string& color_text);
 
 #ifndef NDEBUG
     int getChoiceTextsSize(){return int(choiceTexts.size());};

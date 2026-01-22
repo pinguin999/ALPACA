@@ -49,7 +49,7 @@ bool Background::stepClickableRegions(bool force)
         if (_game->pointer && _game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
         {
 			const jngl::Vec2 mousePos = _game->pointer->getWorldPosition();
-			auto* collision = spSkeletonBounds_containsPointNotMatchingName(
+			const auto* collision = spSkeletonBounds_containsPointNotMatchingName(
 			    bounds.get(), "walkable_area",
 			    static_cast<float>(mousePos.x) - static_cast<float>(position.x),
 			    static_cast<float>(mousePos.y) - static_cast<float>(position.y));

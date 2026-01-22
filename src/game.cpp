@@ -234,16 +234,15 @@ void Game::loadScene(const std::string& level)
 
 void Game::loadScene_internal()
 {
-	jngl::debug("loadScene");
-	std::string old_scene;
-	if (currentScene)
-	{
-		old_scene = currentScene->getSceneName();
-	}
-	dialogManager->cancelDialog();
+    jngl::debug("loadScene {}", nextScene);
+    std::string old_scene;
+    if (currentScene) {
+        old_scene = currentScene->getSceneName();
+    }
+    dialogManager->cancelDialog();
 
-	// Clear the level if there is already a level loaded, but keep the pointer
-	for (auto it = gameObjects.rbegin(); it != gameObjects.rend();)
+    // Clear the level if there is already a level loaded, but keep the pointer
+    for (auto it = gameObjects.rbegin(); it != gameObjects.rend();)
 	{
 		if ((*it) == pointer)
 		{

@@ -185,7 +185,7 @@ void DialogManager::showChoices(std::shared_ptr<schnacker::AnswersStepResult> an
     currentAnswers = answers;
 }
 
-jngl::Rgba DialogManager::textToColor(const std::string& color_text)
+const jngl::Rgba DialogManager::textToColor(const std::string& color_text)
 {
     unsigned int r;
     unsigned int g;
