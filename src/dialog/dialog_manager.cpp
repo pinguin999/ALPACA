@@ -315,8 +315,8 @@ void DialogManager::continueCurrent()
             playCharacterAnimation(character, fileName);
             try {
                 playCharacterVoice(fullFileName);
-            }catch (const std::runtime_error& e) {
-                jngl::error("\033[1;31m Failed to load: " + fullFileName + "\033[0m");
+            } catch (const std::runtime_error& e) {
+                jngl::error("Failed to load: " + fullFileName);
             }
         }
         else

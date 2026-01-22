@@ -80,6 +80,33 @@ Game::Game(const YAML::Node &config) : config(config),
 	// open some common libraries
 	lua_state = std::make_shared<sol::state>();
 	lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+    (*lua_state)["print"] = [this](sol::variadic_args args) {
+        sol::function tostring = (*lua_state)["tostring"];
+
+        // Get source file and line from debug info
+        std::string source = "?";
+        int line = 0;
+        lua_Debug info;
+        if (lua_getstack(lua_state->lua_state(), 1, &info)) {
+            lua_getinfo(lua_state->lua_state(), "Sl", &info);
+            source = info.source;
+            if (!source.empty() && source[0] == '@') {
+                source = source.substr(1);
+            }
+            line = info.currentline;
+        }
+
+        std::string output;
+        for (auto arg : args) {
+            if (!output.empty()) {
+                output += "\t";
+            }
+            output += tostring(arg).get<std::string>();
+        }
+
+        // OSC 8 hyperlink
+        jngl::log("lua", "\033]8;;file://{}/../data-src/{}:{}\033\\{}\033]8;;\033\\", std::filesystem::current_path().string(), source, line, output);
+    };
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 #ifdef _WIN32
@@ -781,9 +808,8 @@ AudioManager *Game::getAudioManager()
 	return &audioManager;
 }
 
-void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject> thisObject)
-{
-	if (actionName.empty())
+void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject> thisObject) {
+    if (actionName.empty())
 	{
 		return;
 	}
@@ -810,7 +836,6 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 	else
 	{
 		const std::string file = "scripts/" + actionName + ".lua";
-		errorMessage = "The Lua code of " + file + " has failed to run!\n";
 		const std::stringstream scriptstream = jngl::readAsset(file);
 
 		if (!scriptstream)
@@ -819,6 +844,12 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 			return;
 		}
 		script = scriptstream.str();
+		jngl::log("lua", file);
+		auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
+		if (!result.valid()) {
+			jngl::error(static_cast<sol::error>(result).what());
+		}
+		return;
 	}
 
 	auto result = lua_state->safe_script(script, sol::script_pass_on_error);
@@ -826,7 +857,7 @@ void Game::runAction(const std::string &actionName, std::shared_ptr<SpineObject>
 	if (!result.valid())
 	{
 		const sol::error err = result;
-		jngl::debug("{} {}", errorMessage, err.what());
+		jngl::error("{} {}", errorMessage, err.what());
 	}
 }
 
@@ -850,7 +881,7 @@ void Game::loadLuaState(const std::optional<std::string> &savefile)
 	jngl::debug("Load all globals");
 	if (savefile) {
 		const std::string state = jngl::readConfig(savefile.value());
-		auto result = lua_state->safe_script(state, sol::script_pass_on_error);
+		auto result = lua_state->safe_script(state, sol::script_pass_on_error, savefile.value());
 
 		if (!result.valid())
 		{
