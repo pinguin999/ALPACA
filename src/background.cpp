@@ -14,8 +14,6 @@ Background::Background(const std::shared_ptr<Game> &game, const std::string &spi
 void Background::stepSpineAndNavigation()
 {
     skeleton->step();
-    skeleton->skeleton->update(1.0/60.0);
-    skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
     bounds->update(*skeleton->skeleton, true);
     updateCorners();
     updateForbiddenCorners();
