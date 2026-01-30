@@ -32,6 +32,21 @@ void TextureLoader::unload(void* texture) {
 	delete (jngl::Sprite*)texture;
 }
 
+namespace {
+struct SpineExtension : spine::DefaultSpineExtension {
+	SpineExtension() {
+		spine::SpineExtension::setInstance(this);
+	}
+	char* _readFile(const spine::String& path, int* length) override {
+		const auto str = jngl::readAsset(path.buffer()).str();
+		*length = static_cast<int>(str.length());
+		char* buf = static_cast<char*>(malloc(str.length())); // NOLINT
+		std::ranges::copy(str, buf);
+		return buf;
+	}
+} gSpineExtension;
+} // namespace
+
 TextureLoader SkeletonDrawable::textureLoader;
 
 SkeletonDrawable::SkeletonDrawable(spine::SkeletonData& skeletonData,
