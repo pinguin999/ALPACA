@@ -117,14 +117,28 @@ void InteractableObject::draw() const
 
     if (visible)
     {
-#ifndef NDEBUG
         if (auto _game = game.lock())
         {
+#ifndef NDEBUG
             skeleton->debugdraw = _game->enableDebugDraw;
-        }
 #endif
+            skeleton->hotspot_highlight = _game->enableHotspotHighlight;
 
-        skeleton->draw(mv);
+            skeleton->draw(mv);
+
+            if (_game->enableHotspotHighlight && _game->getInactivLayerBorder() <= layer)
+            {
+                for (auto hotspot : skeleton->hotspots)
+                {
+                    auto pos = mv;
+                    pos.translate(hotspot);
+
+                    _game->hotspot->draw(pos);
+
+                    // jngl::drawCircle(pos, 5);
+                }
+            }
+        }
     }
 
 #ifndef NDEBUG

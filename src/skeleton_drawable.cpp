@@ -1,4 +1,5 @@
 #include "skeleton_drawable.hpp"
+#include "polylabel.hpp"
 
 #ifndef NDEBUG
 void pac_unload_file(const char* path);
@@ -76,6 +77,36 @@ void SkeletonDrawable::step() {
 	state->apply(*skeleton);
 	skeleton->update(deltaTime * timeScale);
 	skeleton->updateWorldTransform(spine::Physics_Update);
+
+	hotspots.clear();
+
+    if (hotspot_highlight) {
+        for (size_t j = 0; j < skeleton->getSlots().size(); ++j) {
+            spine::Slot& slot = *skeleton->getDrawOrder()[j];
+            spine::Attachment* attachment = slot.getAttachment();
+            if (!attachment) {
+                continue;
+            }
+
+            if (attachment->getRTTI().isExactly(spine::BoundingBoxAttachment::rtti)) {
+                auto* box = reinterpret_cast<spine::BoundingBoxAttachment*>(attachment);
+                worldVertices.setSize(box->getWorldVerticesLength(), 0);
+                box->computeWorldVertices(slot, 0, box->getWorldVerticesLength(), worldVertices.buffer(), 0, 2);
+
+                float* bbvertices = worldVertices.buffer();
+                int vertexCount = box->getWorldVerticesLength();
+
+                std::vector<jngl::Vec2> polygon = {};
+                if (std::string(box->getName().buffer()) != "non_walkable_area" && std::string(box->getName().buffer()) != "walkable_area") {
+                    for (int i = 0; i < vertexCount - 2; i += 2) {
+                        polygon.push_back({ bbvertices[i], bbvertices[i + 1] });
+                    }
+                    jngl::Vec2 p = mapbox::polylabel({ polygon }, 0.4);
+                    hotspots.push_back(p);
+                }
+            }
+        }
+    }
 }
 
 void SkeletonDrawable::setAlpha(float alpha) {
@@ -142,9 +173,7 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
                 float* bbvertices = worldVertices.buffer();
                 int vertexCount = box->getWorldVerticesLength();
 
-                if (std::string(box->getName().buffer()) == "non_walkable_area") {
-
-                } else {
+                if (std::string(box->getName().buffer()) != "non_walkable_area") {
                     for (int i = 0; i < vertexCount - 2; i += 2) {
                         jngl::drawLine(modelview, { bbvertices[i], bbvertices[i + 1] }, { bbvertices[i + 2], bbvertices[i + 3] });
                     }

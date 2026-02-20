@@ -10,6 +10,7 @@
 #include <spine/spine.h>
 #include "pointer.hpp"
 #include "scene_fade.hpp"
+#include "spine_object.hpp"
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
 #include "FileWatch.hpp"
@@ -271,6 +272,14 @@ void Game::loadScene_internal()
 		add(pointer);
 	}
 
+	if (hotspot == nullptr)
+	{
+		hotspot = std::make_shared<Hotspot>(shared_from_this(), "hotspot");
+		hotspot->setCrossScene(true);
+		hotspot->setPosition(Vec2(0, 0));
+		hotspot->playAnimation(0, "idle", true);
+	}
+
 	if (player)
 	{
 		auto position = currentScene->background->getPoint(old_scene);
@@ -341,8 +350,11 @@ void Game::step()
 	}
 
 	dialogManager->step();
+    if (hotspot) {
+        hotspot->step();
+    }
 
-	// Sort game objects depending on the y position for
+    // Sort game objects depending on the y position for
 	sort(gameObjects.begin(), gameObjects.end(), [](const auto &lhs, const auto &rhs)
 		 { return lhs->getZ() < rhs->getZ(); });
 
@@ -386,6 +398,11 @@ void Game::debugStep()
     if (jngl::keyPressed(jngl::key::F10)) {
         enableDebugDraw = !enableDebugDraw;
     }
+	if (jngl::keyDown(jngl::key::Space) || jngl::mouseDown(jngl::mouse::Button::Right)) {
+        enableHotspotHighlight = true;
+    }else {
+		enableHotspotHighlight = false;
+	}
     if (jngl::keyPressed('m'))
 	{
 		if (jngl::getVolume() > 0.0)
