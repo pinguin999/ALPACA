@@ -91,7 +91,7 @@ jngl::Vec2 Keyboard::getSecondaryMovement() const
 }
 
 bool Keyboard::primary() const {
-    return jngl::keyPressed(jngl::key::Return) || jngl::keyPressed(jngl::key::Space) || jngl::keyPressed('e');
+    return jngl::keyPressed(jngl::key::Return) || jngl::keyPressed('e');
 }
 
 bool Keyboard::secondary() const {
