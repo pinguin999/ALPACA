@@ -9,7 +9,7 @@ file(GLOB UNIT_TESTS_INC_FILES ${PROJECT_SOURCE_DIR}/test/*.hpp)
 file(GLOB UNIT_TESTS_SRC_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp)
 
 # Include paths
-set(UNIT_TESTS_INCLUDES ${PROJECT_INCLUDE_DIR}
+set(UNIT_TESTS_INCLUDES
     ${PROJECT_SOURCE_DIR}/src
     ./../src
     ./../subprojects/schnacker/src
