@@ -27,6 +27,8 @@ public:
 
 	void draw(const jngl::Mat3& modelview = jngl::modelview()) const;
 
+	bool hotspot_highlight = false;
+	mutable std::vector<jngl::Vec2> hotspots;
 #ifndef NDEBUG
 	bool debugdraw = false;
 #endif
@@ -37,6 +39,7 @@ private:
 	mutable spine::Vector<unsigned short> quadIndices;
 	mutable spine::SkeletonClipping clipper;
 	float alpha = 1.f;
+
 };
 
 

@@ -9,6 +9,7 @@
 #endif
 #include "player.hpp"
 #include "pointer.hpp"
+#include "hotspot.hpp"
 #include "scene.hpp"
 #include "dialog/dialog_manager.hpp"
 #include "audio_manager.hpp"
@@ -35,6 +36,7 @@ public:
     void debugStep();
     bool editMode = false;
     bool enableDebugDraw = false;
+    bool enableHotspotHighlight = false;
     bool enablezMapDebugDraw = false;
     bool show_debug_info = true;
     bool room_select_mode = false;
@@ -79,6 +81,7 @@ public:
     std::shared_ptr<sol::state> lua_state;
     std::shared_ptr<Player> player = nullptr;
     std::shared_ptr<Pointer> pointer = nullptr;
+    std::shared_ptr<Hotspot> hotspot = nullptr;
 
     std::shared_ptr<DialogManager> getDialogManager();
     AudioManager *getAudioManager();
