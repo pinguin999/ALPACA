@@ -109,20 +109,6 @@ bool Player::step(bool /*force*/)
         }
 #endif
 
-        if (_game->getDialogManager()->isActive() || _game->getInactivLayerBorder() > layer)
-        {
-            skeleton->step();
-            bounds->update(*skeleton->skeleton, true);
-            return false;
-        }
-
-        if (path.size() > 1 && boost::qvm::mag_sqr(position - path.front()) < 0.5)
-        {
-            path.pop_front();
-            setTargentPosition(path.front());
-            setDirection();
-        }
-
         jngl::Vec2 tmp_target_position = target_position - position;
         if (boost::qvm::mag_sqr(tmp_target_position - jngl::Vec2(0, 0)) < 0.5 && currentAnimation == (*_game->lua_state)["config"]["player_walk_animation"])
         {
@@ -146,6 +132,18 @@ bool Player::step(bool /*force*/)
 
                 playAnimation(0, currentAnimation, true);
             }
+        }
+
+        if (_game->getDialogManager()->isActive() || _game->getInactivLayerBorder() > layer) {
+            skeleton->step();
+            bounds->update(*skeleton->skeleton, true);
+            return false;
+        }
+
+        if (path.size() > 1 && boost::qvm::mag_sqr(position - path.front()) < 0.5) {
+            path.pop_front();
+            setTargentPosition(path.front());
+            setDirection();
         }
 
         float max_speed = (*_game->lua_state)["config"]["player_max_speed"];

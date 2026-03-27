@@ -223,14 +223,12 @@ void Game::setupLuaFunctions()
 
 	/// Play a dialog by name
 	/// string dialogName: The dialog to play.
-	lua_state->set_function("PlayDialog",
-							[this](const LuaDialog &dialogName, std::optional<sol::function> callback)
-							{
-								float x = 0;
-								float y = 0;
-								std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
-								getDialogManager()->play(dialogName, jngl::Vec2(x, -y) + obj->getPosition(), std::move(callback));
-							});
+    lua_state->set_function("PlayDialog",
+                            [this](const LuaDialog& dialogName, std::optional<sol::function> callback) {
+        player->stop_walking();
+        std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+        getDialogManager()->play(dialogName, std::move(callback));
+    });
 
 	/// Add the current item to the inventory.
 	/// Sets the skin of the item of the item to inventory_default_skin
@@ -541,16 +539,15 @@ void Game::setupLuaFunctions()
 									auto position = getPointPosition(shared_from_this(), point_name);
 									if (position)
 									{
-										const std::shared_ptr<Player> point = std::dynamic_pointer_cast<Player>(obj);
-										if ( point != nullptr)
-										{
-											point->setPosition(position.value());
-											point->stop_walking();
-											point->addTargetPositionImmediately(position.value(), std::nullopt);
-										}
-										obj->setPosition(position.value());
-										const std::string lua_object = getLuaPath(obj->getId());
-										lua_state->script(lua_object + ".x = " + std::to_string(position->x) + "");
+                                        const std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(obj);
+                                        if (player != nullptr) {
+                                            player->setPosition(position.value());
+                                            player->stop_walking();
+                                            player->addTargetPositionImmediately(position.value(), std::nullopt);
+                                        }
+                                        obj->setPosition(position.value());
+                                        const std::string lua_object = getLuaPath(obj->getId());
+                                        lua_state->script(lua_object + ".x = " + std::to_string(position->x) + "");
 										lua_state->script(lua_object + ".y = " + std::to_string(position->y) + "");
 									}
 								}

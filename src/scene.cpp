@@ -381,7 +381,7 @@ void Scene::createObjectLua(std::string id, std::string scene) {
             }
             interactable->playAnimation(0, animation, true);
 
-            (*_game->lua_state)["scenes"][scene]["items"][id]["object"] = std::static_pointer_cast<SpineObject>(interactable);;
+            (*_game->lua_state)["scenes"][scene]["items"][id]["object"] = std::static_pointer_cast<SpineObject>(interactable);
 
             if ((*_game->lua_state)["scenes"][scene]["items"][id]["skin"].valid()) {
                 std::vector<std::string> const skin = (*_game->lua_state)["scenes"][scene]["items"][id]["skin"].get<sol::as_table_t<std::vector<std::string>>>();
@@ -490,18 +490,22 @@ void Scene::updateObjectPosition(const std::string &id, jngl::Vec2 position)
 }
 #endif
 
+std::string Scene::getSceneName() {
+    return fileName;
+}
+
 double Scene::getScale(jngl::Vec2 position)
 {
     if (!zBufferMap)
     {
         return 1.0;
     }
-    int x = static_cast<int>(position.x + zBufferMap->getWidth() / 2);
-    int y = static_cast<int>(position.y + zBufferMap->getHeight() / 2);
+    int x = static_cast<int>(position.x + (zBufferMap->getWidth() / 2.0));
+    int y = static_cast<int>(position.y + (zBufferMap->getHeight() / 2.0));
     x = std::min(x, zBufferMap->getWidth()-1);
     x = std::max(x, 0);
     y = std::min(y, zBufferMap->getHeight()-1);
     y = std::max(y, 0);
-    const int scale_value = zBufferMap->pixels()[x * 4 + y * zBufferMap->getWidth() * 4 + 3];
+    const int scale_value = zBufferMap->pixels()[(x * 4) + (y * zBufferMap->getWidth() * 4) + 3];
     return scale_value / 255.0;
 }
