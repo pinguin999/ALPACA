@@ -12,6 +12,11 @@ AudioManager::AudioManager() = default;
 
 void AudioManager::stopMusic()
 {
+    if(currentMusic.empty())
+    {
+        return;
+    }
+
     Channels::handle().music.stop(currentMusic);
     currentMusic = "";
 }
