@@ -80,6 +80,7 @@ spine_points: dict[str, set[str]] = {}
 all_dialogs: dict[str, set[str]] = {}
 all_scenes: dict[str, set[str]] = {}
 all_audio: dict[str, set[str]] = {}
+all_audio_channels: dict[str, set[str]] = {"voice": {""}, "music": {""}, "sounds": {""}}
 all_language: dict[str, set[str]] = {}
 schnack_vars: dict[str, str] = {}
 schnack_characters_props: dict[str, str] = {}
@@ -409,7 +410,7 @@ def parse_spine_json(spine_file: str) -> None:
                             with Path(f"./data-src/scripts/{bbname}.lua").open(
                                 "w"
                             ) as f:
-                                f.write(f'print("{bbname}")')
+                                f.write('')
                             print(
                                 colored(
                                     f"Script {bbname}.lua was created automatically!",
@@ -720,6 +721,7 @@ class LuaDocsGen:
         result = result.replace("[this](", "").replace(")", "")
         result = result.replace("const ", "")
         result = result.replace("std::string ", "string ")
+        result = result.replace("std::string& ", "string ")
         result = result.replace("&", "")
         result = result.replace("\tint ", "number ")
         result = result.replace(", int ", ", number ")
@@ -742,6 +744,7 @@ class LuaDocsGen:
         result = result.replace("LuaSpineAnimation ", "")
         result = result.replace("LuaSpineSkin ", "")
         result = result.replace("LuaSpinePoint ", "")
+        result = result.replace("LuaAudioChannel ", "")
         result = result.replace("LuaDialog ", "")
         result = result.replace("LuaScene ", "")
         result = result.replace("LuaAudio ", "")
@@ -831,6 +834,7 @@ class LuaDocsGen:
         write_alias("LuaDialog", all_dialogs)
         write_alias("LuaScene", all_scenes)
         write_alias("LuaAudio", all_audio)
+        write_alias("LuaAudioChannel", all_audio_channels)
         write_alias("LuaLanguage", all_language)
 
         with alpaca_lua.open("+a") as output:

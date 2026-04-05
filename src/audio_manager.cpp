@@ -1,12 +1,6 @@
 #include "audio_manager.hpp"
 
 
-struct Channels : public jngl::Singleton<Channels>{
-    jngl::Channel& main = jngl::Channel::main();
-    jngl::Channel music;
-    jngl::Channel voice;
-    jngl::Channel sounds;
-};
 
 AudioManager::AudioManager() = default;
 
@@ -73,5 +67,3 @@ float AudioManager::getMusicVolume() const
 {
     return musicVolume;
 }
-
-
