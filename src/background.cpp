@@ -66,12 +66,13 @@ bool Background::stepClickableRegions(bool force)
 
 void Background::draw() const
 {
-#ifndef NDEBUG
     if (auto _game = game.lock())
     {
+#ifndef NDEBUG
         skeleton->debugdraw = _game->enableDebugDraw;
-    }
 #endif
+        skeleton->hotspot_highlight = _game->enableHotspotHighlight;
+    }
 
     auto mv = jngl::modelview().translate(position).rotate(getRotation());
     skeleton->draw(mv);
