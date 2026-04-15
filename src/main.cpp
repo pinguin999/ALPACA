@@ -39,9 +39,7 @@ jngl::AppParameters jnglInit()
 	{
 		config = YAML::Load(fin.str());
 		params.displayName = (*config)["name"].as<std::string>();
-#ifndef NDEBUG
 		params.screenSize = {double((*config)["screenSize"]["x"].as<int>()), double((*config)["screenSize"]["y"].as<int>())};
-#endif
 		params.minAspectRatio = {double((*config)["minAspectRatio"]["x"].as<int>()), double((*config)["minAspectRatio"]["y"].as<int>())};
 		params.maxAspectRatio = {double((*config)["maxAspectRatio"]["x"].as<int>()), double((*config)["maxAspectRatio"]["y"].as<int>())};
 	}
