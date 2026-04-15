@@ -4,6 +4,13 @@
 #include <map>
 #include <jngl.hpp>
 
+struct Channels : public jngl::Singleton<Channels> {
+    jngl::Channel& main = jngl::Channel::main();
+    jngl::Channel music;
+    jngl::Channel voice;
+    jngl::Channel sounds;
+};
+
 class AudioManager
 {
 public:
@@ -23,7 +30,7 @@ private:
     std::string currentMusic;
     std::map<std::string, std::shared_ptr<jngl::SoundFile>> loadedSounds = {};
 
-    float soundVolume = 0.8f;
+    float soundVolume = 1.0f;
     float voiceVolume = 1.0f;
-    float musicVolume = 0.5f;
+    float musicVolume = 1.0f;
 };

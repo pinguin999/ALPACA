@@ -153,7 +153,7 @@ void Background::draw() const
 
 double Background::getZ() const
 {
-    return std::numeric_limits<double>::lowest();
+    return -100.0;
 }
 
 enum class Result {
