@@ -4,7 +4,7 @@
 #include <jngl.hpp>
 #include <vector>
 #include <sol/sol.hpp>
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
 #include <gifanim.h>
 #endif
 #include "player.hpp"
@@ -118,7 +118,7 @@ private:
     std::shared_ptr<DialogManager> dialogManager = nullptr;
     AudioManager audioManager;
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
     std::shared_ptr<GifAnim> gifAnimation;
     std::shared_ptr<GifWriter> gifWriter;
     bool recordingGif = false;

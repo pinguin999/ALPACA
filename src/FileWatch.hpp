@@ -22,7 +22,7 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //	SOFTWARE.
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(__EMSCRIPTEN__))
 
 #ifndef FILEWATCHER_H
 #define FILEWATCHER_H

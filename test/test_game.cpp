@@ -13,7 +13,7 @@
 #include "../src/game.hpp"
 #include "../src/interactable_object.hpp"
 
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
 #if (defined(__linux__) && !__has_include(<filesystem>))
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -40,7 +40,7 @@ suite alpaca_test_suite = []
     {
         jngl::setVolume(0);
         std::mt19937 gen = std::mt19937(SEED);
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
         chdir("data");
 #elif !defined(ANDROID)
         auto dataFolder = fs::path("../data");
@@ -155,7 +155,7 @@ suite alpaca_test_suite = []
         return; // DISABLED
         jngl::setVolume(0);
         std::mt19937 gen = std::mt19937(SEED);
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
         chdir("data");
 #elif !defined(ANDROID)
         auto dataFolder = fs::path("../data");

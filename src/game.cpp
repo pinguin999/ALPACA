@@ -11,7 +11,7 @@
 #include "pointer.hpp"
 #include "scene_fade.hpp"
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
 #include "FileWatch.hpp"
 #include <filesystem>
 #endif
@@ -22,7 +22,7 @@ using namespace std::string_literals;
 Game::Game(const YAML::Node &config) : config(config),
 									   cameraPosition(jngl::Vec2(0, 0)),
 									   targetCameraPosition(jngl::Vec2(0, 0))
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
                                        ,
                                        gifGameFrame(0),
                                        gifTime(0.0)
@@ -67,7 +67,7 @@ Game::Game(const YAML::Node &config) : config(config),
 		}
 	}
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
 	gifAnimation = std::make_shared<GifAnim>();
 	gifWriter = std::make_shared<GifWriter>();
 	gifBuffer = std::make_unique<uint8_t[]>((jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR * (jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR)) * 4);
@@ -104,7 +104,7 @@ Game::Game(const YAML::Node &config) : config(config),
         jngl::log("lua", "\033]8;;file://{}/data-src/{}:{}\033\\{}\033]8;;\033\\", std::filesystem::current_path().parent_path().string(), source, line, output);
     };
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
 #ifdef _WIN32
 #define TYPE std::wstring
 #else
@@ -354,7 +354,7 @@ void Game::step()
 	removeObjects();
 }
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
 static std::string currentDateTime()
 {
@@ -504,7 +504,7 @@ void Game::debugStep()
 		}
 	}
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
 	for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"})
 	{
 		int x = static_cast<int>(number[0]) - static_cast<int>('0');
@@ -1081,7 +1081,7 @@ const std::string Game::getLuaPath(std::string objectId)
 	return "";
 }
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
 void Game::onFileDrop(const std::filesystem::path& path)
 {
 	std::string spine_file = path.stem().string();
