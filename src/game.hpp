@@ -32,11 +32,12 @@ public:
     void step() override;
     void draw() const override;
 
+    bool enableHotspotHighlight = false;
+
 #ifndef NDEBUG
     void debugStep();
     bool editMode = false;
     bool enableDebugDraw = false;
-    bool enableHotspotHighlight = false;
     bool enablezMapDebugDraw = false;
     bool show_debug_info = true;
     bool room_select_mode = false;
