@@ -34,6 +34,12 @@ public:
 #endif
 
 private:
+	struct alignas(64) HotspotCache {
+		std::vector<float> vertices;
+		jngl::Vec2 center;
+	};
+	std::vector<HotspotCache> hotspotCache;
+
 	std::unique_ptr<spine::AnimationStateData> animationStateData;
 	mutable spine::Vector<float> worldVertices;
 	mutable spine::Vector<unsigned short> quadIndices;

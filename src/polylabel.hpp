@@ -14,7 +14,7 @@ namespace mapbox {
 namespace detail {
 
 // get squared distance from a point to a segment
-double getSegDistSq(const jngl::Vec2& p,
+inline double getSegDistSq(const jngl::Vec2& p,
                const jngl::Vec2& a,
                const jngl::Vec2& b) {
     auto x = a.x;
@@ -39,11 +39,11 @@ double getSegDistSq(const jngl::Vec2& p,
     dx = p.x - x;
     dy = p.y - y;
 
-    return dx * dx + dy * dy;
+    return (dx * dx) + (dy * dy);
 }
 
 // signed distance from point to polygon outline (negative if point is outside)
-double pointToPolygonDist(const jngl::Vec2& point, const std::vector<std::vector<jngl::Vec2>>& polygon) {
+inline double pointToPolygonDist(const jngl::Vec2& point, const std::vector<std::vector<jngl::Vec2>>& polygon) {
     bool inside = false;
     auto minDistSq = std::numeric_limits<double>::infinity();
 
@@ -53,7 +53,10 @@ double pointToPolygonDist(const jngl::Vec2& point, const std::vector<std::vector
             const jngl::Vec2& b = ring[j];
 
             if ((a.y > point.y) != (b.y > point.y) &&
-                (point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x)) inside = !inside;
+                (point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x))
+                {
+                    inside = !inside;
+                }
 
             minDistSq = std::min(minDistSq, getSegDistSq(point, a, b));
         }
@@ -67,7 +70,7 @@ struct Cell {
         : c(c_),
           h(h_),
           d(pointToPolygonDist(c, polygon)),
-          max(d + h * std::sqrt(2))
+          max(d + (h * std::sqrt(2)))
         {}
 
     jngl::Vec2 c; // cell center
@@ -77,7 +80,7 @@ struct Cell {
 };
 
 // get polygon centroid
-Cell getCentroidCell(const std::vector<std::vector<jngl::Vec2>>& polygon) {
+inline Cell getCentroidCell(const std::vector<std::vector<jngl::Vec2>>& polygon) {
     double area = 0;
     jngl::Vec2 c { 0, 0 };
     const auto& ring = polygon.at(0);
@@ -85,7 +88,7 @@ Cell getCentroidCell(const std::vector<std::vector<jngl::Vec2>>& polygon) {
     for (std::size_t i = 0, len = ring.size(), j = len - 1; i < len; j = i++) {
         const jngl::Vec2& a = ring[i];
         const jngl::Vec2& b = ring[j];
-        auto f = a.x * b.y - b.x * a.y;
+        auto f = (a.x * b.y) - (b.x * a.y);
         c.x += (a.x + b.x) * f;
         c.y += (a.y + b.y) * f;
         area += f * 3;
@@ -96,9 +99,9 @@ Cell getCentroidCell(const std::vector<std::vector<jngl::Vec2>>& polygon) {
 
 } // namespace detail
 
-std::tuple<jngl::Vec2, jngl::Vec2> create_envelope(std::vector<jngl::Vec2> const& geometry)
+inline std::tuple<jngl::Vec2, jngl::Vec2> create_envelope(std::vector<jngl::Vec2> const& geometry)
 {
-    double min_t = std::numeric_limits<double>::min();
+    double min_t = std::numeric_limits<double>::lowest();
     double max_t = std::numeric_limits<double>::max();
 
     jngl::Vec2 min(max_t, max_t);
@@ -106,23 +109,66 @@ std::tuple<jngl::Vec2, jngl::Vec2> create_envelope(std::vector<jngl::Vec2> const
 
     for (auto point : geometry)
     {
-        if (min.x > point.x) min.x = point.x;
-        if (min.y > point.y) min.y = point.y;
-        if (max.x < point.x) max.x = point.x;
-        if (max.y < point.y) max.y = point.y;
+        min.x = std::min(min.x, point.x);
+        min.y = std::min(min.y, point.y);
+        max.x = std::max(max.x, point.x);
+        max.y = std::max(max.y, point.y);
     }
 
     return {min, max};
 }
 
-jngl::Vec2 polylabel(const std::vector<std::vector<jngl::Vec2>>& polygon, double precision = 1, bool debug = false) {
+inline jngl::Vec2 polylabel(const std::vector<std::vector<jngl::Vec2>>& polygon, double precision = 1, bool debug = false) {
     using namespace detail;
 
-    // find the bounding box of the outer ring
-    auto envelope = create_envelope(polygon.at(0));
+    const auto& outerRing = polygon.at(0);
 
-    jngl::Vec2 envelope_min = std::get<0>(envelope);
-    jngl::Vec2 envelope_max = std::get<1>(envelope);
+    // For convex polygons the centroid is the visual center — skip the iterative algorithm
+    const auto isConvex = [&]() {
+        const std::size_t n = outerRing.size();
+        if (n < 3) {
+            return true;
+        }
+        int sign = 0;
+        for (std::size_t i = 0; i < n; ++i) {
+            const jngl::Vec2& a = outerRing[i];
+            const jngl::Vec2& b = outerRing[(i + 1) % n];
+            const jngl::Vec2& c = outerRing[(i + 2) % n];
+            const double cross = ((b.x - a.x) * (c.y - b.y)) - ((b.y - a.y) * (c.x - b.x));
+            if (cross != 0) {
+                const int s = cross > 0 ? 1 : -1;
+                if (sign == 0) {
+                    sign = s;
+                } else if (sign != s) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
+    const auto getCentroid = [&]() {
+        double area = 0;
+        jngl::Vec2 c { 0, 0 };
+        for (std::size_t i = 0, len = outerRing.size(), j = len - 1; i < len; j = i++) {
+            const jngl::Vec2& a = outerRing[i];
+            const jngl::Vec2& b = outerRing[j];
+            const double f = (a.x * b.y) - (b.x * a.y);
+            c.x += (a.x + b.x) * f;
+            c.y += (a.y + b.y) * f;
+            area += f * 3;
+        }
+        return area == 0 ? outerRing.at(0) : c / area;
+    };
+
+    if (isConvex()) {
+        return getCentroid();
+    }
+
+    // find the bounding box of the outer ring
+    const auto envelope = create_envelope(outerRing);
+    const jngl::Vec2 envelope_min = std::get<0>(envelope);
+    const jngl::Vec2 envelope_max = std::get<1>(envelope);
 
     const jngl::Vec2 size {
         envelope_max.x - envelope_min.x,
@@ -172,7 +218,10 @@ jngl::Vec2 polylabel(const std::vector<std::vector<jngl::Vec2>>& polygon, double
         }
 
         // do not drill down further if there's no chance of a better solution
-        if (cell.max - bestCell.d <= precision) continue;
+        if (cell.max - bestCell.d <= precision)
+        {
+            continue;
+        }
 
         // split the cell into four cells
         h = cell.h / 2;
@@ -184,8 +233,8 @@ jngl::Vec2 polylabel(const std::vector<std::vector<jngl::Vec2>>& polygon, double
     }
 
     if (debug) {
-        std::cout << "num probes: " << numProbes << std::endl;
-        std::cout << "best distance: " << bestCell.d << std::endl;
+        std::cout << "num probes: " << numProbes << '\n';
+        std::cout << "best distance: " << bestCell.d << '\n';
     }
 
     return bestCell.c;
