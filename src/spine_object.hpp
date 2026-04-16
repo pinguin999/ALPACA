@@ -73,6 +73,12 @@ public:
 	void toLuaState();
     bool getCrossScene() const {return cross_scene;};
     void setCrossScene(bool cross_scene);
+    std::string getShader() const {
+        return shader;
+    }
+    void setShader(std::string shader) {
+        this->shader = std::move(shader);
+    }
 
 protected:
 	std::string currentAnimation = "idle";
@@ -91,4 +97,5 @@ protected:
 	std::string id;
 	const std::weak_ptr<Game> game;
 	std::shared_ptr<SpineObject> parent = nullptr;
+	std::string shader;
 };
