@@ -358,6 +358,7 @@ void Game::step()
 	sort(gameObjects.begin(), gameObjects.end(), [](const auto &lhs, const auto &rhs)
 		 { return lhs->getZ() < rhs->getZ(); });
 
+	enableHotspotHighlight = jngl::keyDown(jngl::key::Space) || jngl::mouseDown(jngl::mouse::Button::Right);
 #ifndef NDEBUG
 	debugStep();
 #endif
@@ -398,11 +399,7 @@ void Game::debugStep()
     if (jngl::keyPressed(jngl::key::F10)) {
         enableDebugDraw = !enableDebugDraw;
     }
-	if (jngl::keyDown(jngl::key::Space) || jngl::mouseDown(jngl::mouse::Button::Right)) {
-        enableHotspotHighlight = true;
-    }else {
-		enableHotspotHighlight = false;
-	}
+
     if (jngl::keyPressed('m'))
 	{
 		if (jngl::getVolume() > 0.0)
