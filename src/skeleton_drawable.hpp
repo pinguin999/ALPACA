@@ -27,16 +27,25 @@ public:
 
 	void draw(const jngl::Mat3& modelview = jngl::modelview()) const;
 
+	bool hotspot_highlight = false;
+	mutable std::vector<jngl::Vec2> hotspots;
 #ifndef NDEBUG
 	bool debugdraw = false;
 #endif
 
 private:
+	struct alignas(64) HotspotCache {
+		std::vector<float> vertices;
+		jngl::Vec2 center;
+	};
+	std::vector<HotspotCache> hotspotCache;
+
 	std::unique_ptr<spine::AnimationStateData> animationStateData;
 	mutable spine::Vector<float> worldVertices;
 	mutable spine::Vector<unsigned short> quadIndices;
 	mutable spine::SkeletonClipping clipper;
 	float alpha = 1.f;
+
 };
 
 

@@ -1,4 +1,5 @@
 #include "skeleton_drawable.hpp"
+#include "polylabel.hpp"
 
 #ifndef NDEBUG
 void pac_unload_file(const char* path);
@@ -76,6 +77,52 @@ void SkeletonDrawable::step() {
 	state->apply(*skeleton);
 	skeleton->update(deltaTime * timeScale);
 	skeleton->updateWorldTransform(spine::Physics_Update);
+
+	hotspots.clear();
+
+    if (hotspot_highlight) {
+        const size_t slotCount = skeleton->getSlots().size();
+        if (hotspotCache.size() != slotCount) {
+            hotspotCache.resize(slotCount);
+        }
+
+        for (size_t j = 0; j < slotCount; ++j) {
+            spine::Slot& slot = *skeleton->getDrawOrder()[j];
+            spine::Attachment* attachment = slot.getAttachment();
+            if (!attachment) {
+                continue;
+            }
+
+            if (attachment->getRTTI().isExactly(spine::BoundingBoxAttachment::rtti)) {
+                auto* box = reinterpret_cast<spine::BoundingBoxAttachment*>(attachment);
+                const std::string name = std::string(box->getName().buffer());
+                if (name == "non_walkable_area" || name == "walkable_area") {
+                    continue;
+                }
+
+                worldVertices.setSize(box->getWorldVerticesLength(), 0);
+                box->computeWorldVertices(slot, 0, box->getWorldVerticesLength(), worldVertices.buffer(), 0, 2);
+
+                const float* bbvertices = worldVertices.buffer();
+                const auto vertexCount = box->getWorldVerticesLength();
+                HotspotCache& cache = hotspotCache[j];
+
+                const bool changed = cache.vertices.size() != vertexCount ||
+                                     memcmp(cache.vertices.data(), bbvertices, vertexCount * sizeof(float)) != 0;
+                if (changed) {
+                    std::vector<jngl::Vec2> polygon;
+                    polygon.reserve(vertexCount / 2);
+                    for (size_t i = 0; i < vertexCount; i += 2) {
+                        polygon.emplace_back(bbvertices[i], bbvertices[i + 1]);
+                    }
+                    cache.center = mapbox::polylabel({ polygon }, 	0.5);
+                    cache.vertices.assign(bbvertices, bbvertices + vertexCount);
+				}
+
+                hotspots.push_back(cache.center);
+            }
+        }
+    }
 }
 
 void SkeletonDrawable::setAlpha(float alpha) {
@@ -142,9 +189,7 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
                 float* bbvertices = worldVertices.buffer();
                 int vertexCount = box->getWorldVerticesLength();
 
-                if (std::string(box->getName().buffer()) == "non_walkable_area") {
-
-                } else {
+                if (std::string(box->getName().buffer()) != "non_walkable_area") {
                     for (int i = 0; i < vertexCount - 2; i += 2) {
                         jngl::drawLine(modelview, { bbvertices[i], bbvertices[i + 1] }, { bbvertices[i + 2], bbvertices[i + 3] });
                     }
