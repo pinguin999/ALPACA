@@ -272,15 +272,18 @@ void Game::loadScene_internal()
 		add(pointer);
 	}
 
-	if (hotspot == nullptr)
-	{
-		hotspot = std::make_shared<Hotspot>(shared_from_this(), "hotspot");
-		hotspot->setCrossScene(true);
-		hotspot->setPosition(Vec2(0, 0));
-		hotspot->playAnimation(0, "idle", true);
-	}
+    if (hotspot == nullptr) {
+        auto atlas = std::make_unique<spine::Atlas>("hotspot/hotspot.atlas",
+                                                    &SkeletonDrawable::textureLoader);
+        if (atlas->getPages().size()) {
+            hotspot = std::make_shared<Hotspot>(shared_from_this(), "hotspot");
+            hotspot->setCrossScene(true);
+            hotspot->setPosition(Vec2(0, 0));
+            hotspot->playAnimation(0, "idle", true);
+        }
+    }
 
-	if (player)
+    if (player)
 	{
 		auto position = currentScene->background->getPoint(old_scene);
 		if (position)
