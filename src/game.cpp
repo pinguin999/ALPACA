@@ -20,31 +20,10 @@
 using jngl::Vec2;
 using namespace std::string_literals;
 
-namespace {
-void replaceAll(std::string& subject, const std::string& search, const std::string& replace) {
-	size_t pos = 0;
-	while ((pos = subject.find(search, pos)) != std::string::npos) {
-		subject.replace(pos, search.length(), replace);
-		pos += replace.length();
-	}
-}
-
-std::stringstream loadAndReplace(int width, int height) {
-	std::stringstream buffer = jngl::readAsset("blur.frag");
-	std::string tmp = buffer.str();
-	replaceAll(tmp, "FBO_WIDTH", std::to_string(width) + ".f");
-	replaceAll(tmp, "FBO_HEIGHT", std::to_string(height) + ".f");
-	return std::stringstream(tmp);
-}
-}  // namespace
 
 Game::Game(const YAML::Node& config) : config(config),
                                        cameraPosition(jngl::Vec2(0, 0)),
-                                       targetCameraPosition(jngl::Vec2(0, 0)),
-                                       blurFragment(loadAndReplace(jngl::getWindowWidth(),
-                                                                   jngl::getWindowHeight()),
-                                                    jngl::Shader::Type::FRAGMENT),
-                                       blur(jngl::Sprite::vertexShader(), blurFragment)
+                                       targetCameraPosition(jngl::Vec2(0, 0))
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
                                        ,
                                        gifGameFrame(0),
@@ -686,9 +665,9 @@ void Game::draw() const
 	{
 		if ((obj) == pointer)
 		{
-			continue;
-		}
-        if (!obj->getShader().empty()) {
+            continue;
+        }
+        if (auto* shader = obj->getShaderProgram()) {
             {
                 auto _1 = jngl::drawOnlyIntoAlphaChannel();
                 auto _2 = jngl::disableBlending();
@@ -696,17 +675,16 @@ void Game::draw() const
             }
             context = std::nullopt; // end the current framebuffer context to draw to the other one
 
-			context = fb2->use(); // start a new framebuffer context to draw the next objects to the framebuffer
+            context = fb2->use(); // start a new framebuffer context to draw the next objects to the framebuffer
 
-            assert(obj->getShader() == "blur"); // TODO: support more shader effects
-            fb1->draw(originalMv, &blur);
+            fb1->draw(originalMv, shader);
 
             // we are now drawing to fb2 and have overdrawn all its content with fb1. Next time we need to do that the other way around, i.e. fb2 is now the canvas and fb1 is unused. Therefore swap them:
             std::swap(fb1, fb2);
         }
         obj->draw();
-	}
-	jngl::popMatrix();
+    }
+    jngl::popMatrix();
 	context = std::nullopt;
 	fb1->draw(originalMv);
 
