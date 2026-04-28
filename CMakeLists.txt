@@ -169,10 +169,7 @@ endif()
 
 if(WIN32)
 	target_compile_definitions(pac PRIVATE _USE_MATH_DEFINES UNICODE)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-	set_target_properties(pac PROPERTIES WIN32_EXECUTABLE 1)
+	set_target_properties(pac PROPERTIES WIN32_EXECUTABLE $<IF:$<CONFIG:Release>,TRUE,FALSE>)
 endif()
 
 if(ANDROID)
@@ -180,20 +177,11 @@ if(ANDROID)
 		${ANDROID_NDK}/sources/android/native_app_glue)
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
 	if(lto_supported)
 		message(STATUS "IPO / LTO enabled")
-		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-		set_property(TARGET pac jngl spine-cpp schnacker PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+	set_property(TARGET pac jngl spine-cpp schnacker PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 	else()
 		message(STATUS "IPO / LTO not supported: <${error}>")
-	endif()
-endif()
-
-if (MSVC AND CMAKE_BUILD_TYPE MATCHES "Debug")
-	target_compile_options(pac PUBLIC "/ZI")
-	target_link_options(pac PUBLIC "/INCREMENTAL")
-	set(lto_supported FALSE)
 endif()
 
 if(MSVC)
