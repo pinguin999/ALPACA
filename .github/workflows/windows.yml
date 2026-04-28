@@ -17,7 +17,7 @@ jobs:
         cmake -Bbuild
         cmake --build build --parallel
     - name: Upload build as an Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: windows_build
         path: build
