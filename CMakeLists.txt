@@ -164,7 +164,7 @@ target_include_directories(pac PRIVATE ${CMAKE_BINARY_DIR}/include
 										subprojects/schnacker/src)
 if(NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	target_include_directories(pac PRIVATE
-		$<$<CONFIG:Debug>:${CMAKE_SOURCE_DIR}/subprojects/gifanimcplusplus>)
+		$<$<CONFIG:Debug>:${CMAKE_CURRENT_SOURCE_DIR}/subprojects/gifanimcplusplus>)
 endif()
 
 if(WIN32)
