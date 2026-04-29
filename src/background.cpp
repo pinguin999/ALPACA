@@ -64,61 +64,55 @@ bool Background::stepClickableRegions(bool force)
 	return deleted;
 }
 
-void Background::draw() const
-{
-    if (auto _game = game.lock())
-    {
+void Background::draw() const {
+    if (auto _game = game.lock()) {
 #ifndef NDEBUG
         skeleton->debugdraw = _game->enableDebugDraw;
 #endif
         skeleton->hotspot_highlight = _game->enableHotspotHighlight;
-    }
 
-    auto mv = jngl::modelview().translate(position).rotate(getRotation());
-    skeleton->draw(mv);
+        auto mv = jngl::modelview().translate(position).rotate(getRotation());
+        skeleton->draw(mv);
+
+        if (_game->enableHotspotHighlight && _game->getInactivLayerBorder() <= layer) {
+            for (auto hotspot : skeleton->hotspots) {
+                auto pos = mv;
+                pos.translate(hotspot);
+
+                if(_game->hotspot)
+                {
+                    _game->hotspot->draw(pos);
+                }else{
+                    jngl::drawCircle(pos, 5);
+                }
+            }
+        }
 
 #ifndef NDEBUG
-    if (auto _game = game.lock())
-    {
-        if (_game->enablezMapDebugDraw && sprite)
-        {
+        if (_game->enablezMapDebugDraw && sprite) {
             sprite->draw(mv);
         }
-    }
-#endif
 
-#ifndef NDEBUG
-    if (auto _game = game.lock())
-    {
-        if (_game->enableDebugDraw)
-        {
+        if (_game->enableDebugDraw) {
             jngl::setColor(255, 0, 0);
-            if (_game->player)
-            {
-                for (auto corner : corners)
-                {
-                    if (hasPathTo(_game->player->getPosition(), corner))
-                    {
+            if (_game->player) {
+                for (auto corner : corners) {
+                    if (hasPathTo(_game->player->getPosition(), corner)) {
                         jngl::drawLine(mv, _game->player->getPosition(), corner);
                     }
                 }
 
                 jngl::setColor(0, 0, 0);
-                for (const auto &forbidden_area : forbidden_corners)
-                {
-                    for (size_t i = 1; i < forbidden_area.size(); i++)
-                    {
+                for (const auto& forbidden_area : forbidden_corners) {
+                    for (size_t i = 1; i < forbidden_area.size(); i++) {
                         jngl::drawLine(mv, forbidden_area.at(i), forbidden_area.at(i - 1));
                     }
                 }
 
                 jngl::setColor(0, 0, 255);
-                for (const auto &forbidden_area : forbidden_corners)
-                {
-                    for (auto forbidden_corner : forbidden_area)
-                    {
-                        if (hasPathTo(_game->player->getPosition(), forbidden_corner))
-                        {
+                for (const auto& forbidden_area : forbidden_corners) {
+                    for (auto forbidden_corner : forbidden_area) {
+                        if (hasPathTo(_game->player->getPosition(), forbidden_corner)) {
                             jngl::drawLine(mv, _game->player->getPosition(), forbidden_corner);
                         }
                     }
@@ -126,29 +120,14 @@ void Background::draw() const
 
                 jngl::setColor(255, 255, 0);
                 auto debugPath = getPathToTarget(_game->player->getPosition(), _game->pointer->getWorldPosition());
-                for (size_t i = 1; i < debugPath.size(); i++)
-                {
+                for (size_t i = 1; i < debugPath.size(); i++) {
                     jngl::drawLine(mv, debugPath[i - 1], debugPath[i]);
                 }
             }
 
-            auto point_names = getPointNames();
-            for (const auto &point_name : point_names)
-            {
-                auto pos = getPoint(point_name);
-                if (pos)
-                {
-                    jngl::drawCircle(jngl::Mat3(mv).translate(jngl::Vec2(pos->x, pos->y)), 1);
-                    jngl::Text bbname;
-                    bbname.setText(point_name);
-                    bbname.setAlign(jngl::Alignment::CENTER);
-                    bbname.setCenter(pos->x, pos->y);
-                    bbname.draw();
-                }
-            }
         }
-    }
 #endif
+    }
 }
 
 double Background::getZ() const

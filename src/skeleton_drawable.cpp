@@ -199,11 +199,33 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
                 bbname.setText(box->getName().buffer());
                 bbname.setAlign(jngl::Alignment::CENTER);
                 bbname.setCenter(bbvertices[0], bbvertices[1]);
-                jngl::setFontColor(jngl::Rgba(0, 1, 0, 1));
+                jngl::setFontColor(jngl::Rgb(0, 1, 0));
                 bbname.draw(modelview);
             }
 #endif
             continue;
+		} else if (attachment->getRTTI().isExactly(spine::PointAttachment::rtti)) {
+#ifndef NDEBUG
+            if (debugdraw) {
+                auto* point = reinterpret_cast<spine::PointAttachment*>(attachment);
+				float x = 0;
+				float y = 0;
+				point->computeWorldPosition(slot.getBone(), x, y);
+
+				jngl::setFontColor(jngl::Rgb(1, 1, 0));
+				if (point->getColor().r == 0 && point->getColor().g == 0 && point->getColor().b == 0 && point->getColor().a == 0)
+				{
+					jngl::drawCircle(jngl::Mat3(modelview).translate(jngl::Vec2(x, y)), 2);
+				}else {
+					jngl::drawCircle(jngl::Mat3(modelview).translate(jngl::Vec2(x, y)), 2, jngl::Rgba(point->getColor().r, point->getColor().g, point->getColor().b, point->getColor().a));
+				}
+				jngl::Text bbname;
+				bbname.setText(point->getName().buffer());
+				bbname.setAlign(jngl::Alignment::LEFT);
+				bbname.setPos(x, y);
+				bbname.draw(modelview);
+            }
+#endif
 		} else {
 			continue;
 		}

@@ -133,9 +133,12 @@ void InteractableObject::draw() const
                     auto pos = mv;
                     pos.translate(hotspot);
 
-                    _game->hotspot->draw(pos);
-
-                    // jngl::drawCircle(pos, 5);
+                    if(_game->hotspot)
+                    {
+                        _game->hotspot->draw(pos);
+                    }else{
+                        jngl::drawCircle(pos, 5);
+                    }
                 }
             }
         }
