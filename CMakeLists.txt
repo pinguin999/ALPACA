@@ -69,7 +69,7 @@ file(GLOB SOURCES CONFIGURE_DEPENDS
 	src/dialog/*.cpp
 )
 
-if (NOT CMAKE_BUILD_TYPE MATCHES "Release" AND NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+if (NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/gifanimcplusplus/gifanim.h")
 		execute_process(
 			COMMAND git submodule update --init --recursive subprojects/gifanimcplusplus
@@ -77,9 +77,7 @@ if (NOT CMAKE_BUILD_TYPE MATCHES "Release" AND NOT ANDROID AND NOT ${CMAKE_SYSTE
 			COMMAND_ERROR_IS_FATAL ANY
 		)
 	endif()
-	file(GLOB SOURCESGIF CONFIGURE_DEPENDS
-		subprojects/gifanimcplusplus/*.cpp)
-	list (APPEND SOURCES ${SOURCESGIF})
+	list(APPEND SOURCES $<$<CONFIG:Debug>:subprojects/gifanimcplusplus/gifanim.cpp>)
 endif()
 
 if(ANDROID)
