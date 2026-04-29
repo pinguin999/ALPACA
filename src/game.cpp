@@ -667,7 +667,7 @@ void Game::draw() const
 		{
             continue;
         }
-        if (auto* shader = obj->getShaderProgram()) {
+        if (const auto* shader = obj->getShaderProgram()) {
             {
                 auto _1 = jngl::drawOnlyIntoAlphaChannel();
                 auto _2 = jngl::disableBlending();

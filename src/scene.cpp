@@ -321,7 +321,7 @@ void Scene::createObjectJSON(const YAML::Node &object) {
         auto animation = (object)["animation"].as<std::string>("");
         bool const cross_scene = (object)["cross_scene"].as<bool>(false);
         bool const abs_position = (object)["abs_position"].as<bool>(false);
-        const auto shader = (object)["shader"].as<std::string>("");
+        const auto shader = object["shader"].as<std::string>("");
         bool const visible = (object)["visible"].as<bool>(true);
 
         auto interactable = createObject(spine_file, id, scale);
