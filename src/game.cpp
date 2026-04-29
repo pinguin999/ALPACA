@@ -859,7 +859,8 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
 		jngl::log("lua", file);
 		auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
 		if (!result.valid()) {
-			jngl::error(static_cast<sol::error>(result).what());
+			const sol::error err = result;
+			jngl::error(err.what());
 		}
 		return;
 	}
