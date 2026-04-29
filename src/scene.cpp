@@ -126,7 +126,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
 
         if (!zBufferMap)
         {
-            jngl::error("Fatal Error loading " + std::string((*game->lua_state)["scenes"][scene]["zBufferMap"]));
+            jngl::error("Fatal Error loading " + (*game->lua_state)["scenes"][scene]["zBufferMap"].get<std::string>());
             continue;
         }
         break;
