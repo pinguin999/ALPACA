@@ -69,7 +69,7 @@ file(GLOB SOURCES CONFIGURE_DEPENDS
 	src/dialog/*.cpp
 )
 
-if (NOT CMAKE_BUILD_TYPE MATCHES "Release" AND NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+if (NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/gifanimcplusplus/gifanim.h")
 		execute_process(
 			COMMAND git submodule update --init --recursive subprojects/gifanimcplusplus
@@ -164,7 +164,7 @@ target_include_directories(pac PRIVATE ${CMAKE_BINARY_DIR}/include
 										subprojects/schnacker/src)
 if(NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	target_include_directories(pac PRIVATE
-		$<$<CONFIG:Debug>:${CMAKE_CURRENT_SOURCE_DIR}/subprojects/gifanimcplusplus>)
+		${CMAKE_CURRENT_SOURCE_DIR}/subprojects/gifanimcplusplus)
 endif()
 
 if(WIN32)
