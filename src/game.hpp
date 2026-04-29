@@ -121,6 +121,8 @@ private:
     int inactivLayerBorder = 0;
     std::shared_ptr<DialogManager> dialogManager = nullptr;
     AudioManager audioManager;
+    jngl::FrameBuffer frameBuffer1{jngl::getWindowSize()};
+    jngl::FrameBuffer frameBuffer2{jngl::getWindowSize()};
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
     std::shared_ptr<GifAnim> gifAnimation;

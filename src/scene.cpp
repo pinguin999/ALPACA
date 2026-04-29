@@ -321,6 +321,7 @@ void Scene::createObjectJSON(const YAML::Node &object) {
         auto animation = (object)["animation"].as<std::string>("");
         bool const cross_scene = (object)["cross_scene"].as<bool>(false);
         bool const abs_position = (object)["abs_position"].as<bool>(false);
+        const auto shader = object["shader"].as<std::string>("");
         bool const visible = (object)["visible"].as<bool>(true);
 
         auto interactable = createObject(spine_file, id, scale);
@@ -334,6 +335,7 @@ void Scene::createObjectJSON(const YAML::Node &object) {
         interactable->setLuaIndex(id);
         interactable->setCrossScene(cross_scene);
         interactable->abs_position = abs_position;
+        interactable->setShader(shader);
         interactable->setVisible(visible);
 
         interactable->toLuaState();
@@ -369,12 +371,14 @@ void Scene::createObjectLua(std::string id, std::string scene) {
             std::string animation = (*_game->lua_state)["scenes"][scene]["items"][id]["animation"];
             bool const cross_scene = (*_game->lua_state)["scenes"][scene]["items"][id]["cross_scene"];
             bool const abs_position = (*_game->lua_state)["scenes"][scene]["items"][id]["abs_position"];
+            std::string const shader = (*_game->lua_state)["scenes"][scene]["items"][id]["shader"];
 
             interactable->setPosition(jngl::Vec2(x, y));
             interactable->setVisible(visible);
             interactable->layer = static_cast<int>(layer);
             interactable->setCrossScene(cross_scene);
             interactable->abs_position = abs_position;
+            interactable->setShader(shader);
 
             if (animation.empty()) {
                 animation = (*_game->lua_state)["config"]["spine_default_animation"];

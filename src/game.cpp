@@ -20,9 +20,10 @@
 using jngl::Vec2;
 using namespace std::string_literals;
 
-Game::Game(const YAML::Node &config) : config(config),
-									   cameraPosition(jngl::Vec2(0, 0)),
-									   targetCameraPosition(jngl::Vec2(0, 0))
+
+Game::Game(const YAML::Node& config) : config(config),
+                                       cameraPosition(jngl::Vec2(0, 0)),
+                                       targetCameraPosition(jngl::Vec2(0, 0))
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
                                        ,
                                        gifGameFrame(0),
@@ -357,7 +358,7 @@ void Game::step()
         hotspot->step();
     }
 
-    // Sort game objects depending on the y position for
+    // Sort game objects depending on each object's z value (layer):
 	sort(gameObjects.begin(), gameObjects.end(), [](const auto &lhs, const auto &rhs)
 		 { return lhs->getZ() < rhs->getZ(); });
 
@@ -654,6 +655,10 @@ void Game::debugStep()
 
 void Game::draw() const
 {
+	auto originalMv = jngl::modelview();
+	const jngl::FrameBuffer* fb1 = &frameBuffer1;
+	const jngl::FrameBuffer* fb2 = &frameBuffer2;
+	std::optional<jngl::FrameBuffer::Context> context = frameBuffer1.use();
 	jngl::pushMatrix();
 	jngl::setBackgroundColor(jngl::Color(0, 0, 0));
 	applyCamera();
@@ -663,11 +668,28 @@ void Game::draw() const
 	{
 		if ((obj) == pointer)
 		{
-			continue;
-		}
-		obj->draw();
-	}
-	jngl::popMatrix();
+            continue;
+        }
+        if (const auto* shader = obj->getShaderProgram()) {
+            {
+                auto _1 = jngl::drawOnlyIntoAlphaChannel();
+                auto _2 = jngl::disableBlending();
+                obj->draw();
+            }
+            context = std::nullopt; // end the current framebuffer context to draw to the other one
+
+            context = fb2->use(); // start a new framebuffer context to draw the next objects to the framebuffer
+
+            fb1->draw(originalMv, shader);
+
+            // we are now drawing to fb2 and have overdrawn all its content with fb1. Next time we need to do that the other way around, i.e. fb2 is now the canvas and fb1 is unused. Therefore swap them:
+            std::swap(fb1, fb2);
+        }
+        obj->draw();
+    }
+    jngl::popMatrix();
+	context = std::nullopt;
+	fb1->draw(originalMv);
 
 	jngl::pushMatrix();
 	dialogManager->draw();
