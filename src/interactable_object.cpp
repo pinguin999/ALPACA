@@ -93,8 +93,11 @@ void InteractableObject::registerToDelete()
 
     if (auto _game = game.lock())
     {
-        auto lua_object = _game->getLuaPath(luaIndex);
-        _game->lua_state->script(lua_object + " = nil");
+        sol::table lua_object = _game->getObjectTable(luaIndex);
+        if(lua_object.valid())
+        {
+            lua_object = sol::lua_nil;
+        }
     }
 }
 

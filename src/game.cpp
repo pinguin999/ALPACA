@@ -826,7 +826,6 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
 		return;
 	}
 
-	std::string errorMessage;
 	std::string script;
 	lua_state->set("this", thisObject);
 
@@ -835,14 +834,24 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
 	if (actionName.substr(0, 4) == "dlg:")
 	{
 		const std::string dialogName = actionName.substr(4);
-		script = "PlayDialog(\"" + dialogName + "\")";
-		errorMessage = "Failed to play dialog " + dialogName + "!\n";
+		sol::protected_function fn = (*lua_state)["PlayDialog"];
+		auto result = fn(dialogName);
+		if (!result.valid()) {
+			const sol::error err = result;
+			jngl::error("Failed to play dialog {}: {}", dialogName, err.what());
+		}
+		return;
 	}
 	else if (actionName.substr(0, 5) == "anim:")
 	{
 		const std::string animName = actionName.substr(5);
-		script = "PlayAnimationOn(\"" + thisObject->getId() + "\", 0, \"" + animName + "\", false)";
-		errorMessage = "Failed to play animation " + animName + "!\n";
+		sol::protected_function fn = (*lua_state)["PlayAnimationOn"];
+		auto result = fn(thisObject->getId(), 0, animName, false);
+		if (!result.valid()) {
+			const sol::error err = result;
+			jngl::error("Failed to play animation {}: {}", animName, err.what());
+		}
+		return;
 	}
 	// if there is no specific prefix, just load the according Lua file
 	else
@@ -863,14 +872,6 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
 			jngl::error(err.what());
 		}
 		return;
-	}
-
-	auto result = lua_state->safe_script(script, sol::script_pass_on_error);
-
-	if (!result.valid())
-	{
-		const sol::error err = result;
-		jngl::error("{} {}", errorMessage, err.what());
 	}
 }
 
@@ -1069,34 +1070,30 @@ const std::shared_ptr<SpineObject> Game::getObjectById(const std::string &object
 	return obj;
 }
 
-const std::string Game::getLuaPath(std::string objectId)
-{
-	if (objectId == "Player" || objectId == "player")
-	{
-		return R"(scenes["cross_scene"]["items"]["player"])";
-	}
+sol::table Game::getObjectTable(const std::string& objectId) {
+    if (objectId == "Player" || objectId == "player") {
+        return (*lua_state)["scenes"]["cross_scene"]["items"]["player"];
+    }
 
-	std::string scene = (*this->lua_state)["game"]["scene"];
-	if (objectId == "Background") {
-		return "scenes[\"" + scene + R"("]["background"])";
-	}
+    const std::string scene = (*lua_state)["game"]["scene"];
+    if (objectId == "Background") {
+        return (*lua_state)["scenes"][scene]["background"];
+    }
 
-        if ((*this->lua_state)["inventory_items"][objectId].valid())
-	{
-		return "inventory_items[\"" + objectId + "\"]";
-	}
+    if ((*lua_state)["inventory_items"][objectId].valid()) {
+        return (*lua_state)["inventory_items"][objectId];
+    }
 
-	if ((*this->lua_state)["scenes"][scene]["items"][objectId].valid())
-	{
-		return "scenes[\"" + scene + R"("]["items"][")" + objectId + "\"]";
-	}
+    if ((*lua_state)["scenes"][scene]["items"][objectId].valid()) {
+        return (*lua_state)["scenes"][scene]["items"][objectId];
+    }
 
-	if ((*this->lua_state)["scenes"]["cross_scene"]["items"][objectId].valid())
-	{
-		return R"(scenes["cross_scene"]["items"][")" + objectId + "\"]";
-	}
-	jngl::error(objectId +  " does not exist!");
-	return "";
+    if ((*lua_state)["scenes"]["cross_scene"]["items"][objectId].valid()) {
+        return (*lua_state)["scenes"]["cross_scene"]["items"][objectId];
+    }
+
+    jngl::error(objectId + " does not exist!");
+    return sol::table{};
 }
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))

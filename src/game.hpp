@@ -100,7 +100,7 @@ public:
     int getInactivLayerBorder() { return inactivLayerBorder; };
 
     const std::shared_ptr<SpineObject> getObjectById(const std::string &objectId);
-    const std::string getLuaPath(std::string objectId);
+    sol::table getObjectTable(const std::string &objectId);
 
     const std::string cleanLuaString(std::string variable);
     std::vector<std::shared_ptr<SpineObject>> gameObjects;
