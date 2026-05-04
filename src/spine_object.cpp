@@ -196,7 +196,7 @@ void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimat
 			}
 		});
     } else {
-        jngl::error("The animation {} is missing for {}", currentAnimation, spine_name);
+        jngl::error("The animation {} is missing for {}.spine", currentAnimation, spine_name);
     }
 }
 
@@ -222,7 +222,7 @@ void SpineObject::addAnimation(int trackIndex, const std::string& currentAnimati
 		if (animation) {
 			skeleton->state->addAnimation(trackIndex, animation, static_cast<int>(loop), delay);
         } else {
-            jngl::error("The animation {} is missing for {}", currentAnimation, spine_name);
+            jngl::error("The animation {} is missing for {}.spine", currentAnimation, spine_name);
         }
     }
 }
@@ -254,7 +254,7 @@ void SpineObject::setSkin(const std::string& skin) {
 		skeleton->skeleton->setSkin(skin.c_str());
 		skeleton->skeleton->setSlotsToSetupPose();
         if (!skeleton->skeleton->getSkin()) {
-            jngl::error("The Skin {} is missing for {}", skin, spine_name);
+            jngl::error("The Skin {} is missing for {}.spine", skin, spine_name);
         }
     }
 }
@@ -271,7 +271,7 @@ void SpineObject::setSkins(const std::vector<std::string>& skins) {
     for (auto const& skin : skins) {
 		auto* skinPtr = skeletonData->findSkin(skin.c_str());
 		if (!skinPtr) {
-			jngl::error("The Skin " + skin + " is missing for " + spine_name);
+			jngl::error("The Skin " + skin + " is missing for " + spine_name + ".spine");
 			continue;
 		}
 		newSkin->addSkin(skinPtr);
