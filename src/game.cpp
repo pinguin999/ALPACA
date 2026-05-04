@@ -23,11 +23,6 @@ using namespace std::string_literals;
 Game::Game(const YAML::Node &config) : config(config),
 									   cameraPosition(jngl::Vec2(0, 0)),
 									   targetCameraPosition(jngl::Vec2(0, 0))
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
-                                       ,
-                                       gifGameFrame(0),
-                                       gifTime(0.0)
-#endif
 {
 
 	auto screensize = jngl::getScreenSize();
@@ -67,12 +62,6 @@ Game::Game(const YAML::Node &config) : config(config),
 			language = "en";
 		}
 	}
-
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
-	gifAnimation = std::make_shared<GifAnim>();
-	gifWriter = std::make_shared<GifWriter>();
-	gifBuffer = std::make_unique<uint8_t[]>((jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR * (jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR)) * 4);
-#endif
 
 	// open some common libraries
 	lua_state = std::make_shared<sol::state>();
@@ -577,75 +566,6 @@ void Game::debugStep()
 		else if (room_select_mode && jngl::keyPressed(number) && !tens.has_value())
 		{
 			tens = x;
-		}
-	}
-
-	if (recordingGif)
-	{
-		if (gifGameFrame % GIF_FRAME_SKIP == 0)
-		{
-			auto pixels = jngl::readPixels();
-			const int w = jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR;
-			const int h = jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR;
-
-			for (int y = 0; y < h; y++)
-			{
-				for (int x = 0; x < w; x++)
-				{
-					gifBuffer[((w * y) + x) * 4] = static_cast<uint8_t>(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3] * 255);
-					gifBuffer[((w * y) + x) * 4 + 1] = static_cast<uint8_t>(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3 + 1] * 255);
-					gifBuffer[((w * y) + x) * 4 + 2] = static_cast<uint8_t>(pixels[((w * GIF_DOWNSCALE_FACTOR * (h * GIF_DOWNSCALE_FACTOR - 1 * GIF_DOWNSCALE_FACTOR - y * GIF_DOWNSCALE_FACTOR)) + x * GIF_DOWNSCALE_FACTOR) * 3 + 2] * 255);
-					gifBuffer[((w * y) + x) * 4 + 3] = 255;
-				}
-			}
-
-			auto currentTime = jngl::getTime();
-			auto timeDiff = currentTime - gifTime;
-
-			gifAnimation->GifWriteFrame(gifWriter.get(),
-										gifBuffer.get(),
-										jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR,
-										jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR,
-										static_cast<uint32_t>(timeDiff),
-										8,
-										false,
-										nullptr);
-
-			gifTime = currentTime;
-		}
-		gifGameFrame++;
-	}
-
-	if (jngl::keyPressed(jngl::key::F12))
-	{
-		if (!recordingGif)
-		{
-			// start recording
-			recordingGif = true;
-			show_debug_info = false;
-
-			gifGameFrame = 0;
-			gifTime = jngl::getTime();
-
-			std::string filename = "./../";
-			filename += currentDateTime() + ".gif";
-			jngl::debug("start recording {}", filename);
-
-			gifAnimation->GifBegin(gifWriter.get(),
-								   filename.c_str(),
-								   jngl::getWindowWidth() / GIF_DOWNSCALE_FACTOR,
-								   jngl::getWindowHeight() / GIF_DOWNSCALE_FACTOR,
-								   100, // providing 0 ruins the loop count argument ¯\_(ツ)_/¯
-								   0,
-								   8,
-								   false);
-		}
-		else
-		{
-			// stop recording
-			recordingGif = false;
-			gifAnimation->GifEnd(gifWriter.get());
-			jngl::debug("stop recording");
 		}
 	}
 #endif

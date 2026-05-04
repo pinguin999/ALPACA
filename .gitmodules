@@ -7,6 +7,3 @@
 [submodule "subprojects/schnacker"]
 	path = subprojects/schnacker
 	url = https://gitlab.com/pac4/schnacker.git
-[submodule "subprojects/gifanimcplusplus"]
-	path = subprojects/gifanimcplusplus
-	url = https://github.com/cpfr/gifanimcplusplus.git
