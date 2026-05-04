@@ -147,7 +147,7 @@ def rhubarb_export(
 ) -> tuple[list[Any], dict[str, str]]:
     node_id = node_info[0]
     db: dict[str, str] = node_info[2]
-    file = f"data/audio/{node_id}.ogg"
+    file = f"./data/audio/{node_id}.ogg"
     errors: list[str] = []
 
     db_out: dict[str, str] = {}
@@ -459,7 +459,7 @@ def spine_export(
         file,
         "-m",
         "-o",
-        f"./data/{name}/",
+        os.path.abspath(f"./data/{name}/"),
         "-e",
         "./data-src/spine_export_template.export.json",
     ]
