@@ -220,7 +220,7 @@ void Game::loadScene(const std::string& level)
 
 void Game::loadScene_internal()
 {
-    jngl::debug("loadScene {}", nextScene);
+    jngl::debug("loadScene scenes/{}.json", nextScene);
     std::string old_scene;
     if (currentScene) {
         old_scene = currentScene->getSceneName();
