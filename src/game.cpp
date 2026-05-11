@@ -1,5 +1,7 @@
 #include "game.hpp"
 
+#include "shader_cache.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <string>
@@ -381,6 +383,10 @@ void Game::debugStep()
 	// Reload Scene
     if (jngl::keyPressed("r") || reload) {
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		ShaderCache::handle().clear();
+		for (auto& obj : gameObjects) {
+			obj->setShader(obj->shader);
+		}
         auto dialogFilePath = (*lua_state)["config"]["dialog"];
         getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
         loadScene(currentScene->getSceneName());

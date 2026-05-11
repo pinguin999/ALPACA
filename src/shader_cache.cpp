@@ -31,3 +31,7 @@ jngl::ShaderProgram& ShaderCache::get(std::string_view name) {
                                            Shader{ .fragment = std::move(fragment), .program = std::move(program) });
     return inserted->second.program;
 }
+
+void ShaderCache::clear() {
+    cache.clear();
+}

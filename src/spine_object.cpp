@@ -310,10 +310,13 @@ jngl::ShaderProgram* SpineObject::getShaderProgram() const {
 }
 
 void SpineObject::setShader(std::string_view shader) {
-	this->shader = shader;
-    if (shader.empty()) {
-        shaderProgram = nullptr;
-    } else {
-        shaderProgram = &ShaderCache::handle().get(shader);
+    this->shader = shader;
+    shaderProgram = nullptr;
+    if (!shader.empty()) {
+        try {
+            shaderProgram = &ShaderCache::handle().get(shader);
+        } catch (std::exception& e) {
+            jngl::error("Failed to set shader {}: {}", shader, e.what());
+        }
     }
 }

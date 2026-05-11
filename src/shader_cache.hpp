@@ -5,6 +5,7 @@
 class ShaderCache : public jngl::Singleton<ShaderCache> {
 public:
     jngl::ShaderProgram& get(std::string_view name);
+    void clear();
 
 private:
     struct StringHash {
