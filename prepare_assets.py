@@ -691,6 +691,9 @@ def on_data_src_modified(event) -> None:
         fill_all_dialogs(Path(f"./data-src/dialog/{file}"), file)
     if "ALPACA.lua" not in event.src_path:
         LuaDocsGen().render("lua.cpp")
+    if event.src_path.endswith(".frag"):
+        file = Path(event.src_path).name
+        copy_file(f"./data-src/{file}", Path("./data"))
 
 
 @dataclass
@@ -950,7 +953,7 @@ if __name__ == "__main__":
         print(colored("Rhubarb was skipped, since Rhubarb path was not found", "red"))
     LuaDocsGen().render("lua.cpp")
     print(colored("Convert sucess", "green"))
-    patterns_src = ["*.spine", "*.lua", "*.json", "*.schnack", "*.ogg"]
+    patterns_src = ["*.spine", "*.lua", "*.json", "*.schnack", "*.ogg", "*.frag"]
     ignore_patterns = None
     ignore_directories = False
     case_sensitive = True
