@@ -53,7 +53,7 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/schnacker/CMakeLists.txt"
 endif()
 add_subdirectory(subprojects/schnacker/)
 
-set(PAC_SANITIZE_ADDRESS_DEFAULT ON)
+set(PAC_SANITIZE_ADDRESS_DEFAULT OFF)
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR ANDROID OR CMAKE_BUILD_TYPE MATCHES "Release")
 	set(PAC_SANITIZE_ADDRESS_DEFAULT OFF)
 endif()
@@ -68,17 +68,6 @@ file(GLOB SOURCES CONFIGURE_DEPENDS
 	src/input/*.cpp
 	src/dialog/*.cpp
 )
-
-if (NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-	if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/gifanimcplusplus/gifanim.h")
-		execute_process(
-			COMMAND git submodule update --init --recursive subprojects/gifanimcplusplus
-			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-			COMMAND_ERROR_IS_FATAL ANY
-		)
-	endif()
-	list(APPEND SOURCES $<$<CONFIG:Debug>:subprojects/gifanimcplusplus/gifanim.cpp>)
-endif()
 
 if(ANDROID)
 	add_library(native_app_glue STATIC
@@ -113,10 +102,6 @@ endif()
 target_link_libraries(pac PRIVATE
 	jngl spine-cpp schnacker
 )
-
-# Ensure bundled Lua headers take precedence over system Lua (e.g. Homebrew's Lua 5.5)
-target_include_directories(pac BEFORE PRIVATE
-	${CMAKE_CURRENT_BINARY_DIR}/subprojects/schnacker/subprojects/lua/include)
 
 # Add Tests
 if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT IOS AND  NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
@@ -160,10 +145,6 @@ file(GLOB SFX_FILES RELATIVE ${CMAKE_SOURCE_DIR}/data data/sfx/*.ogg)
 target_include_directories(pac PRIVATE ${CMAKE_BINARY_DIR}/include
 										# subprojects/spine-runtimes/spine-cpp/spine-cpp/include
 										subprojects/schnacker/src)
-if(NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-	target_include_directories(pac PRIVATE
-		$<$<CONFIG:Debug>:${CMAKE_CURRENT_SOURCE_DIR}/subprojects/gifanimcplusplus>)
-endif()
 
 if(WIN32)
 	target_compile_definitions(pac PRIVATE _USE_MATH_DEFINES UNICODE)

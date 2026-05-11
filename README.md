@@ -12,7 +12,7 @@ It's written in C++ and can easily be scripted in Lua.
 ## Features
 
 - Easy to use 🐣
-- Gif Recording 🎉
+- Video Recording 🎉
 - Node based dialog editor 🗯️
 - Integrated dialog engine 💬
 - PDF export for voice actors 🎤

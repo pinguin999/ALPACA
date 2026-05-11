@@ -4,9 +4,6 @@
 #include <jngl.hpp>
 #include <vector>
 #include <sol/sol.hpp>
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
-#include <gifanim.h>
-#endif
 #include "player.hpp"
 #include "pointer.hpp"
 #include "hotspot.hpp"
@@ -46,7 +43,6 @@ public:
     jngl::Text debug_info;
     std::string debug_text = ("Press Tab to enter editmode. \n"
 		"Press F10 to show debug draw. \n"
-		"Press F12 to start/end gif recording. \n"
 #ifdef JNGL_RECORD
 		"Press b to start/end movie recording. \n"
 #endif
@@ -100,7 +96,7 @@ public:
     int getInactivLayerBorder() { return inactivLayerBorder; };
 
     const std::shared_ptr<SpineObject> getObjectById(const std::string &objectId);
-    const std::string getLuaPath(std::string objectId);
+    sol::table_proxy<sol::table, std::tuple<std::string>> getObjectTable(const std::string& objectId);
 
     const std::string cleanLuaString(std::string variable);
     std::vector<std::shared_ptr<SpineObject>> gameObjects;
@@ -125,14 +121,6 @@ private:
     jngl::FrameBuffer frameBuffer2{jngl::getWindowSize()};
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
-    std::shared_ptr<GifAnim> gifAnimation;
-    std::shared_ptr<GifWriter> gifWriter;
-    bool recordingGif = false;
-    std::unique_ptr<uint8_t[]> gifBuffer;
-    int gifGameFrame;
-    double gifTime;
-    const int GIF_FRAME_SKIP = 10;
-    const int GIF_DOWNSCALE_FACTOR = 2;
     void onFileDrop(const std::filesystem::path& path) override;
 #endif
 };

@@ -17,7 +17,6 @@ set(UNIT_TESTS_INCLUDES
 
 # Assign the include directories
 include_directories(${UNIT_TESTS_INCLUDES})
-include_directories(../subprojects/gifanimcplusplus)
 
 
 #Remove games main.cpp

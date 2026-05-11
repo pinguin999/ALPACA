@@ -197,7 +197,7 @@ void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimat
 			}
 		});
     } else {
-        jngl::error("The animation {} is missing for {}", currentAnimation, spine_name);
+        jngl::error("The animation {} is missing for {}.spine", currentAnimation, spine_name);
     }
 }
 
@@ -223,7 +223,7 @@ void SpineObject::addAnimation(int trackIndex, const std::string& currentAnimati
 		if (animation) {
 			skeleton->state->addAnimation(trackIndex, animation, static_cast<int>(loop), delay);
         } else {
-            jngl::error("The animation {} is missing for {}", currentAnimation, spine_name);
+            jngl::error("The animation {} is missing for {}.spine", currentAnimation, spine_name);
         }
     }
 }
@@ -232,10 +232,10 @@ void SpineObject::onAnimationComplete(const int index, const std::string& animat
 	if (auto _game = game.lock()) {
 		if (!deleted && index == 0) {
 			// Set animation back to default animation in Lua state
-			const std::string lua_object = _game->getLuaPath(getId());
+			auto lua_object = _game->getObjectTable(getId());
 			std::string animation = (*_game->lua_state)["config"]["spine_default_animation"];
-			(*_game->lua_state).script(lua_object + ".animation = \"" + animation + "\"");
-			(*_game->lua_state).script(lua_object + ".loop_animation = true");
+			lua_object["animation"] = animation;
+			lua_object["loop_animation"] = true;
 		}
 		const auto key = std::to_string(index) + animation;
 		auto it = animation_callback.find(key);
@@ -255,7 +255,7 @@ void SpineObject::setSkin(const std::string& skin) {
 		skeleton->skeleton->setSkin(skin.c_str());
 		skeleton->skeleton->setSlotsToSetupPose();
         if (!skeleton->skeleton->getSkin()) {
-            jngl::error("The Skin {} is missing for {}", skin, spine_name);
+            jngl::error("The Skin {} is missing for {}.spine", skin, spine_name);
         }
     }
 }
@@ -272,7 +272,7 @@ void SpineObject::setSkins(const std::vector<std::string>& skins) {
     for (auto const& skin : skins) {
 		auto* skinPtr = skeletonData->findSkin(skin.c_str());
 		if (!skinPtr) {
-			jngl::error("The Skin " + skin + " is missing for " + spine_name);
+			jngl::error("The Skin " + skin + " is missing for " + spine_name + ".spine");
 			continue;
 		}
 		newSkin->addSkin(skinPtr);
