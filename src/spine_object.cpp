@@ -153,6 +153,10 @@ void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimat
 	if (animation) {
 		auto* entry = skeleton->state->setAnimation(trackIndex, currentAnimation.c_str(),
 		                                            static_cast<int>(loop));
+		if (trackIndex > 0)
+		{
+			skeleton->state->addEmptyAnimation(trackIndex, 0, 0);
+		}
 		entry->setListener([this](spine::AnimationState*, spine::EventType type,
 		                          spine::TrackEntry* entry, spine::Event* event) {
 			if (event) {
