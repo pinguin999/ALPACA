@@ -990,30 +990,33 @@ const std::shared_ptr<SpineObject> Game::getObjectById(const std::string &object
 	return obj;
 }
 
-sol::table Game::getObjectTable(const std::string& objectId) {
+sol::table_proxy<sol::table, std::tuple<std::string>> Game::getObjectTable(const std::string& objectId) {
     if (objectId == "Player" || objectId == "player") {
-        return (*lua_state)["scenes"]["cross_scene"]["items"]["player"];
+        sol::table items = (*lua_state)["scenes"]["cross_scene"]["items"];
+        return std::move(items)[std::string("player")];
     }
 
     const std::string scene = (*lua_state)["game"]["scene"];
     if (objectId == "Background") {
-        return (*lua_state)["scenes"][scene]["background"];
+        sol::table scene_table = (*lua_state)["scenes"][scene];
+        return std::move(scene_table)[std::string("background")];
     }
 
-    if ((*lua_state)["inventory_items"][objectId].valid()) {
-        return (*lua_state)["inventory_items"][objectId];
+    if (sol::table items = (*lua_state)["inventory_items"]; items[objectId].valid()) {
+        return std::move(items)[objectId];
     }
 
-    if ((*lua_state)["scenes"][scene]["items"][objectId].valid()) {
-        return (*lua_state)["scenes"][scene]["items"][objectId];
+    if (sol::table items = (*lua_state)["scenes"][scene]["items"]; items[objectId].valid()) {
+        return std::move(items)[objectId];
     }
 
-    if ((*lua_state)["scenes"]["cross_scene"]["items"][objectId].valid()) {
-        return (*lua_state)["scenes"]["cross_scene"]["items"][objectId];
+    if (sol::table items = (*lua_state)["scenes"]["cross_scene"]["items"]; items[objectId].valid()) {
+        return std::move(items)[objectId];
     }
 
     jngl::error(objectId + " does not exist!");
-    return sol::table{};
+    sol::table empty{};
+    return std::move(empty)[objectId];
 }
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
