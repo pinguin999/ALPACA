@@ -74,6 +74,7 @@ public:
     bool getCrossScene() const {return cross_scene;};
     void setCrossScene(bool cross_scene);
 
+	std::string shader;
 	/// returns nullptr if no "shader" was set
     jngl::ShaderProgram* getShaderProgram() const;
 

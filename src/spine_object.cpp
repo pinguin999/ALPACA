@@ -296,7 +296,7 @@ void SpineObject::toLuaState() {
 		(*_game->lua_state)["scenes"][scene]["items"][id] = _game->lua_state->create_table_with(
 		    "spine", spine_name, "object", shared_from_this(), "x", position.x, "y", position.y,
 		    "animation", currentAnimation, "loop_animation", true, "visible", visible,
-		    "cross_scene", cross_scene, "abs_position", abs_position, "layer", layer, "skin",
+		    "cross_scene", cross_scene, "abs_position", abs_position, "shader", shader, "layer", layer, "skin",
 		    sol::as_table(skins), "scale", scale);
 	}
 }
@@ -310,6 +310,7 @@ jngl::ShaderProgram* SpineObject::getShaderProgram() const {
 }
 
 void SpineObject::setShader(std::string_view shader) {
+	this->shader = shader;
     if (shader.empty()) {
         shaderProgram = nullptr;
     } else {

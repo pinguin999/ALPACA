@@ -378,7 +378,9 @@ void Scene::createObjectLua(std::string id, std::string scene) {
             interactable->layer = static_cast<int>(layer);
             interactable->setCrossScene(cross_scene);
             interactable->abs_position = abs_position;
-            interactable->setShader(shader);
+            if (!shader.empty()) {
+                interactable->setShader(shader);
+            }
 
             if (animation.empty()) {
                 animation = (*_game->lua_state)["config"]["spine_default_animation"];
