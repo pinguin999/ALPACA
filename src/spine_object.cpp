@@ -1,5 +1,6 @@
 #include "spine_object.hpp"
 #include "game.hpp"
+#include "shader_cache.hpp"
 
 // void SpineObject::animationStateListener(spAnimationState *state, spEventType type, spTrackEntry
 // *entry,
@@ -302,4 +303,16 @@ void SpineObject::toLuaState() {
 
 void SpineObject::setCrossScene(bool cross_scene) {
 	this->cross_scene = cross_scene;
+}
+
+jngl::ShaderProgram* SpineObject::getShaderProgram() const {
+    return shaderProgram;
+}
+
+void SpineObject::setShader(std::string_view shader) {
+    if (shader.empty()) {
+        shaderProgram = nullptr;
+    } else {
+        shaderProgram = &ShaderCache::handle().get(shader);
+    }
 }
