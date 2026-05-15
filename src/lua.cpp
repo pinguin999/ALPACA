@@ -178,7 +178,7 @@ void Game::setupLuaFunctions()
 	/// Set a list of skins on a Spine object
 	/// table<string> skin: The name of the Spine skin
 	lua_state->set_function("SetSkins",
-							[this](const std::vector<LuaSpineSkin> &skins)
+							[this](std::vector<LuaSpineSkin> skins)
 							{
 								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								obj->setSkins(skins);
@@ -192,7 +192,7 @@ void Game::setupLuaFunctions()
 	/// SpineObject object: ID of the object to affect
 	/// table<string> skin: The name of the Spine skin
 	lua_state->set_function("SetSkinsOn",
-							[this](const LuaSpineObject &object, const std::vector<LuaSpineSkin> &skins)
+							[this](const LuaSpineObject &object, const std::vector<LuaSpineSkin> skins)
 							{
 								const std::shared_ptr<SpineObject> obj = getObjectById(object);
 								if (obj)
