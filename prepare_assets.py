@@ -10,8 +10,6 @@
 # Export to exe on windows via
 # pyinstaller --onefile .\prepare_assets.py
 
-from __future__ import annotations
-
 import contextlib
 import hashlib
 import json
@@ -90,7 +88,7 @@ scene_files = []  # Temp list to prevent infinite loop
 
 class Progress:
     def __init__(
-        self: Progress,
+        self,
         initialCount: int,
         maxCount: int,
         maxTitleLength: int = 26,
@@ -104,15 +102,15 @@ class Progress:
         self._barLength = barLength
         self._errors: list[str] = []
 
-    def updateTitle(self: Progress, title: str) -> None:
+    def updateTitle(self, title: str) -> None:
         self._title = title
         self.print_status()
 
-    def advance(self: Progress, count: int = 1) -> None:
+    def advance(self, count: int = 1) -> None:
         self._currentCount += count
         self.print_status()
 
-    def print_status(self: Progress) -> None:
+    def print_status(self) -> None:
         if self._maxCount == 0:
             return
         percent = float(self._currentCount) / self._maxCount
@@ -134,10 +132,10 @@ class Progress:
             end="\r",
         )
 
-    def finish(self: Progress) -> None:
+    def finish(self) -> None:
         print("\n")
 
-    def addError(self: Progress, errorMsg: str) -> None:
+    def addError(self, errorMsg: str) -> None:
         self._errors.append(errorMsg)
         self.print_status()
 
@@ -710,16 +708,16 @@ class DocFunction:
 class LuaDocsGen:
     """The PAC's Lua handler class."""
 
-    def collect(self: LuaDocsGen, identifier: str) -> str:
+    def collect(self, identifier: str) -> str:
         return identifier
 
-    def get_name(self: LuaDocsGen, name: str) -> str:
+    def get_name(self, name: str) -> str:
         result = name.replace('lua_state->set_function("', "")
         result = result.replace('"', "")
         result = result.replace(",", "")
         return result.strip()
 
-    def get_parameters(self: LuaDocsGen, parameters: str) -> str:
+    def get_parameters(self, parameters: str) -> str:
         result = parameters.replace("[](", "").replace(")", "")
         result = result.replace("[this](", "").replace(")", "")
         result = result.replace("const ", "")
@@ -736,7 +734,7 @@ class LuaDocsGen:
 
         return result.strip()
 
-    def get_copy_parameters(self: LuaDocsGen, parameters: str) -> str:
+    def get_copy_parameters(self, parameters: str) -> str:
         result = self.get_parameters(parameters)
         result = result.replace("string ", "")
         result = result.replace("number ", "")
@@ -756,7 +754,7 @@ class LuaDocsGen:
 
         return result.strip()
 
-    def get_docs(self: LuaDocsGen, code: list[str], index: int) -> list[str]:
+    def get_docs(self, code: list[str], index: int) -> list[str]:
         result = []
         index -= 1
 
@@ -774,7 +772,7 @@ class LuaDocsGen:
         result.reverse()
         return result
 
-    def get_returns(self: LuaDocsGen, code: list[str], index: int) -> str:
+    def get_returns(self, code: list[str], index: int) -> str:
         result = ""
         index -= 1
 
@@ -788,7 +786,7 @@ class LuaDocsGen:
 
         return result.strip()
 
-    def render(self: LuaDocsGen, data: str) -> str:
+    def render(self, data: str) -> str:
         template = ""
         result = []
         codes = []
@@ -851,11 +849,11 @@ class LuaDocsGen:
                     parameter_striped = parameter.strip()
                     if parameter_striped == "":
                         continue
-                    parameter_striped = parameter_striped.split(" ")
-                    if parameter_striped[0] == "function?":
-                        parameter_striped[0] = "function"
-                        parameter_striped[1] = parameter_striped[1] + "?"
-                    docs += f"\n---@param {parameter_striped[1]} {parameter_striped[0]}"
+                    parameter_striped_split = parameter_striped.split(" ")
+                    if parameter_striped_split[0] == "function?":
+                        parameter_striped_split[0] = "function"
+                        parameter_striped_split[1] = parameter_striped_split[1] + "?"
+                    docs += f"\n---@param {parameter_striped_split[1]} {parameter_striped_split[0]}"
                 output.write(f"""
 {docs}
 function {func.name}({func.copy_parameters})
@@ -965,10 +963,10 @@ if __name__ == "__main__":
         ignore_directories=ignore_directories,
         case_sensitive=case_sensitive,
     )
-    data_src_event_handler.on_created = on_created
-    data_src_event_handler.on_deleted = on_deleted
-    data_src_event_handler.on_modified = on_data_src_modified
-    data_src_event_handler.on_moved = on_moved
+    data_src_event_handler.on_created = on_created  # type: ignore[method-assign]
+    data_src_event_handler.on_deleted = on_deleted  # type: ignore[method-assign]
+    data_src_event_handler.on_modified = on_data_src_modified  # type: ignore[method-assign]
+    data_src_event_handler.on_moved = on_moved  # type: ignore[method-assign]
 
     data_src_path = "./data-src/"
     data_src_observer = Observer()
