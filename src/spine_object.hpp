@@ -77,6 +77,8 @@ public:
 	std::string shader;
 	/// returns nullptr if no "shader" was set
     jngl::ShaderProgram* getShaderProgram() const;
+    /// if the shader supports two-pass rendering, returns the location of the "pass" uniform
+    std::optional<int> getShaderTwoPassUniform() const;
 
 	/// loads data/<shader>.frag from the ShaderCache
     void setShader(std::string_view shader);
@@ -98,5 +100,6 @@ protected:
 	std::string id;
 	const std::weak_ptr<Game> game;
 	std::shared_ptr<SpineObject> parent = nullptr;
-	jngl::ShaderProgram* shaderProgram = nullptr;
+    jngl::ShaderProgram* shaderProgram = nullptr;
+    std::optional<int> shaderTwoPassUniform;
 };

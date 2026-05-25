@@ -596,19 +596,29 @@ void Game::draw() const
             continue;
         }
         if (const auto* shader = obj->getShaderProgram()) {
+            auto disableBlending = jngl::disableBlending();
             {
                 auto _1 = jngl::drawOnlyIntoAlphaChannel();
-                auto _2 = jngl::disableBlending();
                 obj->draw();
             }
-            context = std::nullopt; // end the current framebuffer context to draw to the other one
+            const auto passLocation = obj->getShaderTwoPassUniform();
+            // E.g. two-pass separable blur: pass 0 = vertical, pass 1 = horizontal
+            for (int pass = 0; pass < (passLocation ? 2 : 1); ++pass) {
+                context = std::nullopt; // end the current framebuffer context to draw to the other one
 
-            context = fb2->use(); // start a new framebuffer context to draw the next objects to the framebuffer
+                context = fb2->use(); // start a new framebuffer context to draw the next objects to the framebuffer
 
-            fb1->draw(originalMv, shader);
+                {
+                    auto shaderContext = shader->use();
+                    if (passLocation) {
+                        jngl::ShaderProgram::Context::setUniform(*passLocation, pass);
+                    }
+                    fb1->draw(originalMv, jngl::TextureFilter::NearestNeighbor, shader);
+                }
 
-            // we are now drawing to fb2 and have overdrawn all its content with fb1. Next time we need to do that the other way around, i.e. fb2 is now the canvas and fb1 is unused. Therefore swap them:
-            std::swap(fb1, fb2);
+                // we are now drawing to fb2 and have overdrawn all its content with fb1. Next time we need to do that the other way around, i.e. fb2 is now the canvas and fb1 is unused. Therefore swap them:
+                std::swap(fb1, fb2);
+            }
         }
         obj->draw();
     }

@@ -313,14 +313,27 @@ jngl::ShaderProgram* SpineObject::getShaderProgram() const {
     return shaderProgram;
 }
 
+std::optional<int> SpineObject::getShaderTwoPassUniform() const {
+    return shaderTwoPassUniform;
+}
+
 void SpineObject::setShader(std::string_view shader) {
     this->shader = shader;
     shaderProgram = nullptr;
+    shaderTwoPassUniform = std::nullopt;
     if (!shader.empty()) {
         try {
             shaderProgram = &ShaderCache::handle().get(shader);
         } catch (std::exception& e) {
             jngl::error("Failed to set shader {}: {}", shader, e.what());
+        }
+        if (shaderProgram) {
+            try {
+                shaderTwoPassUniform = shaderProgram->getUniformLocation("pass");
+                jngl::trace("Shader {} supports two-pass rendering, 'pass' uniform location: {}", shader, *shaderTwoPassUniform);
+            } catch (std::exception&) {
+                jngl::trace("Shader {} does not have a 'pass' uniform, two-pass rendering is not supported", shader);
+            }
         }
     }
 }
