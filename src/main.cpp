@@ -58,7 +58,7 @@ jngl::AppParameters jnglInit()
 		jngl::setAntiAliasing(config["antiAliasing"].as<bool>());
 		jngl::setIcon(config["icon"].as<std::string>());
 		auto game = std::make_shared<Game>(config);
-		game->init();
+		game->init(true);
 		return game;
 	};
 

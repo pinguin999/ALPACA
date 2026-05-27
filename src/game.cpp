@@ -132,17 +132,16 @@ Game::Game(const YAML::Node &config) : config(config),
 #endif
 }
 
-void Game::init()
+void Game::init(bool game_start)
 {
 	configToLua();
 	setupLuaFunctions();
 	dialogManager = std::make_shared<DialogManager>(shared_from_this());
-	if (config["auto_load_savegame"].as<bool>(true))
-	{
+	if (!game_start || config["auto_load_savegame"].as<bool>(true)) {
 		loadLuaState();
-    } else {
-        loadLuaState(std::nullopt);
-    }
+	} else {
+		loadLuaState(std::nullopt);
+	}
     jngl::resetFrameLimiter();
 }
 

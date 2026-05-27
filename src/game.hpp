@@ -16,7 +16,7 @@ class Game : public jngl::Work, public std::enable_shared_from_this<Game>
 public:
     explicit Game(const YAML::Node &config);
     ~Game() override;
-    void init();
+    void init(bool game_start = false);
     void reset();
     void loadSceneWithFade(const std::string &level);
     void setupLuaFunctions();
