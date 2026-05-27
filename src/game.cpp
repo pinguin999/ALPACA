@@ -10,7 +10,6 @@
 #include <thread>
 
 #include <spine/spine.h>
-#include "pointer.hpp"
 #include "scene_fade.hpp"
 #include "spine_object.hpp"
 
@@ -834,6 +833,10 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
 void Game::saveLuaState(const std::string& savefile) {
     if (savefile.empty()) {
         return;
+    }
+    if (!player->interruptible) {
+		jngl::debug("Game can not be saved in this state.");
+		return;
     }
     // jngl::debug("Backup all globals start");
     const sol::table& globals = lua_state->globals();
