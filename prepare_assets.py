@@ -144,6 +144,9 @@ def rhubarb_export(
     node_info: tuple[str, str, dict[str, str]],
 ) -> tuple[list[Any], dict[str, str]]:
     node_id = node_info[0]
+    if ".ogg" in node_id:
+        print(colored(f"Audio file {node_id} has ending .ogg. Please remove it.", "red"))
+        node_id = node_id[:-4]
     db: dict[str, str] = node_info[2]
     file = f"./data/audio/{node_id}.ogg"
     errors: list[str] = []
