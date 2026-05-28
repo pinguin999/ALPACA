@@ -41,8 +41,8 @@ private:
 	std::vector<HotspotCache> hotspotCache;
 
 	std::unique_ptr<spine::AnimationStateData> animationStateData;
-	mutable spine::Vector<float> worldVertices;
-	mutable spine::Vector<unsigned short> quadIndices;
+	mutable spine::Array<float> worldVertices;
+	mutable spine::Array<unsigned short> quadIndices;
 	mutable spine::SkeletonClipping clipper;
 	float alpha = 1.f;
 

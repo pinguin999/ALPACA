@@ -143,7 +143,7 @@ file(GLOB GFX_FILES RELATIVE ${CMAKE_SOURCE_DIR}/data CONFIGURE_DEPENDS data/*.w
 file(GLOB SFX_FILES RELATIVE ${CMAKE_SOURCE_DIR}/data data/sfx/*.ogg)
 # configure_file(src/engine/datafiles.hpp.in include/datafiles.hpp @ONLY)
 target_include_directories(pac PRIVATE ${CMAKE_BINARY_DIR}/include
-										# subprojects/spine-runtimes/spine-cpp/spine-cpp/include
+										# subprojects/spine-runtimes/spine-cpp/include
 										subprojects/schnacker/src)
 
 if(WIN32)

@@ -340,8 +340,8 @@ bool Background::hasPathTo(jngl::Vec2 start, jngl::Vec2 target) const
 
 void Background::updateCorners() {
     corners.clear();
-    spine::Vector<spine::BoundingBoxAttachment*>& boundingBoxes = bounds->getBoundingBoxes();
-    spine::Vector<spine::Polygon*>& polygons = bounds->getPolygons();
+    spine::Array<spine::BoundingBoxAttachment*>& boundingBoxes = bounds->getBoundingBoxes();
+    spine::Array<spine::Polygon*>& polygons = bounds->getPolygons();
     for (size_t i = 0; i < boundingBoxes.size(); i++) {
         const auto* polygonName = boundingBoxes[i]->getName().buffer();
         if (polygonName == std::string("walkable_area")) {
