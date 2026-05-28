@@ -40,10 +40,11 @@ void Game::setupLuaFunctions()
 	///
 	/// This door example expects a Spine point object near the door:
 	///
-	///	GoToPoint("cockpit", function ()
-	///		LoadScene("cockpit")
-	///	end)
-	///
+	///```lua
+	///GoToPoint("cockpit", function ()
+	///    LoadScene("cockpit")
+	///end)
+	///```
 	lua_state->set_function("LoadScene",
 							[this](const LuaScene &scene)
 							{
@@ -410,10 +411,12 @@ void Game::setupLuaFunctions()
 	/// See GetPointNames
 	/// Lua Example:
 	///
-	/// local points = GetPointNamesOn("inventory_object")
-	/// for i = 1, #points do
-	///    print(i, points[i])
-	/// end
+	///```lua
+	///local points = GetPointNamesOn("inventory_object")
+	///for i = 1, #points do
+	///   print(i, points[i])
+	///end
+	///```
 	/// SpineObject object: ID of the object to affect
 	/// returns: a list of positions
 	lua_state->set_function("GetPointNamesOn",
