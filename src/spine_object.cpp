@@ -140,68 +140,71 @@ void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimat
                                 std::optional<sol::function> callback) {
 
     if (auto _game = game.lock()) {
-    if (callback) {
-			this->animation_callback.emplace(std::to_string(trackIndex) + currentAnimation,
-			                                 LuaCallback(std::move(*callback), _game->lua_state));
-		}
+        if (callback) {
+            this->animation_callback.emplace(std::to_string(trackIndex) + currentAnimation,
+                                             LuaCallback(std::move(*callback), _game->lua_state));
+        }
     }
-	if (trackIndex == 0) {
-		this->currentAnimation = currentAnimation;
-	}
-	spine::Animation* animation =
-	    skeleton->state->getData().getSkeletonData().findAnimation(currentAnimation.c_str());
-	if (animation) {
-		auto entry = skeleton->state->setAnimation(trackIndex, currentAnimation.c_str(),
-		                                            static_cast<int>(loop));
-		if (trackIndex > 0 && loop == false)
-		{
-			skeleton->state->addEmptyAnimation(trackIndex, 0, 0);
-		}
-		entry.setListener([this](spine::AnimationState*, spine::EventType type,
-		                          spine::TrackEntry* entry, spine::Event* event) {
-			if (event) {
-				if (event->getData().getAudioPath() != nullptr) {
-					jngl::debug(std::string(event->getData().getAudioPath().buffer()));
-					jngl::play("audio/" + std::string(event->getData().getAudioPath().buffer()));
-				}
-				if (event->getData().getName() != nullptr) {
-					// This in Lua setzen
+    if (trackIndex == 0) {
+        this->currentAnimation = currentAnimation;
+    }
+    spine::Animation* animation =
+        skeleton->state->getData().getSkeletonData().findAnimation(currentAnimation.c_str());
+    if (animation) {
+        skeleton->state->setAnimation(trackIndex, currentAnimation.c_str(),
+                                      static_cast<int>(loop))
+            .setListener([this](spine::AnimationState*, spine::EventType type,
+                                spine::TrackEntry* entry, spine::Event* event) {
+            if (event) {
+                if (event->getData().getAudioPath() != nullptr) {
+                    jngl::debug(std::string(event->getData().getAudioPath().buffer()));
+                    jngl::play("audio/" + std::string(event->getData().getAudioPath().buffer()));
+                }
+                auto event_data = event->getData().getSetupPose();
+                // getString() is non-const, so don't make event_str const
+                auto event_str = event_data.getString().buffer();
+                if (event_str != nullptr) {
+                    // This in Lua setzen
 
-					jngl::debug(event->getData().getName().buffer());
+                    jngl::debug(event_str);
 
-					if (auto _game = this->game.lock()) {
+                    if (auto _game = this->game.lock()) {
 
-						(*_game->lua_state)["this"] = this->getptr();
-						std::string extension = ".lua";
-						std::string event_string =
-						    std::string(event->getData().getName().buffer());
-						if (std::equal(extension.rbegin(), extension.rend(),
-						               event_string.rbegin())) {
-							// run lua script from file
-							_game->runAction(event_string.erase(event_string.size() - 4),
-							                 (*_game->lua_state)["this"]);
-						} else {
-							_game->lua_state->script(event_string);
-						}
-					}
-				}
-			}
+                        (*_game->lua_state)["this"] = this->getptr();
+                        std::string extension = ".lua";
+                        std::string event_string =
+                            std::string(event_str);
+                        if (std::equal(extension.rbegin(), extension.rend(),
+                                       event_string.rbegin())) {
+                            // run lua script from file
+                            _game->runAction(event_string.erase(event_string.size() - 4),
+                                             (*_game->lua_state)["this"]);
+                        } else {
+                            _game->lua_state->script(event_string);
+                        }
+                    }
+                }
+            }
 
-			switch (type) {
-			case spine::EventType_Interrupt:
-				break;
+            switch (type) {
+            case spine::EventType_Interrupt:
+                break;
 
-			case spine::EventType_Complete:
-				if (!entry->getLoop()) {
-					onAnimationComplete(entry->getTrackIndex(), std::string(entry->getAnimation().getName().buffer()));
-				}
-				break;
-			default:
-				break;
-			}
-		});
+            case spine::EventType_Complete:
+                if (!entry->getLoop()) {
+                    onAnimationComplete(entry->getTrackIndex(), std::string(entry->getAnimation().getName().buffer()));
+                }
+                break;
+            default:
+                break;
+            }
+        });
     } else {
         jngl::error("The animation {} is missing for {}.spine", currentAnimation, spine_name);
+    }
+
+    if (trackIndex > 0 && loop == false) {
+        skeleton->state->addEmptyAnimation(trackIndex, 0, 0);
     }
 }
 
