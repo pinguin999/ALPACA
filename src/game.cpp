@@ -1,9 +1,12 @@
 #include "game.hpp"
 
+#include "jngl/input.hpp"
 #include "shader_cache.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
+#include <sol/types.hpp>
 #include <string>
 #include <iostream>
 #include <chrono>
@@ -466,6 +469,16 @@ void Game::debugStep()
 		}
 	}
 #endif
+
+	// execute cheat
+	if (jngl::keyPressed(jngl::key::F9))
+	{
+		if(!dialogManager->isActive())
+		{
+			std::optional<sol::function> callback;
+			dialogManager->play("_cheats", std::move(callback));
+		}
+	}
 
 	// Jump to a room
 	if (jngl::keyPressed("j"))
