@@ -63,6 +63,8 @@ suite alpaca_test_suite = []
         jngl::showWindow((config)["name"].as<std::string>(), 800, 600, 0, {16, 9}, {16, 9});
         jngl::setAntiAliasing(true);
 
+        std::set<std::string> visited_scenes;
+
         jngl::writeConfig("savegame", "");
 
         auto game = std::make_shared<Game>(config);
@@ -86,6 +88,12 @@ suite alpaca_test_suite = []
             actions.clear();
 
             game->step();
+
+            if (visited_scenes.find(game->currentScene->getSceneName()) == visited_scenes.end())
+            {
+                visited_scenes.insert(game->currentScene->getSceneName());
+                game->saveLuaState(game->currentScene->getSceneName());
+            }
 
             // TODO: Solange ein Callback gesetzt ist keine neue Aktion auswählen.
             std::string options = "";
@@ -143,6 +151,7 @@ suite alpaca_test_suite = []
             }
         }
         // expect(eq(game->getInactivLayerBorder(), 2));
+        game->saveLuaState();
         jngl::debug("Took: {} steps", i);
 
         jngl::hideWindow();
