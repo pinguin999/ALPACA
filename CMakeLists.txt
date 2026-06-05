@@ -12,7 +12,9 @@ if(NOT MSVC)
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
-	set(JNGL_RECORD 1)
+	if (NOT DEFINED JNGL_RECORD)
+		set(JNGL_RECORD 1)
+	endif()
 endif()
 
 if( ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")

@@ -966,7 +966,7 @@ if __name__ == "__main__":
         ignore_directories=ignore_directories,
         case_sensitive=case_sensitive,
     )
-    data_src_event_handler.on_created = on_created  # type: ignore[method-assign]
+    data_src_event_handler.on_created = on_data_src_modified  # type: ignore[method-assign]
     data_src_event_handler.on_deleted = on_deleted  # type: ignore[method-assign]
     data_src_event_handler.on_modified = on_data_src_modified  # type: ignore[method-assign]
     data_src_event_handler.on_moved = on_moved  # type: ignore[method-assign]
