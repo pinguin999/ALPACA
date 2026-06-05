@@ -615,6 +615,8 @@ def on_moved(event) -> None:
             f"ok ok ok, someone moved {event.src_path} to {event.dest_path}", "green"
         )
     )
+    event.src_path = event.dest_path
+    on_data_src_modified(event)
 
 
 def on_created(event) -> None:
