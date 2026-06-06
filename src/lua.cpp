@@ -216,6 +216,28 @@ void Game::setupLuaFunctions()
         getDialogManager()->play(dialogName, std::move(callback));
     });
 
+    /// Run a script by name (without the '.lua' suffix)
+    /// string scriptName: The script to play.
+    lua_state->set_function("RunScript",
+                            [this](const LuaDialog& scriptName)
+	{
+		const std::string file = "scripts/" + scriptName + ".lua";
+		const std::stringstream scriptstream = jngl::readAsset(file);
+
+		if (!scriptstream)
+		{
+			jngl::error("Can not load lua script " + file);
+			return;
+		}
+		auto script = scriptstream.str();
+		jngl::log("lua", file);
+		auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
+		if (!result.valid()) {
+			const sol::error err = result;
+			jngl::error(err.what());
+		}
+    });
+
 	/// Add the current item to the inventory.
 	/// Sets the skin of the item of the item to inventory_default_skin
 	/// Move the item from the scene to inventory_items.
