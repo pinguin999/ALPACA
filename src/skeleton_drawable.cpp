@@ -157,7 +157,9 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 			uvs = &sequence.getUVs(sequenceIndex);
 			indices = &quadIndices;
 			indicesCount = 6;
-			texture = reinterpret_cast<jngl::Sprite*>(region->getRendererObject());
+			if(region){
+				texture = reinterpret_cast<jngl::Sprite*>(region->getRendererObject());
+			}
 			attachmentColor = &regionAttachment->getColor();
 
 		} else if (attachment->getRTTI().isExactly(spine::MeshAttachment::rtti)) {
@@ -173,7 +175,9 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 				continue;
 			}
 
-			texture = static_cast<jngl::Sprite*>(region->getRendererObject());
+			if(region){
+				texture = static_cast<jngl::Sprite*>(region->getRendererObject());
+			}
 			vertices->setSize(mesh->getWorldVerticesLength(), 0);
 			mesh->computeWorldVertices(*skeleton, slot, 0, mesh->getWorldVerticesLength(), vertices->buffer(),
 			                           0, 2);
