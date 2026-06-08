@@ -95,6 +95,7 @@ void Player::addTargetPositionImmediately(jngl::Vec2 target, std::optional<sol::
 void Player::stop_walking()
 {
     path.clear();
+    walk_callback = std::nullopt;
     setTargentPosition(position);
 }
 
