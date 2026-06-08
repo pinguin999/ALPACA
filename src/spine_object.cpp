@@ -172,15 +172,19 @@ void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimat
 
                         (*_game->lua_state)["this"] = this->getptr();
                         std::string extension = ".lua";
-                        std::string event_string =
-                            std::string(event_str);
+                        std::string event_string = std::string(event_str);
                         if (std::equal(extension.rbegin(), extension.rend(),
                                        event_string.rbegin())) {
                             // run lua script from file
                             _game->runAction(event_string.erase(event_string.size() - 4),
                                              (*_game->lua_state)["this"]);
                         } else {
-                            _game->lua_state->script(event_string);
+							auto result = _game->lua_state->safe_script(event_string, sol::script_pass_on_error);
+							if (!result.valid())
+							{
+								const sol::error err = result;
+								jngl::debug("Failed run script via Event {} {}", event->getData().getName().buffer(), err.what());
+							}
                         }
                     }
                 }
@@ -206,6 +210,8 @@ void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimat
     if (trackIndex > 0 && loop == false) {
         skeleton->state->addEmptyAnimation(trackIndex, 0, 0);
     }
+	skeleton->state->apply(*skeleton->skeleton);
+	skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
 }
 
 void SpineObject::stopAnimation(int trackIndex) {
