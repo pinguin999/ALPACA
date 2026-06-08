@@ -510,6 +510,9 @@ void Game::setupLuaFunctions()
 								{
 									return std::tuple(position->x, position->y);
 								}
+								else {
+									jngl::error("No point called " + point_name);
+								}
 
 								return std::tuple(0.0, 0.0);
 							});
@@ -536,6 +539,9 @@ void Game::setupLuaFunctions()
 										lua_object["x"] = position->x;
 										lua_object["y"] = position->y;
 									}
+								}
+								else {
+									jngl::error("No point called " + point_name);
 								}
 							});
 
@@ -564,6 +570,8 @@ void Game::setupLuaFunctions()
                                             lua_object["x"] = position->x;
                                             lua_object["y"] = position->y;
                                         }
+									}else {
+										jngl::error("No point called " + point_name);
 									}
 								}
 							});
@@ -593,6 +601,8 @@ void Game::setupLuaFunctions()
 											lua_object["x"] = frm->getPosition().x + position->x;
 											lua_object["y"] = frm->getPosition().y + position->y;
 										}
+									}else {
+										jngl::error("No point called " + point_name + "on " + obj->getName());
 									}
 								}
 							});
