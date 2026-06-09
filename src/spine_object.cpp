@@ -271,6 +271,8 @@ void SpineObject::setSkin(const std::string& skin) {
             jngl::error("The Skin {} is missing for {}.spine", skin, spine_name);
         }
     }
+	skeleton->state->apply(*skeleton->skeleton);
+	skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
 }
 
 void SpineObject::setSkins(const std::vector<std::string>& skins) {
@@ -278,6 +280,8 @@ void SpineObject::setSkins(const std::vector<std::string>& skins) {
 	if (skins.size() == 1 && skins[0].empty()) {
 		skeleton->skeleton->setSkin(nullptr);
 		combinedSkin.reset();
+		skeleton->state->apply(*skeleton->skeleton);
+		skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
 		return;
 	}
 
@@ -293,6 +297,8 @@ void SpineObject::setSkins(const std::vector<std::string>& skins) {
 	skeleton->skeleton->setSkin(newSkin.get());
 	combinedSkin = std::move(newSkin);
 	skeleton->skeleton->setupPoseSlots();
+	skeleton->state->apply(*skeleton->skeleton);
+	skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
 }
 
 double SpineObject::getZ() const {
