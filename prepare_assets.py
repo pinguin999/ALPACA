@@ -80,6 +80,7 @@ all_scenes: dict[str, set[str]] = {}
 all_audio: dict[str, set[str]] = {}
 all_audio_channels: dict[str, set[str]] = {"voice": {""}, "music": {""}, "sounds": {""}}
 all_language: dict[str, set[str]] = {}
+all_scripts: dict[str, set[str]] = {}
 schnack_vars: dict[str, str] = {}
 schnack_characters_props: dict[str, str] = {}
 
@@ -541,6 +542,9 @@ def rehash_scenes(directorys: str) -> None:
 def copy_script(file: str) -> None:
     if file.endswith("ALPACA.lua"):
         return
+    stem = Path(file).stem
+    parent = str(Path(file).parent)
+    all_scripts[stem] = {parent}
     if file.endswith(".lua"):
         command = [LUA, "-p", file]
         p = subprocess.Popen(
@@ -756,6 +760,7 @@ class LuaDocsGen:
         result = result.replace("LuaAudio ", "")
         result = result.replace("LuaLanguage ", "")
         result = result.replace("LuaSpineSkin[] ", "")
+        result = result.replace("LuaScript ", "")
 
         return result.strip()
 
@@ -842,6 +847,7 @@ class LuaDocsGen:
         write_alias("LuaAudio", all_audio)
         write_alias("LuaAudioChannel", all_audio_channels)
         write_alias("LuaLanguage", all_language)
+        write_alias("LuaScript", all_scripts)
 
         with alpaca_lua.open("+a") as output:
             for func in result:
