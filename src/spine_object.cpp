@@ -64,7 +64,7 @@ SpineObject::SpineObject(const std::shared_ptr<Game>& game, const std::string& s
 	atlas = std::make_unique<spine::Atlas>((spine_file + "/" + spine_file + ".atlas").c_str(),
 	                                       &SkeletonDrawable::textureLoader);
 	assert(atlas);
-	auto json = std::make_unique<spine::SkeletonJson>(*atlas.get());
+	auto json = std::make_unique<spine::SkeletonJson>(*atlas);
 	json->setScale(scale);
 
 #ifndef NDEBUG
@@ -78,7 +78,7 @@ SpineObject::SpineObject(const std::shared_ptr<Game>& game, const std::string& s
 			atlas =
 			    std::make_unique<spine::Atlas>((spine_file + "/" + spine_file + ".atlas").c_str(),
 			                                   &SkeletonDrawable::textureLoader);
-			json = std::make_unique<spine::SkeletonJson>(*atlas.get());
+			json = std::make_unique<spine::SkeletonJson>(*atlas);
             json->setScale(scale);
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
@@ -87,7 +87,7 @@ SpineObject::SpineObject(const std::shared_ptr<Game>& game, const std::string& s
 #endif
 	}
 
-	auto animationStateData = std::make_unique<spine::AnimationStateData>(*skeletonData.get());
+	auto animationStateData = std::make_unique<spine::AnimationStateData>(*skeletonData);
 	skeleton = std::make_unique<SkeletonDrawable>(*skeletonData, std::move(animationStateData));
 	bounds = std::make_unique<spine::SkeletonBounds>();
 

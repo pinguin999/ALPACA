@@ -897,10 +897,10 @@ scenes.{scene}.top_border = 0
 scenes.{scene}.zBufferMap = nil """
                     ""
                 )
-                scene_json = Path(f"./data-src/scenes/{scene}.json").read_text(
-                    encoding="utf-8"
-                )
                 try:
+                    scene_json = Path(f"./data-src/scenes/{scene}.json").read_text(
+                        encoding="utf-8"
+                    )
                     scene_object = json.loads(scene_json)
                     for item in scene_object["items"] + [{"spine": "background"}]:
                         name = item["id"] if "id" in item else item["spine"]

@@ -1078,7 +1078,7 @@ void Game::onFileDrop(const std::filesystem::path& path)
 
     auto atlas = std::make_unique<spine::Atlas>((spine_file + "/" + spine_file + ".atlas").c_str(), &SkeletonDrawable::textureLoader);
     assert(atlas);
-    auto json = std::make_unique<spine::SkeletonJson>(*atlas.get());
+    auto json = std::make_unique<spine::SkeletonJson>(*atlas);
     std::unique_ptr<spine::SkeletonData> skeletonData;
 	skeletonData.reset((json->readSkeletonDataFile((spine_file + "/" + spine_file + ".json").c_str())));
 
