@@ -13,6 +13,7 @@ using LuaScene = std::string;
 using LuaAudio = std::string;
 using LuaLanguage = std::string;
 using LuaAudioChannel = std::string;
+using LuaScript = std::string;
 
 namespace {
 std::optional<jngl::Vec2> getPointPosition(const std::shared_ptr<Game> &game, const std::string &pointName)
@@ -219,7 +220,7 @@ void Game::setupLuaFunctions()
     /// Run a script by name (without the '.lua' suffix)
     /// string scriptName: The script to play.
     lua_state->set_function("RunScript",
-                            [this](const LuaDialog& scriptName)
+                            [this](const LuaScript& scriptName)
 	{
 		const std::string file = "scripts/" + scriptName + ".lua";
 		const std::stringstream scriptstream = jngl::readAsset(file);
@@ -510,6 +511,9 @@ void Game::setupLuaFunctions()
 								{
 									return std::tuple(position->x, position->y);
 								}
+								else {
+									jngl::error("No point called " + point_name);
+								}
 
 								return std::tuple(0.0, 0.0);
 							});
@@ -536,6 +540,9 @@ void Game::setupLuaFunctions()
 										lua_object["x"] = position->x;
 										lua_object["y"] = position->y;
 									}
+								}
+								else {
+									jngl::error("No point called " + point_name);
 								}
 							});
 
@@ -564,6 +571,8 @@ void Game::setupLuaFunctions()
                                             lua_object["x"] = position->x;
                                             lua_object["y"] = position->y;
                                         }
+									}else {
+										jngl::error("No point called " + point_name);
 									}
 								}
 							});
@@ -593,6 +602,8 @@ void Game::setupLuaFunctions()
 											lua_object["x"] = frm->getPosition().x + position->x;
 											lua_object["y"] = frm->getPosition().y + position->y;
 										}
+									}else {
+										jngl::error("No point called " + point_name + "on " + obj->getName());
 									}
 								}
 							});

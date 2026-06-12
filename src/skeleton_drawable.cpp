@@ -60,13 +60,13 @@ SkeletonDrawable::SkeletonDrawable(spine::SkeletonData& skeletonData,
 	quadIndices.add(3);
 	quadIndices.add(0);
 	spine::Bone::setYDown(true);
-	skeleton = std::make_unique<spine::Skeleton>(&skeletonData);
+	skeleton = std::make_unique<spine::Skeleton>(skeletonData);
 
 	if (!this->animationStateData) {
-		this->animationStateData = std::make_unique<spine::AnimationStateData>(&skeletonData);
+		this->animationStateData = std::make_unique<spine::AnimationStateData>(skeletonData);
 	}
 
-	state = std::make_unique<spine::AnimationState>(this->animationStateData.get());
+	state = std::make_unique<spine::AnimationState>(*this->animationStateData.get());
 }
 
 SkeletonDrawable::~SkeletonDrawable() = default;
@@ -86,9 +86,10 @@ void SkeletonDrawable::step() {
             hotspotCache.resize(slotCount);
         }
 
-        for (size_t j = 0; j < slotCount; ++j) {
-            spine::Slot& slot = *skeleton->getDrawOrder()[j];
-            spine::Attachment* attachment = slot.getAttachment();
+		spine::Array<spine::Slot *> &drawOrder = skeleton->getDrawOrder().getAppliedPose();
+		for (unsigned j = 0; j < drawOrder.size(); ++j) {
+			spine::Slot &slot = *drawOrder[j];
+			spine::Attachment *attachment = slot.getAppliedPose().getAttachment();
             if (!attachment) {
                 continue;
             }
@@ -101,7 +102,7 @@ void SkeletonDrawable::step() {
                 }
 
                 worldVertices.setSize(box->getWorldVerticesLength(), 0);
-                box->computeWorldVertices(slot, 0, box->getWorldVerticesLength(), worldVertices.buffer(), 0, 2);
+                box->computeWorldVertices(*skeleton, slot, 0, box->getWorldVerticesLength(), worldVertices.buffer(), 0, 2);
 
                 const float* bbvertices = worldVertices.buffer();
                 const auto vertexCount = box->getWorldVerticesLength();
@@ -131,16 +132,17 @@ void SkeletonDrawable::setAlpha(float alpha) {
 
 void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 	jngl::Sprite* texture = nullptr;
-	for (size_t j = 0; j < skeleton->getSlots().size(); ++j) {
-		spine::Slot& slot = *skeleton->getDrawOrder()[j];
-		spine::Attachment* attachment = slot.getAttachment();
+	spine::Array<spine::Slot *> &drawOrder = skeleton->getDrawOrder().getAppliedPose();
+	for (unsigned j = 0; j < drawOrder.size(); ++j) {
+		spine::Slot &slot = *drawOrder[j];
+		spine::Attachment *attachment = slot.getAppliedPose().getAttachment();
 		if (!attachment) {
 			continue;
 		}
 
-		spine::Vector<float>* vertices = &worldVertices;
-		spine::Vector<float>* uvs = nullptr;
-		spine::Vector<unsigned short>* indices = nullptr;
+		spine::Array<float>* vertices = &worldVertices;
+		spine::Array<float>* uvs = nullptr;
+		spine::Array<unsigned short>* indices = nullptr;
 		int indicesCount = 0;
 		spine::Color* attachmentColor = nullptr;
 
@@ -148,17 +150,24 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 			auto* regionAttachment = reinterpret_cast<spine::RegionAttachment*>(attachment);
 
 			vertices->setSize(8, 0);
-			regionAttachment->computeWorldVertices(slot, *vertices, 0, 2);
-			uvs = &regionAttachment->getUVs();
+			spine::Sequence &sequence = regionAttachment->getSequence();
+			int sequenceIndex = sequence.resolveIndex(slot.getAppliedPose());
+			spine::TextureRegion *region = sequence.getRegion(sequenceIndex);
+			regionAttachment->computeWorldVertices(slot, regionAttachment->getOffsets(slot.getAppliedPose()), worldVertices, 0, 2);
+			uvs = &sequence.getUVs(sequenceIndex);
 			indices = &quadIndices;
 			indicesCount = 6;
-			texture =
-			    reinterpret_cast<jngl::Sprite*>(regionAttachment->getRegion()->rendererObject);
+			if(region){
+				texture = reinterpret_cast<jngl::Sprite*>(region->getRendererObject());
+			}
 			attachmentColor = &regionAttachment->getColor();
 
 		} else if (attachment->getRTTI().isExactly(spine::MeshAttachment::rtti)) {
 			auto* mesh = reinterpret_cast<spine::MeshAttachment*>(attachment);
 			attachmentColor = &mesh->getColor();
+			spine::Sequence &sequence = mesh->getSequence();
+			int sequenceIndex = sequence.resolveIndex(slot.getAppliedPose());
+			spine::TextureRegion *region = sequence.getRegion(sequenceIndex);
 
 			// Early out if the slot color is 0
 			if (attachmentColor->a == 0) {
@@ -166,16 +175,18 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 				continue;
 			}
 
-			texture = static_cast<jngl::Sprite*>(mesh->getRegion()->rendererObject);
+			if(region){
+				texture = static_cast<jngl::Sprite*>(region->getRendererObject());
+			}
 			vertices->setSize(mesh->getWorldVerticesLength(), 0);
-			mesh->computeWorldVertices(slot, 0, mesh->getWorldVerticesLength(), vertices->buffer(),
+			mesh->computeWorldVertices(*skeleton, slot, 0, mesh->getWorldVerticesLength(), vertices->buffer(),
 			                           0, 2);
-			uvs = &mesh->getUVs();
+			uvs = &sequence.getUVs(sequenceIndex);;
 			indices = &mesh->getTriangles();
 			indicesCount = indices->size();
 		} else if (attachment->getRTTI().isExactly(spine::ClippingAttachment::rtti)) {
-			auto* clip = reinterpret_cast<spine::ClippingAttachment*>(slot.getAttachment());
-			clipper.clipStart(slot, clip);
+			auto* clip = reinterpret_cast<spine::ClippingAttachment*>(slot.getAppliedPose().getAttachment());
+			clipper.clipStart(*skeleton, slot, clip);
 			continue;
 
 		} else if (attachment->getRTTI().isExactly(spine::BoundingBoxAttachment::rtti)) {
@@ -184,7 +195,7 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
                 auto* box = reinterpret_cast<spine::BoundingBoxAttachment*>(attachment);
 
                 worldVertices.setSize(box->getWorldVerticesLength(), 0);
-                box->computeWorldVertices(slot, 0, box->getWorldVerticesLength(), worldVertices.buffer(), 0, 2);
+                box->computeWorldVertices(*skeleton, slot, 0, box->getWorldVerticesLength(), worldVertices.buffer(), 0, 2);
 
                 float* bbvertices = worldVertices.buffer();
                 int vertexCount = box->getWorldVerticesLength();
@@ -210,7 +221,7 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
                 auto* point = reinterpret_cast<spine::PointAttachment*>(attachment);
 				float x = 0;
 				float y = 0;
-				point->computeWorldPosition(slot.getBone(), x, y);
+				point->computeWorldPosition(slot.getBone().getPose(), x, y);
 
 				jngl::setFontColor(jngl::Rgb(1, 1, 0));
 				if (point->getColor().r == 0 && point->getColor().g == 0 && point->getColor().b == 0 && point->getColor().a == 0)
@@ -234,13 +245,13 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 			static spine::Color blancColor;
 			attachmentColor = &blancColor;
 		}
-		const auto r = static_cast<uint8_t>(skeleton->getColor().r * slot.getColor().r *
+		const auto r = static_cast<uint8_t>(skeleton->getColor().r * slot.getPose().getColor().r *
 		                                    attachmentColor->r * 255);
-		const auto g = static_cast<uint8_t>(skeleton->getColor().g * slot.getColor().g *
+		const auto g = static_cast<uint8_t>(skeleton->getColor().g * slot.getPose().getColor().g *
 		                                    attachmentColor->g * 255);
-		const auto b = static_cast<uint8_t>(skeleton->getColor().b * slot.getColor().b *
+		const auto b = static_cast<uint8_t>(skeleton->getColor().b * slot.getPose().getColor().b *
 		                                    attachmentColor->b * 255);
-		const auto a = static_cast<uint8_t>(skeleton->getColor().a * slot.getColor().a *
+		const auto a = static_cast<uint8_t>(skeleton->getColor().a * slot.getPose().getColor().a *
 		                                    attachmentColor->a * 255);
 
 		if (clipper.isClipping()) {
@@ -303,13 +314,13 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 }
 
 spine::BoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spine::SkeletonBounds *self, const std::string &name, float x, float y) {
-	spine::Vector<spine::BoundingBoxAttachment*>& boundingBoxes = self->getBoundingBoxes();
-	spine::Vector<spine::Polygon*>& polygons = self->getPolygons();
+	spine::Array<spine::BoundingBoxAttachment*>& boundingBoxes = self->getBoundingBoxes();
+	spine::Array<spine::Polygon*>& polygons = self->getPolygons();
 	for (size_t i = 0; i < boundingBoxes.size(); ++i)
 	{
         if (std::string(boundingBoxes[i]->getName().buffer()) == name)
         {
-            if (self->containsPoint(polygons[i], x, y))
+            if (self->containsPoint(*polygons[i], x, y))
             {
                 return boundingBoxes[i];
             }
@@ -319,13 +330,13 @@ spine::BoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spine::
 }
 
 spine::BoundingBoxAttachment *spSkeletonBounds_containsPointNotMatchingName(spine::SkeletonBounds *self, const std::string &name, float x, float y) {
-	spine::Vector<spine::BoundingBoxAttachment*>& boundingBoxes = self->getBoundingBoxes();
-	spine::Vector<spine::Polygon*>& polygons = self->getPolygons();
+	spine::Array<spine::BoundingBoxAttachment*>& boundingBoxes = self->getBoundingBoxes();
+	spine::Array<spine::Polygon*>& polygons = self->getPolygons();
 	for (size_t i = 0; i < boundingBoxes.size(); ++i)
 	{
         if (std::string(boundingBoxes[i]->getName().buffer()) != name)
         {
-            if (self->containsPoint(polygons[i], x, y))
+            if (self->containsPoint(*polygons[i], x, y))
             {
                 return boundingBoxes[i];
             }

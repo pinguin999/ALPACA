@@ -73,7 +73,7 @@ void Player::addTargetPositionImmediately(jngl::Vec2 target, std::optional<sol::
 {
     if (auto _game = game.lock())
     {
-        if (boost::qvm::mag_sqr(target_position - target) < 5)
+        if (boost::qvm::mag_sqr(target_position - target) < 5 || (!path.empty() && boost::qvm::mag_sqr(path.back() - target) < 5 ))
         {
             position = target;
         }
@@ -213,7 +213,6 @@ bool Player::step(bool /*force*/)
 
             const double time = jngl::getTime();
             auto click_distance = boost::qvm::dot(last_click_position - click_position, last_click_position - click_position);
-            path.clear();
 
             // Return if players current position is the target position
             double double_click_time = (*_game->lua_state)["config"]["double_click_time"];
@@ -226,6 +225,7 @@ bool Player::step(bool /*force*/)
             newPath = _game->currentScene->background->getPathToTarget(position, click_position);
             walk_callback = std::nullopt;
 
+            path.clear();
             path.insert(path.end(), newPath.begin(), newPath.end());
             if (!path.empty())
             {

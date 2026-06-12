@@ -21,7 +21,6 @@ include_directories(${UNIT_TESTS_INCLUDES})
 
 #Remove games main.cpp
 get_filename_component(full_path_test_cpp ${PROJECT_SOURCE_DIR}/src/main.cpp ABSOLUTE)
-message("${full_path_test_cpp}")
 
 list(REMOVE_ITEM SOURCES "${full_path_test_cpp}")
 
