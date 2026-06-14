@@ -254,7 +254,7 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 		const auto a = static_cast<uint8_t>(skeleton->getColor().a * slot.getPose().getColor().a *
 		                                    attachmentColor->a * 255);
 
-		if (clipper.isClipping()) {
+		if (clipper.isClipping() && vertices && indices && uvs) {
 			clipper.clipTriangles(*vertices, *indices, *uvs, 2);
 			vertices = &clipper.getClippedVertices();
 			uvs = &clipper.getClippedUVs();

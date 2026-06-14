@@ -1,5 +1,6 @@
 #include "spine_object.hpp"
 #include "game.hpp"
+#include "jngl/log.hpp"
 #include "shader_cache.hpp"
 
 // void SpineObject::animationStateListener(spAnimationState *state, spEventType type, spTrackEntry
@@ -158,7 +159,11 @@ void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimat
             if (event) {
                 if (event->getData().getAudioPath() != nullptr) {
                     jngl::debug(std::string(event->getData().getAudioPath().buffer()));
-                    jngl::play("audio/" + std::string(event->getData().getAudioPath().buffer()));
+                    try {
+                        jngl::play("audio/" + std::string(event->getData().getAudioPath().buffer()));
+                    } catch (const std::runtime_error& err) {
+                        jngl::error("Failed to play audio: {}", err.what());
+                    }
                 }
                 auto event_data = event->getData().getSetupPose();
                 // getString() is non-const, so don't make event_str const
