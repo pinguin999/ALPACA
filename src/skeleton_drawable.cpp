@@ -143,7 +143,7 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 		spine::Array<float>* vertices = &worldVertices;
 		spine::Array<float>* uvs = nullptr;
 		spine::Array<unsigned short>* indices = nullptr;
-		int indicesCount = 0;
+		size_t indicesCount = 0;
 		spine::Color* attachmentColor = nullptr;
 
 		if (attachment->getRTTI().isExactly(spine::RegionAttachment::rtti)) {
@@ -263,12 +263,12 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 		}
 
 		std::vector<jngl::Vertex> vertexArray;
-		for (int i = 0; i < indicesCount; ++i) {
+		for (size_t i = 0; i < indicesCount; ++i) {
 			int const index = (*indices)[i] << 1;
 			vertexArray.push_back(jngl::Vertex{
-			    (*vertices)[index], (*vertices)[index + 1],
-			    (*uvs)[index],     // * size.x
-			    (*uvs)[index + 1], // * size.y
+			    .x=(*vertices)[index], .y=(*vertices)[index + 1],
+			    .u=(*uvs)[index],     // * size.x
+			    .v=(*uvs)[index + 1], // * size.y
 			});
 		}
 		if (r < 250 || g < 250 || b < 250) {
