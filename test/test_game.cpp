@@ -3,7 +3,7 @@
 #define BOOST_TEST_MODULE PacTests
 #endif
 
-#include <boost/ut.hpp>
+#include "ut_config.hpp"
 #include <ctime>
 #include <jngl/message.hpp>
 #include <jngl/input.hpp>
