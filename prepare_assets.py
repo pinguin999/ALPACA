@@ -154,11 +154,14 @@ def rhubarb_export(
 
     db_out: dict[str, str] = {}
 
-    with open(file, "rb") as f:
-        checksum = hashlib.file_digest(f, "sha256").hexdigest()
-        db_out[file] = checksum
-        if db.get(file, None) == checksum:
-            return errors, db_out
+    try:
+        with open(file, "rb") as f:
+            checksum = hashlib.file_digest(f, "sha256").hexdigest()
+            db_out[file] = checksum
+            if db.get(file, None) == checksum:
+                return errors, db_out
+    except FileNotFoundError:
+        return errors, {}
 
     if not RHUBARB:
         return errors, {}
@@ -228,6 +231,7 @@ def apply_rhubarb(character_in: str | None = None) -> None:
             for node_id in node_ids:
                 rhubarb_out = Path(f"{RHUBARB_OUT}{node_id}.json")
                 if not rhubarb_out.exists():
+                    character["animations"][f"say_{node_id}"] = {}
                     continue
                 with rhubarb_out.open() as rhubarb_outfile:
                     mouthCues = json.load(rhubarb_outfile)
@@ -293,7 +297,7 @@ def get_notes(character=None) -> list[tuple[str, str, dict[str, str]]]:
                                             "red",
                                         )
                                     )
-                                    continue
+                                    # continue
 
                                 nodes.append(
                                     (f"{lang_code}_{node_id}", character_name, db)
@@ -952,7 +956,7 @@ if __name__ == "__main__":
     copy_folder("./data-src/audio", "./data/audio")
     copy_folder("./data-src/icons", "./data/icons")
     copy_folder("./data-src/dialog", "./data/dialog")
-    spine_reexport(["./data-src"])
+    # spine_reexport(["./data-src"])
     rehash_scenes("./data-src/scenes")
     rhubarb_path = Path(RHUBARB)
     if rhubarb_path.exists():
