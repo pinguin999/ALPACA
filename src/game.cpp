@@ -11,6 +11,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <yaml-cpp/yaml.h>
 
 #include <spine/spine.h>
 #include "scene_fade.hpp"
@@ -200,9 +201,17 @@ void Game::configToLua()
 void Game::loadSceneWithFade(const std::string &level)
 {
 	if(enable_fade){
-		jngl::setScene<SceneFade>(jngl::getWork(), [this, level]() {
+		// Dirty way to get the background audio for the next scene
+		std::optional<std::string> backgroundMusic;
+		auto nextSceneJson = YAML::Node(YAML::Load(jngl::readAsset("scenes/" + level + ".json").str()));
+		if (nextSceneJson["backgroundMusic"].IsDefined() && !nextSceneJson["backgroundMusic"].IsNull())
+		{
+			backgroundMusic = nextSceneJson["backgroundMusic"].as<std::string>();
+		}
+
+		jngl::setScene<SceneFade>(shared_from_this(), [this, level]() {
 			loadScene(level);
-		});
+		}, backgroundMusic);
 	}else{
 		loadScene(level);
 	}
@@ -796,11 +805,6 @@ void Game::removeObjects()
 std::shared_ptr<DialogManager> Game::getDialogManager()
 {
 	return dialogManager;
-}
-
-AudioManager *Game::getAudioManager()
-{
-	return &audioManager;
 }
 
 void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject> thisObject) {

@@ -296,11 +296,11 @@ void Scene::playMusic()
     {
         if (backgroundMusic.has_value())
         {
-            _game->getAudioManager()->loopMusic(backgroundMusic.value());
+            AudioManager::handle().loopMusic(backgroundMusic.value());
         }
         else
         {
-            _game->getAudioManager()->stopMusic();
+            AudioManager::handle().stopMusic();
         }
     }
 }

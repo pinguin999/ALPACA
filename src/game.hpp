@@ -84,7 +84,6 @@ public:
     std::shared_ptr<Hotspot> hotspot = nullptr;
 
     std::shared_ptr<DialogManager> getDialogManager();
-    AudioManager *getAudioManager();
     void addObjects();
     void removeObjects();
 
@@ -119,7 +118,6 @@ private:
     double cameraZoom = 1.0;
     int inactivLayerBorder = 0;
     std::shared_ptr<DialogManager> dialogManager = nullptr;
-    AudioManager audioManager;
     jngl::FrameBuffer frameBuffer1{jngl::getWindowSize()};
     jngl::FrameBuffer frameBuffer2{jngl::getWindowSize()};
 

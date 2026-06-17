@@ -887,7 +887,7 @@ void Game::setupLuaFunctions()
     /// Playing an audio file.
     /// It's muchannel better to use Spine events to trigger the sound to keep it in sync with the animation
     /// string file: The audio file
-    /// string channel: music, voice or sounds
+    /// string channel: music, voice, sounds or ambient
     lua_state->set_function("PlayAudio",
                             [](const LuaAudio& file, const LuaAudioChannel& channel)
 							{
@@ -897,6 +897,8 @@ void Game::setupLuaFunctions()
             Channels::handle().voice.play("audio/" + file);
         } else if (channel == "sounds") {
             Channels::handle().sounds.play("audio/" + file);
+		} else if (channel == "ambient") {
+            Channels::handle().ambient.play("audio/" + file);
         } else {
             jngl::play("audio/" + file);
         }
@@ -904,7 +906,7 @@ void Game::setupLuaFunctions()
 
     /// Loop an audio file.
     /// string file: The audio file
-    /// string channel: music, voice or sounds
+    /// string channel: music, voice, sounds or ambient
     lua_state->set_function("LoopAudio",
                             [](const LuaAudio& file, const LuaAudioChannel& channel)
 	{
@@ -914,6 +916,8 @@ void Game::setupLuaFunctions()
             Channels::handle().voice.loop("audio/" + file);
         } else if (channel == "sounds") {
             Channels::handle().sounds.loop("audio/" + file);
+		} else if (channel == "ambient") {
+            Channels::handle().ambient.loop("audio/" + file);
         } else {
             jngl::loop("audio/" + file);
         }
@@ -921,7 +925,7 @@ void Game::setupLuaFunctions()
 
     /// Stop an audio file.
     /// string file: The audio file
-    /// string channel: music, voice or sounds
+    /// string channel: music, voice, sounds or ambient
     lua_state->set_function("StopAudio",
                             [](const LuaAudio& file, const LuaAudioChannel& channel)
 		{
@@ -931,6 +935,8 @@ void Game::setupLuaFunctions()
             Channels::handle().voice.stop("audio/" + file);
         } else if (channel == "sounds") {
             Channels::handle().sounds.stop("audio/" + file);
+		} else if (channel == "ambient") {
+            Channels::handle().ambient.stop("audio/" + file);
         } else {
             jngl::stop("audio/" + file);
         }
@@ -939,53 +945,61 @@ void Game::setupLuaFunctions()
     /// Checks if an audio file is playing.
     /// string file: The audio file
     /// returns:a bool indication if the audio is playing
-    /// string channel: music, voice or sounds
+    /// string channel: music, voice, sounds or ambient
     lua_state->set_function("isAudioPlaying",
                             [](const LuaAudio& file, const std::string& channel)
 							{
         if (channel == "music") {
             return Channels::handle().music.isPlaying("audio/" + file);
         }
-        if (channel == "voice") {
+        else if (channel == "voice") {
             return Channels::handle().voice.isPlaying("audio/" + file);
         }
-        if (channel == "sounds") {
+        else if (channel == "sounds") {
             return Channels::handle().sounds.isPlaying("audio/" + file);
+        }
+		else if (channel == "ambient") {
+            return Channels::handle().ambient.isPlaying("audio/" + file);
         }
         return jngl::isPlaying("audio/" + file);
     });
 
     /// Set Sound Volume
     /// float level: A value between 0.0 and 1.0
-    /// string channel: music, voice or sounds
+    /// string channel: music, voice, sounds or ambient
     lua_state->set_function("setSoundVolume",
                             [this](const float level, const std::string& channel)
 							{
         if (channel == "music") {
-            audioManager.setMusicVolume(level);
+            AudioManager::handle().setMusicVolume(level);
         } else if (channel == "voice") {
-            audioManager.setVoiceVolume(level);
+            AudioManager::handle().setVoiceVolume(level);
         } else if (channel == "sounds") {
-            audioManager.setSoundVolume(level);
+            AudioManager::handle().setSoundVolume(level);
+		} else if (channel == "ambient") {
+            AudioManager::handle().setAmbientVolume(level);
         } else {
             jngl::setVolume(level);
         }
     });
 
     /// Ger Sound Volume
-    /// string channel: music, voice or sounds
+    /// string channel: music, voice, sounds or ambient
     /// returns: the sound volume
     lua_state->set_function("setSoundVolume",
                             [this](const std::string& channel)
 							{
         if (channel == "music") {
-            return audioManager.getMusicVolume();
+            return AudioManager::handle().getMusicVolume();
         }
-        if (channel == "voice") {
-            return audioManager.getVoiceVolume();
+        else if (channel == "voice") {
+            return AudioManager::handle().getVoiceVolume();
         }
-        if (channel == "sounds") {
-            return audioManager.getSoundVolume();
+        else if (channel == "sounds") {
+            return AudioManager::handle().getSoundVolume();
+        }
+		else if (channel == "ambient") {
+            return AudioManager::handle().getAmbientVolume();
         }
 
         return jngl::getVolume();
