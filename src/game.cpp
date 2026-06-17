@@ -470,7 +470,22 @@ void Game::debugStep()
 	}
 #endif
 
-	// execute cheat
+    // Record movie
+    if (jngl::keyPressed(jngl::key::F12)) {
+        std::string filename = "./../";
+        filename += currentDateTime() + ".tga";
+
+        // Take the screenshot and exit
+        const int width = jngl::getWindowWidth();
+        const int height = jngl::getWindowHeight();
+
+        std::vector<uint8_t> pixels(static_cast<size_t>(width * height * 3));
+        jngl::readPixels(pixels.data());
+
+        writeTGA(filename, width, height, pixels.data());
+    }
+
+    // execute cheat
 	if (jngl::keyPressed(jngl::key::F9))
 	{
 		if(!dialogManager->isActive())
@@ -1089,5 +1104,61 @@ void Game::onFileDrop(const std::filesystem::path& path)
     currentScene->addToFile(spine_file);
     currentScene->writeToFile();
     reload = true;
+}
+#endif
+
+#ifndef NDEBUG
+void Game::writeTGA(const std::filesystem::path& filename, int width, int height,
+                              const uint8_t* pixels) {
+	std::ofstream file(filename, std::ios::binary);
+	if (!file) {
+		throw std::runtime_error("Failed to open file for writing: " + filename.string());
+	}
+
+	// TGA header (18 bytes)
+	uint8_t header[18] = {
+		0, // ID length
+		0, // Color map type
+		2, // Image type (2 = uncompressed RGB)
+		0,
+		0,
+		0,
+		0,
+		0, // Color map specification (not used)
+		0,
+		0, // X origin
+		0,
+		0, // Y origin
+		static_cast<uint8_t>(width & 0xFF),
+		static_cast<uint8_t>((width >> 8) & 0xFF), // Width
+		static_cast<uint8_t>(height & 0xFF),
+		static_cast<uint8_t>((height >> 8) & 0xFF), // Height
+		24,                                         // Bits per pixel (RGB = 24)
+		0                                           // Image descriptor
+	};
+
+	file.write(reinterpret_cast<const char*>(header), sizeof(header));
+
+	// TGA stores images in BGR format and from bottom to top
+	// OpenGL's glReadPixels returns RGB from bottom to top by default
+	// So we need to convert RGB to BGR
+	std::vector<uint8_t> bgrPixels(static_cast<size_t>(width * height * 3));
+	for (int y = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x) {
+			int idx = (y * width + x) * 3;
+			bgrPixels[idx + 0] = pixels[idx + 2]; // B
+			bgrPixels[idx + 1] = pixels[idx + 1]; // G
+			bgrPixels[idx + 2] = pixels[idx + 0]; // R
+		}
+	}
+
+	file.write(reinterpret_cast<const char*>(bgrPixels.data()),
+	           static_cast<std::streamsize>(bgrPixels.size()));
+
+	if (!file) {
+		throw std::runtime_error("Failed to write TGA data");
+	}
+
+	jngl::debug("TGA file written successfully: {}", filename.string());
 }
 #endif
