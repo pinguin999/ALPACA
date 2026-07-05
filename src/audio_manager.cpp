@@ -53,7 +53,6 @@ void AudioManager::stopFadeMusic()
     Channels::handle().music_fadeout.stopAll();
 }
 
-// TODO: implement crossfade using an additional volume factor
 void AudioManager::loopMusic(const std::string &filePath)
 {
     // if the music is the same as already playing, do nothing
@@ -71,6 +70,19 @@ void AudioManager::loopMusic(const std::string &filePath)
     // now start the new music
     currentMusic = filePath;
     Channels::handle().music.loop(filePath);
+}
+
+void AudioManager::loopAmbient(const std::string &filePath)
+{
+    // if the music is the same as already playing, do nothing
+    if (currentAmbient.contains(filePath))
+    {
+        return;
+    }
+
+    // now start the ambient sounds
+    currentAmbient.insert(filePath);
+    Channels::handle().ambient.loop(filePath);
 }
 
 void AudioManager::setSoundVolume(float volume)

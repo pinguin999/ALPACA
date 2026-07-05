@@ -22,6 +22,8 @@ public:
     void loopMusic(const std::string &filePath);
     void stopMusic();
 
+    void loopAmbient(const std::string &filePath);
+
     void stopFadeMusic();
 
     void setSoundVolume(float volume);
@@ -36,6 +38,7 @@ public:
 
 private:
     std::string currentMusic;
+    std::set<std::string> currentAmbient;
     std::map<std::string, std::shared_ptr<jngl::SoundFile>> loadedSounds = {};
 
     float soundVolume = 1.0f;

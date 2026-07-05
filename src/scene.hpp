@@ -48,6 +48,7 @@ private:
     YAML::Node json;
 
     std::optional<std::string> backgroundMusic;
+    std::vector<std::string> ambientMusic;
 
     std::weak_ptr<Game> game;
 };

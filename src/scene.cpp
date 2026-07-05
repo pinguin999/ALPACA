@@ -192,6 +192,16 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         this->backgroundMusic = {};
     }
 
+    if (json["ambientMusic"].IsDefined() && !json["ambientMusic"].IsNull())
+    {
+        this->ambientMusic = json["ambientMusic"].as<std::vector<std::string>>();
+    }
+    else
+    {
+        this->ambientMusic.clear();
+    }
+
+
     if (!(*game->lua_state)["inactivLayerBorder"].valid())
     {
         game->setInactivLayerBorder(0);
@@ -301,6 +311,10 @@ void Scene::playMusic()
         else
         {
             AudioManager::handle().stopMusic();
+        }
+        for (auto ambient : ambientMusic)
+        {
+            AudioManager::handle().loopAmbient(ambient);
         }
     }
 }
