@@ -6,27 +6,56 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 include(CheckIPOSupported)
 check_ipo_supported(RESULT lto_supported OUTPUT error)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 if(NOT MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color")
+endif()
+
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+	if (NOT DEFINED JNGL_RECORD)
+		set(JNGL_RECORD 1)
+	endif()
 endif()
 
 if( ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	set(USE_FLAGS "-s USE_SDL=2 -s USE_FREETYPE=1 -s USE_VORBIS=1 -s USE_LIBPNG=1 -s DISABLE_EXCEPTION_CATCHING=0 ")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${USE_FLAGS}")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${USE_FLAGS}")
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${USE_FLAGS} -s ASSERTIONS=1 -s FULL_ES3=1 --pre-js pre.js -lidbfs.js -s FORCE_FILESYSTEM -s INITIAL_MEMORY=1024MB --preload-file data ") #-s ALLOW_MEMORY_GROWTH=1 --source-map-base https://pac4.gitlab.io/pac/ -g
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${USE_FLAGS} -s ASSERTIONS=1 -s FULL_ES3=1 --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/pre.js -lidbfs.js -s FORCE_FILESYSTEM -s INITIAL_MEMORY=1024MB --preload-file data ") #-s ALLOW_MEMORY_GROWTH=1 --source-map-base https://pac4.gitlab.io/pac/ -g
 	if (CMAKE_BUILD_TYPE MATCHES "Debug")
 		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O0 -g --source-map-base http://0.0.0.0:8000/")  # https://developer.chrome.com/blog/wasm-debugging-2020/ and https://groups.google.com/g/emscripten-discuss/c/DEmpyGoq6kE --source-map-base https://pac4.gitlab.io/pac/
 	endif()
 	SET(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif()
 
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/jngl/CMakeLists.txt")
+	execute_process(
+		COMMAND git submodule update --init subprojects/jngl
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMAND_ERROR_IS_FATAL ANY
+	)
+endif()
 add_subdirectory(subprojects/jngl)
-add_subdirectory(subprojects/spine-runtimes/spine-c)
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/spine-runtimes/spine-cpp")
+	execute_process(
+		COMMAND git submodule update --init subprojects/spine-runtimes
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMAND_ERROR_IS_FATAL ANY
+	)
+endif()
+set(SPINE_SET_COMPILER_FLAGS OFF CACHE BOOL "Set compiler flags" FORCE)
+add_compile_definitions(SPINE_USE_STD_FUNCTION)
+add_subdirectory(subprojects/spine-runtimes/spine-cpp)
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/schnacker/CMakeLists.txt")
+	execute_process(
+		COMMAND git submodule update --init --recursive subprojects/schnacker
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMAND_ERROR_IS_FATAL ANY
+	)
+endif()
 add_subdirectory(subprojects/schnacker/)
 
-set(PAC_SANITIZE_ADDRESS_DEFAULT ON)
+set(PAC_SANITIZE_ADDRESS_DEFAULT OFF)
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR ANDROID OR CMAKE_BUILD_TYPE MATCHES "Release")
 	set(PAC_SANITIZE_ADDRESS_DEFAULT OFF)
 endif()
@@ -41,12 +70,6 @@ file(GLOB SOURCES CONFIGURE_DEPENDS
 	src/input/*.cpp
 	src/dialog/*.cpp
 )
-
-if (NOT CMAKE_BUILD_TYPE MATCHES "Release" AND NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-	file(GLOB SOURCESGIF CONFIGURE_DEPENDS
-		subprojects/gifanimcplusplus/*.cpp)
-	list (APPEND SOURCES ${SOURCESGIF})
-endif()
 
 if(ANDROID)
 	add_library(native_app_glue STATIC
@@ -79,7 +102,7 @@ if (APPLE)
 endif()
 
 target_link_libraries(pac PRIVATE
-	jngl spine-c schnacker
+	jngl spine-cpp schnacker
 )
 
 # Add Tests
@@ -122,18 +145,12 @@ file(GLOB GFX_FILES RELATIVE ${CMAKE_SOURCE_DIR}/data CONFIGURE_DEPENDS data/*.w
 file(GLOB SFX_FILES RELATIVE ${CMAKE_SOURCE_DIR}/data data/sfx/*.ogg)
 # configure_file(src/engine/datafiles.hpp.in include/datafiles.hpp @ONLY)
 target_include_directories(pac PRIVATE ${CMAKE_BINARY_DIR}/include
-										subprojects/spine-runtimes/spine-c/spine-c/include
+										# subprojects/spine-runtimes/spine-cpp/include
 										subprojects/schnacker/src)
-if (NOT CMAKE_BUILD_TYPE MATCHES "Release" AND NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-	target_include_directories(pac PRIVATE subprojects/gifanimcplusplus)
-endif()
 
 if(WIN32)
 	target_compile_definitions(pac PRIVATE _USE_MATH_DEFINES UNICODE)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-	set_target_properties(pac PROPERTIES WIN32_EXECUTABLE 1)
+	set_target_properties(pac PROPERTIES WIN32_EXECUTABLE $<IF:$<CONFIG:Release>,TRUE,FALSE>)
 endif()
 
 if(ANDROID)
@@ -141,20 +158,11 @@ if(ANDROID)
 		${ANDROID_NDK}/sources/android/native_app_glue)
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-	if(lto_supported)
-		message(STATUS "IPO / LTO enabled")
-		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-		set_property(TARGET pac jngl spine-c schnacker PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-	else()
-		message(STATUS "IPO / LTO not supported: <${error}>")
-	endif()
-endif()
-
-if (MSVC AND CMAKE_BUILD_TYPE MATCHES "Debug")
-	target_compile_options(pac PUBLIC "/ZI")
-	target_link_options(pac PUBLIC "/INCREMENTAL")
-	set(lto_supported FALSE)
+if(lto_supported)
+	message(STATUS "IPO / LTO enabled")
+	set_property(TARGET pac jngl spine-cpp schnacker PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+else()
+	message(STATUS "IPO / LTO not supported: <${error}>")
 endif()
 
 if(MSVC)
@@ -162,8 +170,14 @@ if(MSVC)
 	# TODO add /WX
 else()
 	if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-		target_compile_options(pac PRIVATE -std=c++20 -Wall -Wextra -pedantic -Wno-long-long -Wunused -Wnon-virtual-dtor -Wno-align-mismatch )
-	#    TODO Add -Wshadow -Wconversion
+		target_compile_options(pac PRIVATE -std=c++20 -Wall -Wextra -pedantic -Wno-long-long -Wunused -Wnon-virtual-dtor -Wno-align-mismatch -Wpedantic -Wpointer-arith -Wno-missing-braces -Wno-unused-parameter)
+		# -Wdangling only works with clang
+	#    TODO Add -Wshadow -Wconversion -Wmissing-prototypes -Werror
 	# -std=c++20 -O3 -fsanitize=fuzzer,address,undefined -fPIE
 	endif()
+endif()
+
+option(ALPACA_CLANG_TIDY "Run clang-tidy on source files" OFF)
+if(ALPACA_CLANG_TIDY)
+	set_target_properties(pac PROPERTIES CXX_CLANG_TIDY "clang-tidy;--use-color")
 endif()

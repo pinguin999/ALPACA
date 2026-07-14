@@ -1,5 +1,6 @@
 #include "interactable_object.hpp"
 
+#include "jngl/Mat3.hpp"
 #include "skeleton_drawable.hpp"
 #include "game.hpp"
 
@@ -14,33 +15,30 @@ bool InteractableObject::step(bool force)
     if (auto _game = game.lock())
     {
         skeleton->step();
-        spSkeleton_update(skeleton->skeleton, 1.0/60.0);
-        spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_UPDATE);
-        spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
+        bounds->update(*skeleton->skeleton, true);
 
 #ifndef NDEBUG
-        if (_game->editMode && jngl::mousePressed())
+        if (_game->editMode  && !abs_position)
         {
-            dragposition = jngl::getMousePos();
-        }
-        if (_game->editMode && jngl::mouseDown())
-        {
-            auto mouse_pose = jngl::getMousePos();
-
-            double DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
-            if (std::sqrt((mouse_pose.x - position.x) * (mouse_pose.x - position.x) + (mouse_pose.y - position.y) * (mouse_pose.y - position.y)) < DEBUG_GRAP_DISTANCE)
-            {
-                position += (jngl::getMousePos() - dragposition) / _game->getCameraZoom();
-                jngl::debugLn(position);
-                dragposition = jngl::getMousePos();
-#ifndef NDEBUG
-                _game->currentScene->updateObjectPosition(id, position);
-#endif
+            const float DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
+            mouseOver = false;
+            for (auto cursor : jngl::input().cursors()) {
+                mouseOver = std::sqrt((cursor.pos().x - position.x) * (cursor.pos().x - position.x) +
+                                      (cursor.pos().y - position.y) * (cursor.pos().y - position.y)) <
+                            DEBUG_GRAP_DISTANCE;
+                if (mouseOver) {
+                    mouseDown = cursor.pressed(position);
+                    break;
+                }
             }
         }
-        if (_game->editMode && jngl::mousePressed())
-        {
-            dragposition = jngl::getMousePos();
+        if (mouseDown) {
+            position = mouseDown->newPos();
+            jngl::debug("{} \"{}\"", position, luaIndex);
+            _game->currentScene->updateObjectPosition(id, position);
+            if (mouseDown->released()) {
+                mouseDown = std::nullopt;
+            }
         }
 #endif
 
@@ -62,19 +60,18 @@ bool InteractableObject::step(bool force)
         // TODO Double Click on Objekts
         if (_game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
         {
-            jngl::Vec2 click_position = _game->pointer->getPosition();
+            jngl::Vec2 click_position = _game->pointer->getWorldPosition();
             if (abs_position)
             {
-                click_position -= _game->getCameraPosition();
+                click_position = _game->pointer->getPosition();
             }
 
-            auto *collision = spSkeletonBounds_containsPoint(bounds, static_cast<float>(click_position.x) - static_cast<float>(position.x), static_cast<float>(click_position.y) - static_cast<float>(position.y));
+            auto *collision = bounds->containsPoint(static_cast<float>(click_position.x) - static_cast<float>(position.x), static_cast<float>(click_position.y) - static_cast<float>(position.y));
             if (collision)
             {
-                collision_script = collision->super.super.name;
+                collision_script = collision->getName().buffer();
                 if (collision_script != "non_walkable_area") {
-                    jngl::debug("clicked interactable item ");
-                    jngl::debugLn(collision_script);
+                    jngl::debug("clicked interactable item {}", collision_script);
                     _game->pointer->setPrimaryHandled();
                     _game->runAction(collision_script, getptr());
                 }
@@ -96,66 +93,72 @@ void InteractableObject::registerToDelete()
 
     if (auto _game = game.lock())
     {
-        auto lua_object = _game->getLuaPath(luaIndex);
-        _game->lua_state->script(lua_object + " = nil");
+        _game->getObjectTable(luaIndex) = sol::lua_nil;
     }
 }
 
 void InteractableObject::draw() const
 {
-    if (!visible)
-    {
-        return;
-    }
-
-    jngl::pushMatrix();
+    auto mv = jngl::modelview();
     if (abs_position)
     {
-        jngl::reset();
+        mv = jngl::Mat3();
         if (auto _game = game.lock())
         {
-            jngl::scale(_game->getCameraZoom());
+            mv.scale(_game->getCameraZoom());
         }
     }
     else
     {
-        jngl::translate(position);
+        mv.translate(position);
     }
-    jngl::rotate(getRotation());
+    mv.rotate(getRotation());
 
-#ifndef NDEBUG
-    if (auto _game = game.lock())
+    if (visible)
     {
-        skeleton->debugdraw = _game->enableDebugDraw;
-    }
+        if (auto _game = game.lock())
+        {
+#ifndef NDEBUG
+            skeleton->debugdraw = _game->enableDebugDraw;
 #endif
+            skeleton->hotspot_highlight = _game->enableHotspotHighlight;
 
-    skeleton->draw();
+            skeleton->draw(mv);
+
+            if (_game->enableHotspotHighlight && _game->getInactivLayerBorder() <= layer)
+            {
+                for (auto hotspot : skeleton->hotspots)
+                {
+                    auto pos = mv;
+                    pos.translate(hotspot);
+
+                    if(_game->hotspot)
+                    {
+                        _game->hotspot->draw(pos);
+                    }else{
+                        jngl::drawCircle(pos, 5);
+                    }
+                }
+            }
+        }
+    }
 
 #ifndef NDEBUG
     if (auto _game = game.lock())
     {
-        if (_game->editMode)
+        if (_game->editMode && !abs_position)
         {
             const float DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
-            jngl::drawCircle(jngl::Vec2(0, 0), DEBUG_GRAP_DISTANCE);
+            jngl::drawCircle(mv, DEBUG_GRAP_DISTANCE,
+                             jngl::Rgba(0, mouseOver ? 0.7 : (mouseDown ? 0.4 : 0.9), 0, 0.9));
             jngl::Text pposition;
-            pposition.setText("x: " + std::to_string(position.x) + "\ny: " + std::to_string(position.y));
-            jngl::setFontColor(jngl::Color(255, 0, 0));
+            pposition.setText("x: " + std::to_string(std::lround(position.x)) +
+                              "\ny: " + std::to_string(std::lround(position.y)));
+            jngl::setFontColor(jngl::Rgba(1.0, 0, 0, 1.0));
             pposition.setAlign(jngl::Alignment::CENTER);
             pposition.setCenter(0, 0);
-            pposition.draw();
+            pposition.draw(mv);
         }
     }
 #endif
-
-    jngl::popMatrix();
-}
-
-void InteractableObject::goToPosition(jngl::Vec2 position, const sol::function &callback)
-{
-    if (auto _game = game.lock())
-    {
-        _game->player->addTargetPositionImmediately(this->position + position, callback);
-    }
 }

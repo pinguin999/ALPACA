@@ -3,44 +3,51 @@
 #include <jngl.hpp>
 
 #include <spine/spine.h>
-#include <spine/extension.h>
 
-_SP_ARRAY_DECLARE_TYPE(spColorArray, spColor)
-
-namespace spine {
-
-class SkeletonDrawable : public jngl::Drawable {
+class TextureLoader : public spine::TextureLoader {
 public:
-	spSkeleton* skeleton;
-	spAnimationState* state;
+	void load(spine::AtlasPage& page, const spine::String& path) override;
+	void unload(void* texture) override;
+};
+
+
+class SkeletonDrawable {
+public:
+	static TextureLoader textureLoader;
+	std::unique_ptr<spine::Skeleton> skeleton;
+	std::unique_ptr<spine::AnimationState> state;
 	float timeScale;
 
-	explicit SkeletonDrawable(spSkeletonData* skeleton, spAnimationStateData* stateData = 0);
-	~SkeletonDrawable() override;
+	explicit SkeletonDrawable(spine::SkeletonData& skeleton,
+	                          std::unique_ptr<spine::AnimationStateData> = nullptr);
+	~SkeletonDrawable();
 
-    void endAnimation(int trackIndex) const;
-
-    void step() override;
-
-	void draw() const override;
-
+    void step();
 	void setAlpha(float);
 
+	void draw(const jngl::Mat3& modelview = jngl::modelview()) const;
+
+	bool hotspot_highlight = false;
+	mutable std::vector<jngl::Vec2> hotspots;
 #ifndef NDEBUG
 	bool debugdraw = false;
 #endif
 
 private:
+	struct alignas(64) HotspotCache {
+		std::vector<float> vertices;
+		jngl::Vec2 center;
+	};
+	std::vector<HotspotCache> hotspotCache;
+
+	std::unique_ptr<spine::AnimationStateData> animationStateData;
+	mutable spine::Array<float> worldVertices;
+	mutable spine::Array<unsigned short> quadIndices;
+	mutable spine::SkeletonClipping clipper;
 	float alpha = 1.f;
-	bool ownsAnimationStateData;
-	float* worldVertices;
-	spFloatArray* tempUvs;
-	spColorArray* tempColors;
-	spSkeletonClipping* clipper;
+
 };
 
 
-spBoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spSkeletonBounds *self, const std::string &name, float x, float y);
-spBoundingBoxAttachment *spSkeletonBounds_containsPointNotMatchingName(spSkeletonBounds *self, const std::string &name, float x, float y);
-
-} // namespace spine
+spine::BoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spine::SkeletonBounds *self, const std::string &name, float x, float y);
+spine::BoundingBoxAttachment *spSkeletonBounds_containsPointNotMatchingName(spine::SkeletonBounds *self, const std::string &name, float x, float y);

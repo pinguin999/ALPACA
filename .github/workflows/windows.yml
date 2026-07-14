@@ -8,7 +8,7 @@ jobs:
   msvc:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
       with:
         submodules: recursive
     - name: Configure
@@ -20,7 +20,7 @@ jobs:
     - name: Build Release
       run: cmake --build build --parallel --config Release
     - name: Upload build as an Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v7
       with:
         name: windows_build
         path: build

@@ -22,7 +22,7 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //	SOFTWARE.
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(EMSCRIPTEN))
+#if (!defined(NDEBUG) && !defined(ANDROID) && !defined(__EMSCRIPTEN__))
 
 #ifndef FILEWATCHER_H
 #define FILEWATCHER_H
@@ -673,7 +673,7 @@ namespace filewatch {
                   if (stat.st_mode & S_IFREG || stat.st_mode & S_IFLNK) {
                         size_t len = strlen(buf);
 
-                        for (size_t i = len - 1; i >= 0; i--) {
+                        for (int i = len - 1; i >= 0; i--) {
                               if (buf[i] == '/') {
                                     buf[i] = '\0';
                                     break;
@@ -705,7 +705,7 @@ namespace filewatch {
                   if (stat.st_mode & S_IFREG || stat.st_mode & S_IFLNK) {
                         size_t len = strlen(buf);
 
-                        for (size_t i = len - 1; i >= 0; i--) {
+                        for (int i = len - 1; i >= 0; i--) {
                               if (buf[i] == '/') {
                                     buf[i] = '\0';
                                     break;
@@ -908,9 +908,9 @@ namespace filewatch {
                         fstat(entry.second.fd, &stat);
                         if (fdIsRemoved(entry.second.fd)) {
                               events.push_back(EventInfo {
-                                    .event = Event::removed,
                                     .file = entry.first,
-                                    .time = stat.st_ctimespec
+                                    .time = stat.st_ctimespec,
+                                    .event = Event::removed,
                               });
                               continue;
                         }
@@ -920,31 +920,31 @@ namespace filewatch {
 
                         if (pathPair.directory != _path) {
                               events.push_back(EventInfo {
-                                    .event = Event::removed,
                                     .file = entry.first,
-                                    .time = stat.st_ctimespec
+                                    .time = stat.st_ctimespec,
+                                    .event = Event::removed,
                               });
                               continue;
                         }
                         if (entry.first != pathPair.filename) {
                               events.push_back(EventInfo {
-                                    .event = Event::renamed_old,
                                     .file = entry.first,
-                                    .time = stat.st_ctimespec
+                                    .time = stat.st_ctimespec,
+                                    .event = Event::renamed_old,
                               });
                               events.push_back(EventInfo {
-                                    .event = Event::renamed_new,
                                     .file = pathPair.filename,
-                                    .time = stat.st_ctimespec
+                                    .time = stat.st_ctimespec,
+                                    .event = Event::renamed_new,
                               });
                         }
                         else {
                               if (stat.st_mtimespec.tv_sec > entry.second.last_modification) {
                                     entry.second.last_modification = stat.st_mtimespec.tv_sec;
                                     events.push_back(EventInfo {
-                                          .event = Event::modified,
                                           .file = pathPair.filename,
-                                          .time = stat.st_mtimespec
+                                          .time = stat.st_mtimespec,
+                                          .event = Event::modified,
                                     });
                               }
                         }
@@ -962,9 +962,9 @@ namespace filewatch {
 
                               fstat(state.fd, &stat);
                               events.push_back(EventInfo {
-                                    .event = Event::added,
                                     .file = file,
-                                    .time = stat.st_mtimespec
+                                    .time = stat.st_mtimespec,
+                                    .event = Event::added,
                               });
                               newSnapshot.insert(std::make_pair(file, std::move(state)));
                         }

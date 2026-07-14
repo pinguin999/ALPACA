@@ -28,7 +28,7 @@ public:
     void createObjectLua(std::string id, std::string scene);
     void loadObjects(YAML::Node objects);
 
-    std::string getSceneName(){return fileName;};
+    std::string getSceneName();
     double getScale(jngl::Vec2 position);
 
     std::shared_ptr<Background> background;
@@ -40,6 +40,7 @@ public:
     std::unique_ptr<jngl::ImageData> zBufferMap;
 #ifndef NDEBUG
     void writeToFile();
+    void addToFile(const std::string &spine_file);
     void updateObjectPosition(const std::string &id, jngl::Vec2 position);
 #endif
 private:
@@ -47,6 +48,7 @@ private:
     YAML::Node json;
 
     std::optional<std::string> backgroundMusic;
+    std::vector<std::string> ambientMusic;
 
-    const std::weak_ptr<Game> game;
+    std::weak_ptr<Game> game;
 };

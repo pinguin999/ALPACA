@@ -14,7 +14,7 @@ PlayDialog("armchair")
 -- The second function is called after the dialog has been played.
 function takeBananaDialog()
     PlayDialog("banana", function ()
-        PlayAudio("pick-up-item.ogg")
+        PlayAudio("pick-up-item.ogg", "voice")
         AddToInventory()
         SetSkin("inventory")
         SetHidden()

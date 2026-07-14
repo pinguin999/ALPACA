@@ -2,7 +2,6 @@
 
 #include "spine_object.hpp"
 
-#include <array>
 #include <deque>
 #include <jngl.hpp>
 #include <sol/sol.hpp>
@@ -18,7 +17,7 @@ public:
     void draw() const override;
 
     void addTargetPosition(jngl::Vec2 target);
-    void addTargetPositionImmediately(jngl::Vec2 target, const sol::function &callback);
+    void addTargetPositionImmediately(jngl::Vec2 target, std::optional<sol::function> callback);
     void stop_walking();
 
     float getMaxSpeed() const;
@@ -39,4 +38,5 @@ private:
     void setDirection();
 
     std::deque<jngl::Vec2> newPath;
+    std::string script;
 };

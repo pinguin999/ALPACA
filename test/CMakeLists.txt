@@ -9,7 +9,7 @@ file(GLOB UNIT_TESTS_INC_FILES ${PROJECT_SOURCE_DIR}/test/*.hpp)
 file(GLOB UNIT_TESTS_SRC_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp)
 
 # Include paths
-set(UNIT_TESTS_INCLUDES ${PROJECT_INCLUDE_DIR}
+set(UNIT_TESTS_INCLUDES
     ${PROJECT_SOURCE_DIR}/src
     ./../src
     ./../subprojects/schnacker/src
@@ -17,12 +17,10 @@ set(UNIT_TESTS_INCLUDES ${PROJECT_INCLUDE_DIR}
 
 # Assign the include directories
 include_directories(${UNIT_TESTS_INCLUDES})
-include_directories(../subprojects/gifanimcplusplus)
 
 
 #Remove games main.cpp
 get_filename_component(full_path_test_cpp ${PROJECT_SOURCE_DIR}/src/main.cpp ABSOLUTE)
-message("${full_path_test_cpp}")
 
 list(REMOVE_ITEM SOURCES "${full_path_test_cpp}")
 
@@ -32,9 +30,9 @@ add_executable(${PROJECT_UNIT_TESTS_NAME} ${UNIT_TESTS_SRC_FILES} ${SOURCES})
 
 if (APPLE)
     find_library(CoreServices CoreServices)
-    target_link_libraries(${PROJECT_UNIT_TESTS_NAME} PRIVATE jngl schnacker spine-c $<$<CONFIG:Debug>:${CoreServices}>)
+    target_link_libraries(${PROJECT_UNIT_TESTS_NAME} PRIVATE jngl schnacker spine-cpp $<$<CONFIG:Debug>:${CoreServices}>)
 else()
-    target_link_libraries(${PROJECT_UNIT_TESTS_NAME} jngl schnacker spine-c)
+    target_link_libraries(${PROJECT_UNIT_TESTS_NAME} jngl schnacker spine-cpp)
 endif()
 
 enable_testing()

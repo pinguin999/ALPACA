@@ -1,8 +1,6 @@
 #include <jngl/init.hpp>
 #include "game.hpp"
 
-#include <fstream>
-
 #ifndef NDEBUG
 void pac_unload_file(const char* path)
 {
@@ -29,6 +27,10 @@ jngl::AppParameters jnglInit()
 {
 
 	jngl::AppParameters params;
+	auto args = jngl::getArgs();
+	if (args.size() == 1 && args[0] == "--fullscreen") {
+		params.fullscreen = true;
+	}
 	std::srand(std::time(nullptr));
 
 	std::optional<YAML::Node> config;
@@ -37,9 +39,7 @@ jngl::AppParameters jnglInit()
 	{
 		config = YAML::Load(fin.str());
 		params.displayName = (*config)["name"].as<std::string>();
-#ifndef NDEBUG
 		params.screenSize = {double((*config)["screenSize"]["x"].as<int>()), double((*config)["screenSize"]["y"].as<int>())};
-#endif
 		params.minAspectRatio = {double((*config)["minAspectRatio"]["x"].as<int>()), double((*config)["minAspectRatio"]["y"].as<int>())};
 		params.maxAspectRatio = {double((*config)["maxAspectRatio"]["x"].as<int>()), double((*config)["maxAspectRatio"]["y"].as<int>())};
 	}
@@ -58,7 +58,7 @@ jngl::AppParameters jnglInit()
 		jngl::setAntiAliasing(config["antiAliasing"].as<bool>());
 		jngl::setIcon(config["icon"].as<std::string>());
 		auto game = std::make_shared<Game>(config);
-		game->init();
+		game->init(true);
 		return game;
 	};
 

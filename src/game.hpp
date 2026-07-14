@@ -1,14 +1,12 @@
 #pragma once
 
+#include <filesystem>
 #include <jngl.hpp>
-#include <set>
 #include <vector>
 #include <sol/sol.hpp>
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
-#include <gifanim.h>
-#endif
 #include "player.hpp"
 #include "pointer.hpp"
+#include "hotspot.hpp"
 #include "scene.hpp"
 #include "dialog/dialog_manager.hpp"
 #include "audio_manager.hpp"
@@ -18,9 +16,9 @@ class Game : public jngl::Work, public std::enable_shared_from_this<Game>
 public:
     explicit Game(const YAML::Node &config);
     ~Game() override;
-    void init();
+    void init(bool game_start = false);
     void reset();
-    void loadSceneWithFade(std::string level);
+    void loadSceneWithFade(const std::string &level);
     void setupLuaFunctions();
     void configToLua();
     void saveLuaState(const std::string &savefile = "savegame");
@@ -31,6 +29,8 @@ public:
     void step() override;
     void draw() const override;
 
+    bool enableHotspotHighlight = false;
+
 #ifndef NDEBUG
     void debugStep();
     bool editMode = false;
@@ -39,11 +39,16 @@ public:
     bool show_debug_info = true;
     bool room_select_mode = false;
     std::optional<int> tens;
+    static void writeTGA(const std::filesystem::path& filename, int width, int height,
+                        const uint8_t* pixels);
 
     jngl::Text debug_info;
     std::string debug_text = ("Press Tab to enter editmode. \n"
 		"Press F10 to show debug draw. \n"
-		"Press F12 to start/end gif recording. \n"
+#ifdef JNGL_RECORD
+		"Press b to start/end movie recording. \n"
+#endif
+		"Press F12 to take a screenshot. \n"
 		"Press r to reload the scene. \n"
 		"Press l start the game from the beginning. \n"
 		"Press c to save the game. \n"
@@ -76,13 +81,14 @@ public:
     std::shared_ptr<sol::state> lua_state;
     std::shared_ptr<Player> player = nullptr;
     std::shared_ptr<Pointer> pointer = nullptr;
+    std::shared_ptr<Hotspot> hotspot = nullptr;
 
     std::shared_ptr<DialogManager> getDialogManager();
-    AudioManager *getAudioManager();
     void addObjects();
     void removeObjects();
 
     std::shared_ptr<Scene> currentScene = nullptr;
+    std::string nextScene;
     bool reload = false;
     void setInactivLayerBorder(int layer)
     {
@@ -91,8 +97,8 @@ public:
     };
     int getInactivLayerBorder() { return inactivLayerBorder; };
 
-    const std::shared_ptr<SpineObject> getObjectById(std::string objectId);
-    const std::string getLuaPath(std::string objectId);
+    const std::shared_ptr<SpineObject> getObjectById(const std::string &objectId);
+    sol::table_proxy<sol::table, std::tuple<std::string>> getObjectTable(const std::string& objectId);
 
     const std::string cleanLuaString(std::string variable);
     std::vector<std::shared_ptr<SpineObject>> gameObjects;
@@ -101,6 +107,7 @@ public:
 private:
     YAML::Node config;
     void loadScene(const std::string& level);
+    void loadScene_internal();
 
     std::vector<std::shared_ptr<SpineObject>> needToAdd;
     std::vector<std::shared_ptr<SpineObject>> needToRemove;
@@ -111,16 +118,10 @@ private:
     double cameraZoom = 1.0;
     int inactivLayerBorder = 0;
     std::shared_ptr<DialogManager> dialogManager = nullptr;
-    AudioManager audioManager;
+    jngl::FrameBuffer frameBuffer1{jngl::getWindowSize()};
+    jngl::FrameBuffer frameBuffer2{jngl::getWindowSize()};
 
-#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(EMSCRIPTEN))
-    std::shared_ptr<GifAnim> gifAnimation;
-    std::shared_ptr<GifWriter> gifWriter;
-    bool recordingGif = false;
-    std::unique_ptr<uint8_t[]> gifBuffer;
-    int gifGameFrame;
-    double gifTime;
-    const int GIF_FRAME_SKIP = 10;
-    const int GIF_DOWNSCALE_FACTOR = 2;
+#if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
+    void onFileDrop(const std::filesystem::path& path) override;
 #endif
 };

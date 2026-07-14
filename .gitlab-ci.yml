@@ -5,7 +5,7 @@
 # Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
 # Note that environment variables can be set in several places
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
-image: registry.fedoraproject.org/fedora-minimal:37
+image: registry.fedoraproject.org/fedora-minimal:44
 
 test:
   stage: test
@@ -71,11 +71,9 @@ linux:
   - rm -rf build
   - mkdir build
   - cd build
-  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DALPACA_CLANG_TIDY=1
     -GNinja ..
   - TERM=xterm script -qfec "ninja pac" /dev/null
-  - TERM=xterm script -qfec "../subprojects/jngl/data/run-clang-tidy.py" | sed s_$PWD/__
-  - '! grep -Fq "error:" typescript'
 
 linux_debug:
   stage: build
@@ -92,11 +90,9 @@ linux_debug:
   - rm -rf build
   - mkdir build
   - cd build
-  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DALPACA_CLANG_TIDY=1
     -GNinja -DCMAKE_BUILD_TYPE=Debug ..
   - TERM=xterm script -qfec "ninja pac" /dev/null
-  - TERM=xterm script -qfec "../subprojects/jngl/data/run-clang-tidy.py" | sed s_$PWD/__
-  - '! grep -Fq "error:" typescript'
 
 linux_release:
   stage: build
@@ -113,11 +109,9 @@ linux_release:
   - rm -rf build
   - mkdir build
   - cd build
-  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+  - CC=clang CXX=clang++ CXXFLAGS=-stdlib=libc++ cmake -DALPACA_CLANG_TIDY=1
     -GNinja -DCMAKE_BUILD_TYPE=Release ..
   - TERM=xterm script -qfec "ninja pac" /dev/null
-  - TERM=xterm script -qfec "../subprojects/jngl/data/run-clang-tidy.py" | sed s_$PWD/__
-  - '! grep -Fq "error:" typescript'
 
 windows:
   stage: build
@@ -202,7 +196,7 @@ docs:
   script:
     - microdnf install -y python3-devel
     - pip install pipenv
-    - pipenv install -d --python 3.12
+    - pipenv install -d --python 3.14
     - cd lua-docs
     - pipenv run mkdocs build
   artifacts:

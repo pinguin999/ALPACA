@@ -2,7 +2,6 @@
 
 #include "spine_object.hpp"
 
-#include <array>
 #include <jngl.hpp>
 #include <sol/sol.hpp>
 
@@ -16,14 +15,13 @@ public:
 
     void draw() const override;
 
-    void goToPosition(jngl::Vec2 position, const sol::function &callback);
-
     void registerToDelete();
     void setLuaIndex(const std::string &index) { luaIndex = index; };
 
 private:
     std::string luaIndex;
 #ifndef NDEBUG
-    jngl::Vec2 dragposition = jngl::Vec2(0, 0);
+    bool mouseOver = false;
+    std::optional<jngl::MouseInfo::Down> mouseDown;
 #endif
 };

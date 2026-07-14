@@ -13,6 +13,9 @@
         "y": 9
     },
     "default_font": "fonts/ABeeZee-Regular.ttf",
+    "default_font_color": "#ffffff",
+    "default_font_selected_color": "#ffffff",
+    "default_font_not_selected_color": "#9c9c9c",
     "player": "spineboy-ess",
     "pointer": "pointer",
     "dialog": "dialog/dialogs.schnack",

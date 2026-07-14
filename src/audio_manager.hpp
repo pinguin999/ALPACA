@@ -1,30 +1,50 @@
 #pragma once
 
-#include <string>
 #include <map>
 #include <jngl.hpp>
 
-class AudioManager
+struct Channels : public jngl::Singleton<Channels> {
+    jngl::Channel& main = jngl::Channel::main();
+    jngl::Channel music;
+    jngl::Channel voice;
+    jngl::Channel sounds;
+    jngl::Channel ambient;
+
+    jngl::Channel music_fadeout;
+};
+
+class AudioManager : public jngl::Singleton<AudioManager>
 {
 public:
-    AudioManager();
+    void step();
+    void fadeLoopMuisc(const std::string &filePath);
+
     void loopMusic(const std::string &filePath);
     void stopMusic();
-    std::shared_ptr<jngl::SoundFile> loadSound(const std::string &filePath);
+
+    void loopAmbient(const std::string &filePath);
+
+    void stopFadeMusic();
 
     void setSoundVolume(float volume);
     void setVoiceVolume(float volume);
     void setMusicVolume(float volume);
+    void setAmbientVolume(float volume);
 
     float getSoundVolume() const;
     float getVoiceVolume() const;
     float getMusicVolume() const;
+    float getAmbientVolume() const;
 
 private:
-    std::shared_ptr<jngl::SoundFile> currentMusic = {};
+    std::string currentMusic;
+    std::set<std::string> currentAmbient;
     std::map<std::string, std::shared_ptr<jngl::SoundFile>> loadedSounds = {};
 
-    float soundVolume = 0.8f;
+    float soundVolume = 1.0f;
     float voiceVolume = 1.0f;
-    float musicVolume = 0.5f;
+    float musicVolume = 1.0f;
+    float ambientVolume = 1.0f;
+
+    std::optional<float> fadeStep;
 };

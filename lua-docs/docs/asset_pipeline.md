@@ -49,6 +49,9 @@ For the Windows version of ALPACA, the prepare_assets script is bundled into pre
         "y": 9
     },
     "default_font": "fonts/ABeeZee-Regular.ttf",    # Font for all ingame text
+    "default_font_color": "#000000",                # Font color used for normal text
+    "default_font_selected_color": "#00ff00",       # Font color used for selected choise
+    "default_font_not_selected_color": "#ffffff",   # Font color for choises not selected
     "player": "spineboy-ess",                       # The Spine file of the player
     "pointer": "pointer",                           # The Spine file of the mouse pointer
     "dialog": "dialog/dialogs.schnack",             # Path to the .schnack file with all dialogs
@@ -61,9 +64,6 @@ For the Windows version of ALPACA, the prepare_assets script is bundled into pre
     "gamepad_speed_multiplier": 11.0,               # Gamepad movement speed multiplier
     "inventory_default_skin": "default",            # AddToInventory sets this skin on objects
     "player_default_skin": "default",               # The skin the player starts with
-    "player_side_skin": "default",                  # Skin to use when the player moves to the side
-    "player_front_skin": "default",                 # Skin to use when the player moves down
-    "player_up_skin": "default",                    # Skin to use when the player moves up
     "player_walk_animation": "walk",                # Animation to play when the player is walking
     "player_beam_animation": "aim",                 # Animation to play after a double click
     "player_idle_animation": "idle",                # Animation to play when the player is idle

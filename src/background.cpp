@@ -1,10 +1,10 @@
 #include "background.hpp"
 
+#include "jngl/matrix.hpp"
 #include "skeleton_drawable.hpp"
 #include "game.hpp"
 
 #include <cmath>
-#include <limits>
 
 Background::Background(const std::shared_ptr<Game> &game, const std::string &spine_file) : SpineObject(game, spine_file, "Background")
 {
@@ -14,11 +14,9 @@ Background::Background(const std::shared_ptr<Game> &game, const std::string &spi
 void Background::stepSpineAndNavigation()
 {
     skeleton->step();
-    spSkeleton_update(skeleton->skeleton, 1.0/60.0);
-    spSkeleton_updateWorldTransform(skeleton->skeleton, SP_PHYSICS_UPDATE);
-    spSkeletonBounds_update(bounds, skeleton->skeleton, 1);
-    corners = getCorners();
-    forbidden_corners = getForbiddenCorners();
+    bounds->update(*skeleton->skeleton, true);
+    updateCorners();
+    updateForbiddenCorners();
 }
 
 bool Background::step(bool force)
@@ -48,112 +46,93 @@ bool Background::stepClickableRegions(bool force)
 
         if (_game->pointer && _game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
         {
-            const jngl::Vec2 mousePos = _game->pointer->getPosition();
-            auto *collision = spine::spSkeletonBounds_containsPointNotMatchingName(bounds, "walkable_area", static_cast<float>(mousePos.x) - static_cast<float>(position.x), static_cast<float>(mousePos.y) - static_cast<float>(position.y));
-            // TODO Double Click on Regions
-            if (collision)
-            {
-                collision_script = collision->super.super.name;
-                jngl::debug("clicked interactable region ");
-                jngl::debugLn(collision_script);
-                _game->pointer->setPrimaryHandled();
-                _game->runAction(collision_script, getptr());
-            }
-        }
-    }
+			const jngl::Vec2 mousePos = _game->pointer->getWorldPosition();
+			const auto* collision = spSkeletonBounds_containsPointNotMatchingName(
+			    bounds.get(), "walkable_area",
+			    static_cast<float>(mousePos.x) - static_cast<float>(position.x),
+			    static_cast<float>(mousePos.y) - static_cast<float>(position.y));
+			// TODO Double Click on Regions
+			if (collision) {
+				collision_script = collision->getName().buffer();
+				jngl::debug("clicked interactable region {}", collision_script);
+				_game->pointer->setPrimaryHandled();
+				_game->runAction(collision_script, getptr());
+			}
+		}
+	}
 
-    return deleted;
+	return deleted;
 }
 
-void Background::draw() const
-{
-    jngl::pushMatrix();
-    jngl::translate(position);
-    jngl::rotate(getRotation());
-
+void Background::draw() const {
+    if (auto _game = game.lock()) {
 #ifndef NDEBUG
-    if (auto _game = game.lock())
-    {
         skeleton->debugdraw = _game->enableDebugDraw;
-    }
 #endif
+        skeleton->hotspot_highlight = _game->enableHotspotHighlight;
 
-    skeleton->draw();
+        auto mv = jngl::modelview().translate(position).rotate(getRotation());
+        skeleton->draw(mv);
 
-#ifndef NDEBUG
-    if (auto _game = game.lock())
-    {
-        if (_game->enablezMapDebugDraw && sprite)
-        {
-            sprite->draw();
-        }
-    }
-#endif
+        if (_game->enableHotspotHighlight && _game->getInactivLayerBorder() <= layer) {
+            for (auto hotspot : skeleton->hotspots) {
+                auto pos = mv;
+                pos.translate(hotspot);
 
-#ifndef NDEBUG
-    if (auto _game = game.lock())
-    {
-        if (_game->enableDebugDraw)
-        {
-            jngl::setColor(255, 0, 0);
-            if (_game->player)
-            {
-                for (auto corner : corners)
+                if(_game->hotspot)
                 {
-                    if (hasPathTo(_game->player->getPosition(), corner))
-                    {
-                        jngl::drawLine(_game->player->getPosition(), corner);
+                    _game->hotspot->draw(pos);
+                }else{
+                    jngl::drawCircle(pos, 5);
+                }
+            }
+        }
+
+#ifndef NDEBUG
+        if (_game->enablezMapDebugDraw && sprite) {
+            sprite->draw(mv);
+        }
+
+        if (_game->enableDebugDraw) {
+            jngl::setColor(255, 0, 0);
+            if (_game->player) {
+                for (auto corner : corners) {
+                    if (hasPathTo(_game->player->getPosition(), corner)) {
+                        jngl::drawLine(mv, _game->player->getPosition(), corner);
                     }
                 }
 
                 jngl::setColor(0, 0, 0);
-                for (const auto &forbidden_area : forbidden_corners)
-                {
-                    for (size_t i = 1; i < forbidden_area.size(); i++)
-                    {
-                        jngl::drawLine(forbidden_area.at(i), forbidden_area.at(i - 1));
+                for (const auto& forbidden_area : forbidden_corners) {
+                    for (size_t i = 1; i < forbidden_area.size(); i++) {
+                        jngl::drawLine(mv, forbidden_area.at(i), forbidden_area.at(i - 1));
                     }
                 }
 
                 jngl::setColor(0, 0, 255);
-                for (const auto &forbidden_area : forbidden_corners)
-                {
-                    for (auto forbidden_corner : forbidden_area)
-                    {
-                        if (hasPathTo(_game->player->getPosition(), forbidden_corner))
-                        {
-                            jngl::drawLine(_game->player->getPosition(), forbidden_corner);
+                for (const auto& forbidden_area : forbidden_corners) {
+                    for (auto forbidden_corner : forbidden_area) {
+                        if (hasPathTo(_game->player->getPosition(), forbidden_corner)) {
+                            jngl::drawLine(mv, _game->player->getPosition(), forbidden_corner);
                         }
                     }
                 }
 
                 jngl::setColor(255, 255, 0);
-                auto debugPath = getPathToTarget(_game->player->getPosition(), _game->pointer->getPosition());
-                for (size_t i = 1; i < debugPath.size(); i++)
-                {
-                    jngl::drawLine(debugPath[i - 1], debugPath[i]);
+                auto debugPath = getPathToTarget(_game->player->getPosition(), _game->pointer->getWorldPosition());
+                for (size_t i = 1; i < debugPath.size(); i++) {
+                    jngl::drawLine(mv, debugPath[i - 1], debugPath[i]);
                 }
             }
 
-            auto point_names = getPointNames();
-            for (const auto &point_name : point_names)
-            {
-                auto pos = getPoint(point_name);
-                if (pos)
-                {
-                    jngl::drawCircle(jngl::modelview().translate(jngl::Vec2(pos->x, pos->y)), 1);
-                    jngl::Text bbname;
-                    bbname.setText(point_name);
-                    bbname.setAlign(jngl::Alignment::CENTER);
-                    bbname.setCenter(pos->x, pos->y);
-                    bbname.draw();
-                }
-            }
         }
-    }
 #endif
+    }
+}
 
-    jngl::popMatrix();
+double Background::getZ() const
+{
+    return -100.0;
 }
 
 enum class Result {
@@ -163,7 +142,7 @@ enum class Result {
 };
 
 // Quelle: https://www.youtube.com/watch?v=c065KoXooSw
-Result lineIntersection(jngl::Vec2 a, jngl::Vec2 b, jngl::Vec2 c, jngl::Vec2 d)
+static Result lineIntersection(jngl::Vec2 a, jngl::Vec2 b, jngl::Vec2 c, jngl::Vec2 d)
 {
     if (boost::qvm::mag_sqr(a - c) < 0.1) {
         return boost::qvm::mag_sqr(b - d) < 0.1 ? Result::TWO_POINTS_EQUAL
@@ -229,7 +208,7 @@ std::deque<jngl::Vec2> Background::getPathToTarget(jngl::Vec2 start, jngl::Vec2 
             }
         }
 
-        if (current->coordinates == target)
+        if (boost::qvm::mag_sqr(current->coordinates - target) < 1)
         {
             break;
         }
@@ -293,7 +272,7 @@ Node *Background::findNodeOnList(const std::vector<Node *> &nodes_, jngl::Vec2 c
 {
     for (const auto node : nodes_)
     {
-        if (node->coordinates == coordinates_)
+        if (boost::qvm::mag_sqr(node->coordinates - coordinates_) < 0.5)
         {
             return node;
         }
@@ -359,66 +338,51 @@ bool Background::hasPathTo(jngl::Vec2 start, jngl::Vec2 target) const
     return is_walkable(start + direction); // move 1 pixel and see if that wouldn't leave the walkable area
 }
 
-std::vector<jngl::Vec2> Background::getCorners() const
-{
-    std::vector<jngl::Vec2> result;
-    if (bounds->count == 0)
-    {
-        return result;
-    }
-    for (int iPoly = 0; iPoly < bounds->count; iPoly++)
-    {
-        const auto *polygonName = bounds->boundingBoxes[iPoly]->super.super.name;
-        if (polygonName == std::string("walkable_area"))
-        {
-            // bounds->polygons
-            for (int i = 0; i < (bounds->polygons[iPoly])->count; i += 2)
-            {
-                result.emplace_back((bounds->polygons[iPoly])->vertices[i + 0], (bounds->polygons[iPoly])->vertices[i + 1]);
+void Background::updateCorners() {
+    corners.clear();
+    spine::Array<spine::BoundingBoxAttachment*>& boundingBoxes = bounds->getBoundingBoxes();
+    spine::Array<spine::Polygon*>& polygons = bounds->getPolygons();
+    for (size_t i = 0; i < boundingBoxes.size(); i++) {
+        const auto* polygonName = boundingBoxes[i]->getName().buffer();
+        if (polygonName == std::string("walkable_area")) {
+            for (int j = 0; j < polygons[i]->_count; j += 2) {
+                corners.emplace_back(polygons[i]->_vertices[j + 0], polygons[i]->_vertices[j + 1]);
             }
             // Add first to the back again.
-            result.emplace_back((bounds->polygons[iPoly])->vertices[0], (bounds->polygons[iPoly])->vertices[1]);
-            break;
+            corners.emplace_back(polygons[i]->_vertices[0], polygons[i]->_vertices[1]);
+            break; // there can only be one walkable area per scene
         }
     }
-
-    return result;
 }
 
-std::vector<std::vector<jngl::Vec2>> Background::getForbiddenCorners() const
-{
-    std::vector<std::vector<jngl::Vec2>> result;
-
-    std::vector<jngl::Vec2> forbidden_area;
-
-    if (auto _game = game.lock())
-    {
-        for (const auto &obj : _game->gameObjects)
-        {
-            for (int iPoly = 0; iPoly < obj->bounds->count; iPoly++)
-            {
-                const auto *polygonName = obj->bounds->boundingBoxes[iPoly]->super.super.name;
-                if (polygonName == std::string("non_walkable_area"))
-                {
-                    // obj->bounds->polygons
-                    for (int i = 0; i < (obj->bounds->polygons[iPoly])->count; i += 2)
-                    {
-                        forbidden_area.emplace_back(((obj->bounds->polygons[iPoly])->vertices[i + 0]) + obj->getPosition().x, ((obj->bounds->polygons[iPoly])->vertices[i + 1]) + obj->getPosition().y);
+void Background::updateForbiddenCorners() {
+    forbidden_corners.clear();
+    if (auto _game = game.lock()) {
+        for (const auto& obj : _game->gameObjects) {
+            if (!obj->getVisible()) {
+                continue;
+            }
+            auto& polygons = obj->bounds->getPolygons();
+            auto& boundingBoxes = obj->bounds->getBoundingBoxes();
+            for (size_t i = 0; i < boundingBoxes.size(); i++) {
+                const auto* polygonName = boundingBoxes[i]->getName().buffer();
+                if (polygonName == std::string("non_walkable_area")) {
+                    std::vector<jngl::Vec2> forbidden_area;
+                    for (int j = 0; j < polygons[i]->_count; j += 2) {
+                        forbidden_area.emplace_back(jngl::Vec2(polygons[i]->_vertices[j + 0], polygons[i]->_vertices[j + 1]) + obj->getPosition());
                     }
                     // Add first to the back again.
-                    forbidden_area.emplace_back(((obj->bounds->polygons[iPoly])->vertices[0]) + obj->getPosition().x, ((obj->bounds->polygons[iPoly])->vertices[1]) + obj->getPosition().y);
-                    result.emplace_back(forbidden_area);
-                    forbidden_area.clear();
+                    forbidden_area.emplace_back(jngl::Vec2(polygons[i]->_vertices[0], polygons[i]->_vertices[1]) + obj->getPosition());
+                    forbidden_corners.emplace_back(std::move(forbidden_area));
                 }
             }
         }
     }
-    return result;
 }
 
 bool Background::is_walkable(jngl::Vec2 position) const
 {
-    const auto walkableResult = spine::spSkeletonBounds_containsPointMatchingName(bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
+    const auto walkableResult = spSkeletonBounds_containsPointMatchingName(bounds.get(), "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y));
     if (!walkableResult)
     {
         return false;
@@ -428,7 +392,10 @@ bool Background::is_walkable(jngl::Vec2 position) const
     {
         for (const auto &obj : _game->gameObjects)
         {
-            auto *non_walkable = spine::spSkeletonBounds_containsPointMatchingName(obj->bounds, "non_walkable_area", static_cast<float>(position.x) - static_cast<float>(obj->getPosition().x), static_cast<float>(position.y) - static_cast<float>(obj->getPosition().y));
+            if (!obj->getVisible()) {
+                continue;
+            }
+            auto *non_walkable = spSkeletonBounds_containsPointMatchingName(obj->bounds.get(), "non_walkable_area", static_cast<float>(position.x) - static_cast<float>(obj->getPosition().x), static_cast<float>(position.y) - static_cast<float>(obj->getPosition().y));
             if (non_walkable)
             {
                 return false;
@@ -438,6 +405,6 @@ bool Background::is_walkable(jngl::Vec2 position) const
 
     // if there is an interactable region and a walkable spot,
     // just interact, don't walk there
-    return spine::spSkeletonBounds_containsPointNotMatchingName(
-               bounds, "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y)) == nullptr;
+    return spSkeletonBounds_containsPointNotMatchingName(
+               bounds.get(), "walkable_area", static_cast<float>(position.x), static_cast<float>(position.y)) == nullptr;
 }

@@ -3,7 +3,6 @@
 #include "spine_object.hpp"
 #include "input/control.hpp"
 
-#include <array>
 #include <jngl.hpp>
 #include <memory>
 
@@ -11,7 +10,7 @@ class Pointer : public SpineObject
 {
 public:
     explicit Pointer(std::shared_ptr<Game> game, const std::string &spine_file);
-    ~Pointer() = default;
+    ~Pointer() override = default;
 
     bool step(bool force = false) override;
 
@@ -37,6 +36,8 @@ public:
     jngl::Vec2 getSecondaryMovement() const;
     bool primary() const;
     bool secondary() const;
+
+    jngl::Vec2 getWorldPosition();
 
     std::vector<std::shared_ptr<SpineObject>> attachedObjects;
 
