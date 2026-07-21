@@ -158,7 +158,8 @@ if(ANDROID)
 		${ANDROID_NDK}/sources/android/native_app_glue)
 endif()
 
-if(lto_supported)
+if(lto_supported AND NOT WIN32) # LTO broken with MinGW: multiple definition of `spine::Bone::~Bone()'
+                                # see https://sourceforge.net/p/mingw-w64/bugs/829/
 	message(STATUS "IPO / LTO enabled")
 	set_property(TARGET pac jngl spine-cpp schnacker PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 else()
