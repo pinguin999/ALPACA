@@ -968,7 +968,7 @@ void Game::setupLuaFunctions()
     /// float level: A value between 0.0 and 1.0
     /// string channel: music, voice, sounds or ambient
     lua_state->set_function("setSoundVolume",
-                            [this](const float level, const std::string& channel)
+                            [](const float level, const std::string& channel)
 							{
         if (channel == "music") {
             AudioManager::handle().setMusicVolume(level);
@@ -987,7 +987,7 @@ void Game::setupLuaFunctions()
     /// string channel: music, voice, sounds or ambient
     /// returns: the sound volume
     lua_state->set_function("setSoundVolume",
-                            [this](const std::string& channel)
+                            [](const std::string& channel)
 							{
         if (channel == "music") {
             return AudioManager::handle().getMusicVolume();
