@@ -5,7 +5,7 @@
 class SceneFade : public jngl::Work {
 public:
     SceneFade(std::shared_ptr<jngl::Work> game, std::function<void()> loadScene, std::optional<std::string> backgroundMusic);
-    ~SceneFade();
+    ~SceneFade() override;
 
     void step() override;
     void draw() const override;
