@@ -39,7 +39,7 @@ public:
 private:
     std::string currentMusic;
     std::set<std::string> currentAmbient;
-    std::map<std::string, std::shared_ptr<jngl::SoundFile>> loadedSounds = {};
+    std::map<std::string, std::shared_ptr<jngl::SoundFile>> loadedSounds;
 
     float soundVolume = 1.0f;
     float voiceVolume = 1.0f;
