@@ -120,7 +120,7 @@ suite alpaca_test_suite = []
                     }
                 }
             }
-            jngl::debug("OPTIONS {}", options);
+            jngl::debug("FRAME {} OPTIONS {}", i, options);
 
             if (actions.empty()) {
                 continue;

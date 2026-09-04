@@ -1,10 +1,23 @@
 #include "scene_fade.hpp"
 
+#include "audio_manager.hpp"
+
 SceneFade::SceneFade(std::shared_ptr<jngl::Work> game,
-                     std::function<void()> loadScene)
-    : loadScene(std::move(loadScene)), game(std::move(game)) {}
+                     std::function<void()> loadScene, std::optional<std::string> backgroundMusic)
+    : loadScene(std::move(loadScene)), game(std::move(game)), backgroundMusic(backgroundMusic) {
+    if (backgroundMusic) {
+        AudioManager::handle().fadeLoopMuisc(backgroundMusic.value());
+    }
+    }
+
+SceneFade::~SceneFade(){
+    AudioManager::handle().stopFadeMusic();
+}
 
 void SceneFade::step() {
+    if (backgroundMusic) {
+        AudioManager::handle().step();
+    }
     if (loadScene) {
         alpha += 0.05f;
         if (alpha > 1) {

@@ -10,7 +10,7 @@ void replaceAll(std::string& subject, std::string_view search, std::string_view 
 }
 
 std::stringstream loadAndReplace(std::string_view name, int width, int height) {
-    std::stringstream buffer = jngl::readAsset(std::string(name) + ".frag");
+    std::stringstream buffer = jngl::readAsset("shader/" + std::string(name) + ".frag");
     std::string tmp = buffer.str();
     replaceAll(tmp, "FBO_WIDTH", std::format("{}.f", width));
     replaceAll(tmp, "FBO_HEIGHT", std::format("{}.f", height));

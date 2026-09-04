@@ -39,6 +39,8 @@ public:
     bool show_debug_info = true;
     bool room_select_mode = false;
     std::optional<int> tens;
+    static void writeTGA(const std::filesystem::path& filename, int width, int height,
+                        const uint8_t* pixels);
 
     jngl::Text debug_info;
     std::string debug_text = ("Press Tab to enter editmode. \n"
@@ -46,6 +48,7 @@ public:
 #ifdef JNGL_RECORD
 		"Press b to start/end movie recording. \n"
 #endif
+		"Press F12 to take a screenshot. \n"
 		"Press r to reload the scene. \n"
 		"Press l start the game from the beginning. \n"
 		"Press c to save the game. \n"
@@ -81,7 +84,6 @@ public:
     std::shared_ptr<Hotspot> hotspot = nullptr;
 
     std::shared_ptr<DialogManager> getDialogManager();
-    AudioManager *getAudioManager();
     void addObjects();
     void removeObjects();
 
@@ -116,7 +118,6 @@ private:
     double cameraZoom = 1.0;
     int inactivLayerBorder = 0;
     std::shared_ptr<DialogManager> dialogManager = nullptr;
-    AudioManager audioManager;
     jngl::FrameBuffer frameBuffer1{jngl::getWindowSize()};
     jngl::FrameBuffer frameBuffer2{jngl::getWindowSize()};
 

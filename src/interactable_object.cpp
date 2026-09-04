@@ -153,7 +153,8 @@ void InteractableObject::draw() const
                              jngl::Rgba(0, mouseOver ? 0.7 : (mouseDown ? 0.4 : 0.9), 0, 0.9));
             jngl::Text pposition;
             pposition.setText("x: " + std::to_string(std::lround(position.x)) +
-                              "\ny: " + std::to_string(std::lround(position.y)));
+                              "\ny: " + std::to_string(std::lround(position.y)) +
+                              "\n" + id);
             jngl::setFontColor(jngl::Rgba(1.0, 0, 0, 1.0));
             pposition.setAlign(jngl::Alignment::CENTER);
             pposition.setCenter(0, 0);

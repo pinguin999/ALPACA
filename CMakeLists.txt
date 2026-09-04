@@ -18,7 +18,7 @@ if (CMAKE_BUILD_TYPE MATCHES "Debug")
 endif()
 
 if( ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-	set(USE_FLAGS "-s USE_SDL=2 -s USE_FREETYPE=1 -s USE_VORBIS=1 -s USE_LIBPNG=1 -s DISABLE_EXCEPTION_CATCHING=0 ")
+	set(USE_FLAGS "-s USE_SDL=3 -s USE_FREETYPE=1 -s USE_VORBIS=1 -s USE_LIBPNG=1 -s DISABLE_EXCEPTION_CATCHING=0 ")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${USE_FLAGS}")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${USE_FLAGS}")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${USE_FLAGS} -s ASSERTIONS=1 -s FULL_ES3=1 --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/pre.js -lidbfs.js -s FORCE_FILESYSTEM -s INITIAL_MEMORY=1024MB --preload-file data ") #-s ALLOW_MEMORY_GROWTH=1 --source-map-base https://pac4.gitlab.io/pac/ -g
@@ -158,11 +158,12 @@ if(ANDROID)
 		${ANDROID_NDK}/sources/android/native_app_glue)
 endif()
 
-	if(lto_supported)
-		message(STATUS "IPO / LTO enabled")
+if(lto_supported AND NOT WIN32) # LTO broken with MinGW: multiple definition of `spine::Bone::~Bone()'
+                                # see https://sourceforge.net/p/mingw-w64/bugs/829/
+	message(STATUS "IPO / LTO enabled")
 	set_property(TARGET pac jngl spine-cpp schnacker PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-	else()
-		message(STATUS "IPO / LTO not supported: <${error}>")
+else()
+	message(STATUS "IPO / LTO not supported: <${error}>")
 endif()
 
 if(MSVC)
