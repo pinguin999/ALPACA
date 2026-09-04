@@ -1,5 +1,6 @@
 #include "dialog_manager.hpp"
 #include "../game.hpp"
+#include "jngl/log.hpp"
 
 constexpr int BOX_HEIGHT = 65;
 constexpr int BOX_PADDING = 20;
@@ -31,6 +32,7 @@ void DialogManager::play(const std::string& dialogName, std::optional<sol::funct
     cancelDialog(); // if there is a current dialog, cancel the current one
 
 	if (auto _game = game.lock()) {
+        jngl::debug("DialogManager::play " + dialogName);
         currentDialog = schnackFile->dialogs[dialogName];
         if (currentDialog) {
             currentNode = currentDialog->getEntryNode();
@@ -330,6 +332,10 @@ void DialogManager::continueCurrent()
 
 void DialogManager::cancelDialog()
 {
+    if(currentDialog != nullptr)
+    {
+        jngl::debug("DialogManager::cancelDialog " + currentDialog->name);
+    }
     hideChoices();
     hideCharacterText();
     currentDialog = nullptr;
@@ -351,7 +357,11 @@ void DialogManager::selectCurrentAnswer(int index)
         return;
     }
 
-    currentNode = currentAnswers->chooseAnswer(currentDialog, std::get<0>(currentAnswers->answers[index]));
+    auto answerNodeId = std::get<0>(currentAnswers->answers[index]);
+    currentNode = currentAnswers->chooseAnswer(currentDialog, answerNodeId);
+
+    jngl::debug("DialogManager::selectCurrentAnswer " + answerNodeId);
+
     selected_index = -1;
     hideChoices();
     continueCurrent();
