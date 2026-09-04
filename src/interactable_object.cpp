@@ -71,9 +71,40 @@ bool InteractableObject::step(bool force)
             {
                 collision_script = collision->getName().buffer();
                 if (collision_script != "non_walkable_area") {
-                    jngl::debug("clicked interactable item {}", collision_script);
+                    std::string action = collision_script;
+                    bool has_action = _game->pointer->attachedObjects.empty() || _game->actionExists(collision_script);
+                    if (!has_action)
+                    {
+                        for (auto it = _game->pointer->attachedObjects.rbegin(); it != _game->pointer->attachedObjects.rend(); ++it)
+                        {
+                            if (*it == nullptr)
+                            {
+                                continue;
+                            }
+
+                            const std::string carried_action = collision_script + "_" + (*it)->getId();
+                            if (_game->actionExists(carried_action))
+                            {
+                                action = carried_action;
+                                has_action = true;
+                                break;
+                            }
+                        }
+                    }
+
                     _game->pointer->setPrimaryHandled();
-                    _game->runAction(collision_script, getptr());
+                    if (has_action)
+                    {
+                        jngl::debug("clicked interactable item {}", action);
+                        _game->runAction(action, getptr());
+                    }
+                    else
+                    {
+                        const std::string default_dialog = (*_game->lua_state)["config"]["default_item_dialog"];
+                        jngl::debug("no action for item {} on {}, playing default dialog {}",
+                                     _game->pointer->attachedObjects.back()->getId(), collision_script, default_dialog);
+                        _game->getDialogManager()->play(default_dialog, std::nullopt);
+                    }
                 }
             }
         }

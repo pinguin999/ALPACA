@@ -254,12 +254,12 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
 		const auto a = static_cast<uint8_t>(skeleton->getColor().a * slot.getPose().getColor().a *
 		                                    attachmentColor->a * 255);
 
-		if (clipper.isClipping() && vertices && indices && uvs) {
+		if (clipper.isClipping() && indices) {
 			clipper.clipTriangles(*vertices, *indices, *uvs, 2);
 			vertices = &clipper.getClippedVertices();
 			uvs = &clipper.getClippedUVs();
 			indices = &clipper.getClippedTriangles();
-			indicesCount = clipper.getClippedTriangles().size();
+			indicesCount = (int32_t) (clipper.getClippedTriangles().size());
 		}
 
 		std::vector<jngl::Vertex> vertexArray;

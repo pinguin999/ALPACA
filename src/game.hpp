@@ -24,6 +24,7 @@ public:
     void saveLuaState(const std::string &savefile = "savegame");
     void loadLuaState(const std::optional<std::string> &savefile = "savegame");
 
+    bool actionExists(const std::string &actionName) const;
     void runAction(const std::string &actionName, std::shared_ptr<SpineObject> thisObject);
 
     void step() override;

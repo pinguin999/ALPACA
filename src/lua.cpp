@@ -457,18 +457,20 @@ void Game::setupLuaFunctions()
 	/// string point_name: Name of the Spine point the player should go to
 	/// function callback: Function to be called when the layer reaches the position
 	lua_state->set_function("GoToPoint",
-							[this](const LuaSpinePoint &point_name, std::optional<sol::function> callback)
+							[this](const LuaSpinePoint &point_name, std::optional<sol::function> callback) -> bool
 							{
+								// TODO this should return bool if the Path to the point is possible
 								const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
 								auto position = obj->getPoint(point_name);
 								if (!position)
 								{
 									jngl::error("Point " + point_name + " not found.");
-									return;
+									return false;
 								}
 								player->addTargetPositionImmediately(obj->getPosition() + *position, std::move(callback));
 								pointer->setPrimaryHandled();
 								// TODO Write Players position to Lua
+								return true;
 							});
 
 	/// See GoToPoint
@@ -511,9 +513,7 @@ void Game::setupLuaFunctions()
 								{
 									return std::tuple(position->x, position->y);
 								}
-								else {
-									jngl::error("No point called " + point_name);
-								}
+								jngl::error("No point called " + point_name);
 
 								return std::tuple(0.0, 0.0);
 							});
@@ -952,13 +952,13 @@ void Game::setupLuaFunctions()
         if (channel == "music") {
             return Channels::handle().music.isPlaying("audio/" + file);
         }
-        else if (channel == "voice") {
+        if (channel == "voice") {
             return Channels::handle().voice.isPlaying("audio/" + file);
         }
-        else if (channel == "sounds") {
+        if (channel == "sounds") {
             return Channels::handle().sounds.isPlaying("audio/" + file);
         }
-		else if (channel == "ambient") {
+		if (channel == "ambient") {
             return Channels::handle().ambient.isPlaying("audio/" + file);
         }
         return jngl::isPlaying("audio/" + file);
@@ -992,13 +992,13 @@ void Game::setupLuaFunctions()
         if (channel == "music") {
             return AudioManager::handle().getMusicVolume();
         }
-        else if (channel == "voice") {
+        if (channel == "voice") {
             return AudioManager::handle().getVoiceVolume();
         }
-        else if (channel == "sounds") {
+        if (channel == "sounds") {
             return AudioManager::handle().getSoundVolume();
         }
-		else if (channel == "ambient") {
+		if (channel == "ambient") {
             return AudioManager::handle().getAmbientVolume();
         }
 

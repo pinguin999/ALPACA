@@ -168,6 +168,7 @@ void Game::configToLua()
     (*lua_state)["config"]["player"] = config["player"].as<std::string>("");
     (*lua_state)["config"]["pointer"] = config["pointer"].as<std::string>();
     (*lua_state)["config"]["dialog"] = config["dialog"].as<std::string>();
+	(*lua_state)["config"]["default_item_dialog"] = config["default_item_dialog"].as<std::string>();
     (*lua_state)["config"]["antiAliasing"] = config["antiAliasing"].as<bool>();
     (*lua_state)["config"]["icon"] = config["icon"].as<std::string>();
     (*lua_state)["config"]["start_scene"] = config["start_scene"].as<std::string>();
@@ -805,6 +806,16 @@ void Game::removeObjects()
 std::shared_ptr<DialogManager> Game::getDialogManager()
 {
 	return dialogManager;
+}
+
+bool Game::actionExists(const std::string& actionName) const
+{
+	if (actionName.empty() || actionName.starts_with("dlg:") || actionName.starts_with("anim:"))
+	{
+		return true;
+	}
+
+	return static_cast<bool>(jngl::readAsset("scripts/" + actionName + ".lua"));
 }
 
 void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject> thisObject) {
