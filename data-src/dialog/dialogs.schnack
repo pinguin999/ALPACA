@@ -1,10 +1,14 @@
 {
     "name": "Dialogs",
-    "schnackVersion": "0.4.0",
+    "schnackVersion": "0.9.0",
     "dialogs": [
         {
             "name": "alpaca",
-            "viewport": {},
+            "viewport": {
+                "x": 0,
+                "y": 0,
+                "zoom": 1
+            },
             "entryNode": "7Rsc3TCAja",
             "nodes": [
                 {
@@ -14,6 +18,7 @@
                         "x": 304,
                         "y": 190.6875
                     },
+                    "isCollapsed": false,
                     "onlyOnce": false,
                     "next": [],
                     "character": "alpaca"
@@ -24,13 +29,13 @@
     "emptyFolders": [],
     "characters": [
         {
-            "displayName": "spine_boy",
             "canonicalName": "spine_boy",
+            "color": "#596935",
             "properties": {}
         },
         {
-            "displayName": "alpaca",
             "canonicalName": "alpaca",
+            "color": "#2ea190",
             "properties": {}
         }
     ],
@@ -84,8 +89,24 @@
         "en"
     ],
     "localization": {
-        "7Rsc3TCAja": [
-            "Welcome to the tutorial."
-        ]
+        "nodeTexts": {
+            "7Rsc3TCAja": [
+                "Welcome to the tutorial."
+            ]
+        },
+        "directions": {
+            "7Rsc3TCAja": [
+                ""
+            ]
+        },
+        "characterNames": {
+            "alpaca": [
+                "alpaca"
+            ],
+            "spine_boy": [
+                "spine_boy"
+            ]
+        },
+        "application": {}
     }
 }

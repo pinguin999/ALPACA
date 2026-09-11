@@ -223,7 +223,7 @@ void DialogManager::showCharacterText(std::shared_ptr<schnacker::TextStepResult>
     bubbleText.setFont(dialogFont);
     bubbleText.setText(text->text, 1720);
 
-    auto characterName = jngl::Text(text->character->displayName);
+    auto characterName = jngl::Text(schnackFile->localizeCharacter(text->character->canonicalName));
     characterName.setFont(dialogFont);
 
     jngl::Rgba textColor = 0xffffffff_rgba;
