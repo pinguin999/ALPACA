@@ -78,7 +78,7 @@
     "packSource": "attachments",
     "packTarget": "perskeleton",
     "warnings": true,
-    "version": null,
+    "version": 4.3,
     "forceAll": false,
     "open": false
 }
