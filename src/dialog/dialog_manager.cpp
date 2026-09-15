@@ -383,7 +383,7 @@ bool DialogManager::isSelectTextActive() const
     return !choiceTexts.empty();
 }
 
-bool DialogManager::isOverText(jngl::Vec2 mouse_pos)
+bool DialogManager::isOverText()
 {
-    return mouse_pos.y > 1040 - BOX_HEIGHT * choiceTexts.size();
+    return selected_index != -1;
 }

@@ -80,9 +80,9 @@ bool Pointer::step(bool)
 
         bool over = false;
         auto dlgMan = _game->getDialogManager();
-        if (dlgMan->isSelectTextActive())
+        if (dlgMan->isActive())
         {
-            over = dlgMan->isOverText(position);
+            over = dlgMan->isOverText();
         }
         // Region and Object Collision Test nur, wenn kein Dialog läuft.
         else

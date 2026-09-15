@@ -25,7 +25,7 @@ public:
     void cancelDialog();
 
     bool isSelectTextActive() const;
-    bool isOverText(jngl::Vec2 mouse_pos);
+    bool isOverText();
 
     void play(const std::string &dialogName, std::optional<sol::function> callback); // TODO: multiple positions for different characters
     void continueCurrent();
