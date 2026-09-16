@@ -863,10 +863,10 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
                 jngl::error("No function with name " + attached_object_ids_string + " in " + file);
             }
             // Call all if exist
-            funcOpt = env["all_items"];
-            if (funcOpt && funcOpt->valid()) {
+            sol::optional<sol::function> funcOptAll = env["all_items"];
+            if (funcOptAll && funcOptAll->valid()) {
                 // Function exists and is callable
-                (*lua_state)["_all_items"] = *funcOpt;
+                (*lua_state)["_all_items"] = *funcOptAll;
                 (*lua_state)["_all_items"]();
                 (*lua_state)["_all_items"] = sol::lua_nil;
                 return;
