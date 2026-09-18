@@ -835,7 +835,7 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
                 attached_object_ids_string += attached_object_ids[i];
             }
 
-            // Only get one function out of a function without execute the global scope
+            // Only runs the function if it is defined in the Lua file
             sol::environment env((*lua_state), sol::create, (*lua_state).globals());
             sol::load_result load_res = (*lua_state).load(script);
             if (!load_res.valid()) {
@@ -853,22 +853,26 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
 
             sol::optional<sol::function> funcOpt = env[attached_object_ids_string];
             if (funcOpt && funcOpt->valid()) {
-                // Function exists and is callable
-                (*lua_state)["_" + attached_object_ids_string] = *funcOpt;
-                (*lua_state)["_" + attached_object_ids_string]();
-                (*lua_state)["_" + attached_object_ids_string] = sol::lua_nil;
+				auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
+				if (!result.valid()) {
+					const sol::error err = result;
+					jngl::error(err.what());
+				}
+				(*lua_state)[attached_object_ids_string]();
                 return;
 
             } else {
                 jngl::error("No function with name " + attached_object_ids_string + " in " + file);
             }
-            // Call all if exist
+            // Call all_items if exist
             sol::optional<sol::function> funcOptAll = env["all_items"];
             if (funcOptAll && funcOptAll->valid()) {
-                // Function exists and is callable
-                (*lua_state)["_all_items"] = *funcOptAll;
-                (*lua_state)["_all_items"]();
-                (*lua_state)["_all_items"] = sol::lua_nil;
+				auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
+				if (!result.valid()) {
+					const sol::error err = result;
+					jngl::error(err.what());
+				}
+				(*lua_state)["all_items"]();
                 return;
             } else {
                 jngl::error("No function all_items in " + file);
@@ -1104,11 +1108,12 @@ const std::shared_ptr<SpineObject> Game::getObjectById(const std::string &object
 	}
 
 	std::shared_ptr<SpineObject> obj = nullptr;
-	if ((*this->lua_state)[objectId].valid())
-	{
-		obj = (*this->lua_state)[objectId];
-	}
-	else if ((*this->lua_state)["inventory_items"][objectId].valid())
+	// if ((*this->lua_state)[objectId].valid())
+	// {
+	// 	obj = (*this->lua_state)[objectId];
+	// }
+	// else
+	if ((*this->lua_state)["inventory_items"][objectId].valid())
 	{
 		obj = (*this->lua_state)["inventory_items"][objectId]["object"];
 	}
