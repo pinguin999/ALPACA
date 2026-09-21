@@ -569,7 +569,8 @@ def copy_script(file: str) -> None:
                 Path(f"./data/scripts/{name}").chmod(
                     S_IREAD | S_IRGRP | S_IROTH | S_IWUSR
                 )
-        shutil.copyfile(file, f"./data/scripts/{name}")
+        with contextlib.suppress(FileNotFoundError):
+            shutil.copyfile(file, f"./data/scripts/{name}")
         if set_read_only:
             Path(f"./data/scripts/{name}").chmod(S_IREAD | S_IRGRP | S_IROTH)
 
@@ -734,6 +735,7 @@ class LuaDocsGen:
         result = parameters.replace("[](", "").replace(")", "")
         result = result.replace("[this](", "").replace(")", "")
         result = result.replace("const ", "")
+        result = result.replace(" {", "")
         result = result.replace("std::string ", "string ")
         result = result.replace("std::string& ", "string ")
         result = result.replace("&", "")
