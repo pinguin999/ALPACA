@@ -18,4 +18,9 @@ jobs:
         sudo apt-get install -y clang-format
         pip install pre-commit
     - name: Check formatting
-      run: pre-commit run clang-format --all-files --hook-stage manual
+      run: |
+        if ! pre-commit run clang-format --all-files --hook-stage manual; then
+          echo "::error::C++ formatting errors detected. Diff:"
+          git --no-pager diff --color=always
+          exit 1
+        fi
