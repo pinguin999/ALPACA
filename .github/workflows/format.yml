@@ -9,14 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
-    - uses: actions/setup-python@v6
-      with:
-        python-version: "3.x"
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang-format
-        pip install pre-commit
+        sudo apt-get install -y clang-format pre-commit
     - name: Check formatting
       run: |
         if ! pre-commit run clang-format --all-files --hook-stage manual; then
