@@ -739,7 +739,7 @@ class LuaDocsGen:
         result = result.replace("std::string ", "string ")
         result = result.replace("std::string& ", "string ")
         result = result.replace("&", "")
-        result = result.replace("\tint ", "number ")
+        result = result.replace(" int ", " number ")
         result = result.replace(", int ", ", number ")
         result = result.replace("float ", "number ")
         result = result.replace("bool ", "boolean ")
