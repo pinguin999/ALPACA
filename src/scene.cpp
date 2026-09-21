@@ -9,7 +9,8 @@ LoadException::LoadException(const char* details)
 : std::runtime_error(details) {
 }
 
-Scene::Scene(const std::string& fileName, const std::shared_ptr<Game>& game) : fileName(fileName), json(YAML::Load(jngl::readAsset("scenes/" + fileName + ".json").str())), game(game) {
+Scene::Scene(const std::string& fileName, const std::shared_ptr<Game>& game)
+: fileName(fileName), json(YAML::Load(jngl::readAsset("scenes/" + fileName + ".json").str())), game(game) {
 
     std::string scene = fileName;
 

@@ -180,21 +180,24 @@ class FileWatch {
     typedef std::basic_regex<C, std::regex_traits<C>> UnderpinningRegex;
 
 public:
-    FileWatch(const StringType& path, UnderpinningRegex pattern, std::function<void(const StringType& file, const Event event_type)> callback) : _path(absolute_path_of(path)),
-                                                                                                                                                 _pattern(pattern),
-                                                                                                                                                 _callback(callback),
-                                                                                                                                                 _directory(get_directory(path)) {
+    FileWatch(const StringType& path, UnderpinningRegex pattern, std::function<void(const StringType& file, const Event event_type)> callback)
+    : _path(absolute_path_of(path)),
+      _pattern(pattern),
+      _callback(callback),
+      _directory(get_directory(path)) {
         init();
     }
 
-    FileWatch(const StringType& path, std::function<void(const StringType& file, const Event event_type)> callback) : FileWatch<StringType>(path, UnderpinningRegex(_regex_all), callback) {
+    FileWatch(const StringType& path, std::function<void(const StringType& file, const Event event_type)> callback)
+    : FileWatch<StringType>(path, UnderpinningRegex(_regex_all), callback) {
     }
 
     ~FileWatch() {
         destroy();
     }
 
-    FileWatch(const FileWatch<StringType>& other) : FileWatch<StringType>(other._path, other._callback) {
+    FileWatch(const FileWatch<StringType>& other)
+    : FileWatch<StringType>(other._path, other._callback) {
     }
 
     FileWatch<StringType>& operator=(const FileWatch<StringType>& other) {
@@ -219,7 +222,8 @@ private:
     static constexpr C _this_directory[] = { '.', '/', '\0' };
 
     struct PathParts {
-        PathParts(const StringType& directory, const StringType& filename) : directory(directory), filename(filename) {
+        PathParts(const StringType& directory, const StringType& filename)
+        : directory(directory), filename(filename) {
         }
         StringType directory;
         StringType filename;
@@ -293,7 +297,8 @@ private:
         }
         FileState(const FileState&) = delete;
         FileState& operator=(const FileState&) = delete;
-        FileState(FileState&& other) : fd(other.fd), nlink(other.nlink), last_modification(other.last_modification) {
+        FileState(FileState&& other)
+        : fd(other.fd), nlink(other.nlink), last_modification(other.last_modification) {
             other.fd = -1;
         }
 

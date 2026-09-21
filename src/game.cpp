@@ -25,9 +25,10 @@
 using jngl::Vec2;
 using namespace std::string_literals;
 
-Game::Game(const YAML::Node& config) : config(config),
-                                       cameraPosition(jngl::Vec2(0, 0)),
-                                       targetCameraPosition(jngl::Vec2(0, 0)) {
+Game::Game(const YAML::Node& config)
+: config(config),
+  cameraPosition(jngl::Vec2(0, 0)),
+  targetCameraPosition(jngl::Vec2(0, 0)) {
 
     auto screensize = jngl::getScreenSize();
     auto zoomx = this->config["screenSize"]["x"].as<int>() / screensize.x;

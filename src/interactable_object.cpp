@@ -6,7 +6,8 @@
 
 #include <cmath>
 
-InteractableObject::InteractableObject(const std::shared_ptr<Game>& game, const std::string& spine_file, const std::string& id, float scale) : SpineObject(game, spine_file, id, scale), luaIndex(id) {
+InteractableObject::InteractableObject(const std::shared_ptr<Game>& game, const std::string& spine_file, const std::string& id, float scale)
+: SpineObject(game, spine_file, id, scale), luaIndex(id) {
 }
 
 bool InteractableObject::step(bool force) {

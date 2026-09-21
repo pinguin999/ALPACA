@@ -5,8 +5,9 @@
 
 #include <cmath>
 
-Player::Player(const std::shared_ptr<Game>& game, const std::string& spine_file) : SpineObject(game, spine_file, "player"),
-                                                                                   last_click_time(std::numeric_limits<double>::min()) {
+Player::Player(const std::shared_ptr<Game>& game, const std::string& spine_file)
+: SpineObject(game, spine_file, "player"),
+  last_click_time(std::numeric_limits<double>::min()) {
     const std::string file = "scripts/" + spine_name + ".lua";
     const std::stringstream scriptstream = jngl::readAsset(file);
 

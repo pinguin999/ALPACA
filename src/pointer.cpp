@@ -9,7 +9,8 @@
 #include <cmath>
 #include <spine/spine.h>
 
-Pointer::Pointer(std::shared_ptr<Game> game, const std::string& spine_file) : SpineObject(game, spine_file, "Pointer", .5) {
+Pointer::Pointer(std::shared_ptr<Game> game, const std::string& spine_file)
+: SpineObject(game, spine_file, "Pointer", .5) {
     const auto controllers = jngl::getConnectedControllers();
     if (controllers.size() > pointerNr) {
         control = std::make_unique<Gamepad>(controllers[pointerNr]);

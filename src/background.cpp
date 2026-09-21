@@ -6,7 +6,8 @@
 
 #include <cmath>
 
-Background::Background(const std::shared_ptr<Game>& game, const std::string& spine_file) : SpineObject(game, spine_file, "Background") {
+Background::Background(const std::shared_ptr<Game>& game, const std::string& spine_file)
+: SpineObject(game, spine_file, "Background") {
     stepSpineAndNavigation();
 }
 
@@ -154,7 +155,8 @@ static Result lineIntersection(jngl::Vec2 a, jngl::Vec2 b, jngl::Vec2 c, jngl::V
                                                   : Result::NO_INTERSECTION;
 }
 
-Node::Node(jngl::Vec2 coordinates_, Node* parent_) : coordinates(coordinates_), parent(parent_) {
+Node::Node(jngl::Vec2 coordinates_, Node* parent_)
+: coordinates(coordinates_), parent(parent_) {
 
     G = H = 0;
 }
