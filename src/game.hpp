@@ -11,20 +11,19 @@
 #include "dialog/dialog_manager.hpp"
 #include "audio_manager.hpp"
 
-class Game : public jngl::Work, public std::enable_shared_from_this<Game>
-{
+class Game : public jngl::Work, public std::enable_shared_from_this<Game> {
 public:
-    explicit Game(const YAML::Node &config);
+    explicit Game(const YAML::Node& config);
     ~Game() override;
     void init(bool game_start = false);
     void reset();
-    void loadSceneWithFade(const std::string &level);
+    void loadSceneWithFade(const std::string& level);
     void setupLuaFunctions();
     void configToLua();
-    void saveLuaState(const std::string &savefile = "savegame");
-    void loadLuaState(const std::optional<std::string> &savefile = "savegame");
+    void saveLuaState(const std::string& savefile = "savegame");
+    void loadLuaState(const std::optional<std::string>& savefile = "savegame");
 
-    void runAction(const std::string &actionName, std::shared_ptr<SpineObject> thisObject);
+    void runAction(const std::string& actionName, std::shared_ptr<SpineObject> thisObject);
 
     void step() override;
     void draw() const override;
@@ -40,24 +39,24 @@ public:
     bool room_select_mode = false;
     std::optional<int> tens;
     static void writeTGA(const std::filesystem::path& filename, int width, int height,
-                        const uint8_t* pixels);
+                         const uint8_t* pixels);
 
     jngl::Text debug_info;
     std::string debug_text = ("Press Tab to enter editmode. \n"
-		"Press F10 to show debug draw. \n"
+                              "Press F10 to show debug draw. \n"
 #ifdef JNGL_RECORD
-		"Press b to start/end movie recording. \n"
+                              "Press b to start/end movie recording. \n"
 #endif
-		"Press F12 to take a screenshot. \n"
-		"Press r to reload the scene. \n"
-		"Press l start the game from the beginning. \n"
-		"Press c to save the game. \n"
-		"Press v to load the game. \n"
-		"Press j to jump to a savegame. \n"
-		"Press s in editmode to save changes to a scene. \n"
-		"Press m to mute and unmute audio. \n"
-		"Press z to toggle zBufferMap. \n"
-		"Press x to hide this text.");
+                              "Press F12 to take a screenshot. \n"
+                              "Press r to reload the scene. \n"
+                              "Press l start the game from the beginning. \n"
+                              "Press c to save the game. \n"
+                              "Press v to load the game. \n"
+                              "Press j to jump to a savegame. \n"
+                              "Press s in editmode to save changes to a scene. \n"
+                              "Press m to mute and unmute audio. \n"
+                              "Press z to toggle zBufferMap. \n"
+                              "Press x to hide this text.");
 #endif
 
     /// Wendet die Kamera auf JNGLs globale ModelView-Matrix an
@@ -74,8 +73,8 @@ public:
     void stepCamera();
     void triangulateBorder();
 
-    void add(const std::shared_ptr<SpineObject> &obj);
-    void remove(const std::shared_ptr<SpineObject> &obj);
+    void add(const std::shared_ptr<SpineObject>& obj);
+    void remove(const std::shared_ptr<SpineObject>& obj);
     std::string language;
 
     std::shared_ptr<sol::state> lua_state;
@@ -90,14 +89,15 @@ public:
     std::shared_ptr<Scene> currentScene = nullptr;
     std::string nextScene;
     bool reload = false;
-    void setInactivLayerBorder(int layer)
-    {
+    void setInactivLayerBorder(int layer) {
         inactivLayerBorder = layer;
         (*lua_state)["inactivLayerBorder"] = layer;
     };
-    int getInactivLayerBorder() { return inactivLayerBorder; };
+    int getInactivLayerBorder() {
+        return inactivLayerBorder;
+    };
 
-    const std::shared_ptr<SpineObject> getObjectById(const std::string &objectId);
+    const std::shared_ptr<SpineObject> getObjectById(const std::string& objectId);
     sol::table_proxy<sol::table, std::tuple<std::string>> getObjectTable(const std::string& objectId);
 
     const std::string cleanLuaString(std::string variable);
@@ -111,15 +111,15 @@ private:
 
     std::vector<std::shared_ptr<SpineObject>> needToAdd;
     std::vector<std::shared_ptr<SpineObject>> needToRemove;
-    std::string backupLuaTable(const sol::table table, const std::string &parent);
+    std::string backupLuaTable(const sol::table table, const std::string& parent);
     jngl::Vec2 cameraPosition;
     jngl::Vec2 targetCameraPosition;
     jngl::Vec2 cameraDeadzone;
     double cameraZoom = 1.0;
     int inactivLayerBorder = 0;
     std::shared_ptr<DialogManager> dialogManager = nullptr;
-    jngl::FrameBuffer frameBuffer1{jngl::getWindowSize()};
-    jngl::FrameBuffer frameBuffer2{jngl::getWindowSize()};
+    jngl::FrameBuffer frameBuffer1{ jngl::getWindowSize() };
+    jngl::FrameBuffer frameBuffer2{ jngl::getWindowSize() };
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
     void onFileDrop(const std::filesystem::path& path) override;

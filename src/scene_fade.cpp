@@ -4,13 +4,13 @@
 
 SceneFade::SceneFade(std::shared_ptr<jngl::Work> game,
                      std::function<void()> loadScene, std::optional<std::string> backgroundMusic)
-    : loadScene(std::move(loadScene)), game(std::move(game)), backgroundMusic(backgroundMusic) {
+: loadScene(std::move(loadScene)), game(std::move(game)), backgroundMusic(backgroundMusic) {
     if (backgroundMusic) {
         AudioManager::handle().fadeLoopMuisc(backgroundMusic.value());
     }
-    }
+}
 
-SceneFade::~SceneFade(){
+SceneFade::~SceneFade() {
     AudioManager::handle().stopFadeMusic();
 }
 

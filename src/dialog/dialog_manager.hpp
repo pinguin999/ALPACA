@@ -12,8 +12,7 @@
 
 class Game;
 
-class DialogManager
-{
+class DialogManager {
 public:
     explicit DialogManager(std::shared_ptr<Game> game);
     void loadDialogsFromFile(const std::string& fileName, bool initializeVariables);
@@ -27,20 +26,22 @@ public:
     bool isSelectTextActive() const;
     bool isOverText();
 
-    void play(const std::string &dialogName, std::optional<sol::function> callback); // TODO: multiple positions for different characters
+    void play(const std::string& dialogName, std::optional<sol::function> callback); // TODO: multiple positions for different characters
     void continueCurrent();
     void selectCurrentAnswer(int selected_index);
     const jngl::Rgba textToColor(const std::string& color_text);
 
 #ifndef NDEBUG
-    int getChoiceTextsSize(){return int(choiceTexts.size());};
+    int getChoiceTextsSize() {
+        return int(choiceTexts.size());
+    };
 #endif
 private:
     void showChoices(std::shared_ptr<schnacker::AnswersStepResult> answers);
     void showCharacterText(std::shared_ptr<schnacker::TextStepResult> text);
-    void playCharacterVoice(const std::string &file);
+    void playCharacterVoice(const std::string& file);
     void stopCharacterVoiceAndAnimation();
-    void playCharacterAnimation(const std::string &character, const std::string &id);
+    void playCharacterAnimation(const std::string& character, const std::string& id);
     void hideChoices();
     void hideCharacterText();
 
@@ -58,7 +59,7 @@ private:
     std::string last_played_audio_character;
     bool wasActiveLastFrame = false;
     std::optional<LuaCallback> dialog_callback;
-	const std::weak_ptr<Game> game;
+    const std::weak_ptr<Game> game;
 
     jngl::Rgba default_font_color;
     jngl::Rgba default_font_selected_color;

@@ -6,20 +6,17 @@
 
 #include <cmath>
 
-InteractableObject::InteractableObject(const std::shared_ptr<Game> &game, const std::string &spine_file, const std::string &id, float scale) : SpineObject(game, spine_file, id, scale), luaIndex(id)
-{
+InteractableObject::InteractableObject(const std::shared_ptr<Game>& game, const std::string& spine_file, const std::string& id, float scale)
+: SpineObject(game, spine_file, id, scale), luaIndex(id) {
 }
 
-bool InteractableObject::step(bool force)
-{
-    if (auto _game = game.lock())
-    {
+bool InteractableObject::step(bool force) {
+    if (auto _game = game.lock()) {
         skeleton->step();
         bounds->update(*skeleton->skeleton, true);
 
 #ifndef NDEBUG
-        if (_game->editMode  && !abs_position)
-        {
+        if (_game->editMode && !abs_position) {
             const float DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
             mouseOver = false;
             for (auto cursor : jngl::input().cursors()) {
@@ -42,33 +39,27 @@ bool InteractableObject::step(bool force)
         }
 #endif
 
-        if (!force && _game->getDialogManager()->isActive())
-        {
+        if (!force && _game->getDialogManager()->isActive()) {
             return false;
         }
 
-        if (!force && _game->getInactivLayerBorder() > layer)
-        {
+        if (!force && _game->getInactivLayerBorder() > layer) {
             return false;
         }
 
-        if (!force && _game->player && !_game->player->interruptible)
-        {
+        if (!force && _game->player && !_game->player->interruptible) {
             return false;
         }
 
         // TODO Double Click on Objekts
-        if (_game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled())
-        {
+        if (_game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled()) {
             jngl::Vec2 click_position = _game->pointer->getWorldPosition();
-            if (abs_position)
-            {
+            if (abs_position) {
                 click_position = _game->pointer->getPosition();
             }
 
-            auto *collision = bounds->containsPoint(static_cast<float>(click_position.x) - static_cast<float>(position.x), static_cast<float>(click_position.y) - static_cast<float>(position.y));
-            if (collision)
-            {
+            auto* collision = bounds->containsPoint(static_cast<float>(click_position.x) - static_cast<float>(position.x), static_cast<float>(click_position.y) - static_cast<float>(position.y));
+            if (collision) {
                 collision_script = collision->getName().buffer();
                 if (collision_script != "non_walkable_area") {
                     jngl::debug("clicked interactable item {}", collision_script);
@@ -78,8 +69,7 @@ bool InteractableObject::step(bool force)
             }
         }
 
-        if (parent)
-        {
+        if (parent) {
             position = parent->getPosition();
         }
     }
@@ -87,37 +77,28 @@ bool InteractableObject::step(bool force)
     return deleted;
 }
 
-void InteractableObject::registerToDelete()
-{
+void InteractableObject::registerToDelete() {
     deleted = true;
 
-    if (auto _game = game.lock())
-    {
+    if (auto _game = game.lock()) {
         _game->getObjectTable(luaIndex) = sol::lua_nil;
     }
 }
 
-void InteractableObject::draw() const
-{
+void InteractableObject::draw() const {
     auto mv = jngl::modelview();
-    if (abs_position)
-    {
+    if (abs_position) {
         mv = jngl::Mat3();
-        if (auto _game = game.lock())
-        {
+        if (auto _game = game.lock()) {
             mv.scale(_game->getCameraZoom());
         }
-    }
-    else
-    {
+    } else {
         mv.translate(position);
     }
     mv.rotate(getRotation());
 
-    if (visible)
-    {
-        if (auto _game = game.lock())
-        {
+    if (visible) {
+        if (auto _game = game.lock()) {
 #ifndef NDEBUG
             skeleton->debugdraw = _game->enableDebugDraw;
 #endif
@@ -125,17 +106,14 @@ void InteractableObject::draw() const
 
             skeleton->draw(mv);
 
-            if (_game->enableHotspotHighlight && _game->getInactivLayerBorder() <= layer)
-            {
-                for (auto hotspot : skeleton->hotspots)
-                {
+            if (_game->enableHotspotHighlight && _game->getInactivLayerBorder() <= layer) {
+                for (auto hotspot : skeleton->hotspots) {
                     auto pos = mv;
                     pos.translate(hotspot);
 
-                    if(_game->hotspot)
-                    {
+                    if (_game->hotspot) {
                         _game->hotspot->draw(pos);
-                    }else{
+                    } else {
                         jngl::drawCircle(pos, 5);
                     }
                 }
@@ -144,10 +122,8 @@ void InteractableObject::draw() const
     }
 
 #ifndef NDEBUG
-    if (auto _game = game.lock())
-    {
-        if (_game->editMode && !abs_position)
-        {
+    if (auto _game = game.lock()) {
+        if (_game->editMode && !abs_position) {
             const float DEBUG_GRAP_DISTANCE = (*_game->lua_state)["config"]["debug_grap_distance"];
             jngl::drawCircle(mv, DEBUG_GRAP_DISTANCE,
                              jngl::Rgba(0, mouseOver ? 0.7 : (mouseDown ? 0.4 : 0.9), 0, 0.9));

@@ -1,0 +1,22 @@
+name: Format
+
+on:
+- push
+- pull_request
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-format pre-commit
+    - name: Check formatting
+      run: |
+        if ! pre-commit run clang-format --all-files --hook-stage manual; then
+          echo "::error::C++ formatting errors detected. Diff:"
+          git --no-pager diff --color=always
+          exit 1
+        fi

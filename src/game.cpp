@@ -25,15 +25,15 @@
 using jngl::Vec2;
 using namespace std::string_literals;
 
-Game::Game(const YAML::Node &config) : config(config),
-									   cameraPosition(jngl::Vec2(0, 0)),
-									   targetCameraPosition(jngl::Vec2(0, 0))
-{
+Game::Game(const YAML::Node& config)
+: config(config),
+  cameraPosition(jngl::Vec2(0, 0)),
+  targetCameraPosition(jngl::Vec2(0, 0)) {
 
-	auto screensize = jngl::getScreenSize();
-	auto zoomx = this->config["screenSize"]["x"].as<int>() / screensize.x;
-	auto zoomy = this->config["screenSize"]["y"].as<int>() / screensize.y;
-	cameraZoom = 1.0 / std::max(zoomx, zoomy);
+    auto screensize = jngl::getScreenSize();
+    auto zoomx = this->config["screenSize"]["x"].as<int>() / screensize.x;
+    auto zoomy = this->config["screenSize"]["y"].as<int>() / screensize.y;
+    cameraZoom = 1.0 / std::max(zoomx, zoomy);
 
 #ifndef NDEBUG
     debug_info.setFont(jngl::OutlinedFont(config["default_font"].as<std::string>(), 12, 9.f)
@@ -43,34 +43,28 @@ Game::Game(const YAML::Node &config) : config(config),
     debug_info.setPos(jngl::Vec2(-screensize.x / 2, -screensize.y / 2) + jngl::Vec2(5, 10));
 #endif
 
-	bool language_supportet = false;
-	language = jngl::getPreferredLanguage();
+    bool language_supportet = false;
+    language = jngl::getPreferredLanguage();
 
-	YAML::Node languages = this->config["supportedLanguages"];
-	for (auto supported_language : languages)
-	{
-		if (language == supported_language.as<std::string>())
-		{
-			language_supportet = true;
-			break;
-		}
-	}
+    YAML::Node languages = this->config["supportedLanguages"];
+    for (auto supported_language : languages) {
+        if (language == supported_language.as<std::string>()) {
+            language_supportet = true;
+            break;
+        }
+    }
 
-	if (!language_supportet)
-	{
-		if (languages.size() >= 1)
-		{
-			language = languages[0].as<std::string>();
-		}
-		else
-		{
-			language = "en";
-		}
-	}
+    if (!language_supportet) {
+        if (languages.size() >= 1) {
+            language = languages[0].as<std::string>();
+        } else {
+            language = "en";
+        }
+    }
 
-	// open some common libraries
-	lua_state = std::make_shared<sol::state>();
-	lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+    // open some common libraries
+    lua_state = std::make_shared<sol::state>();
+    lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
     (*lua_state)["print"] = [this](sol::variadic_args args) {
         sol::function tostring = (*lua_state)["tostring"];
 
@@ -105,53 +99,49 @@ Game::Game(const YAML::Node &config) : config(config),
 #else
 #define TYPE std::string
 #endif
-	const static filewatch::FileWatch<TYPE> watch(
+    const static filewatch::FileWatch<TYPE> watch(
 #ifdef _WIN32
-		L"."s,
+        L"."s,
 #else
-		"."s,
+        "."s,
 #endif
-		[this](const TYPE &path [[maybe_unused]], const filewatch::Event change_type)
-		{
-			switch (change_type)
-			{
-			case filewatch::Event::modified:
-			case filewatch::Event::added:
+        [this](const TYPE& path [[maybe_unused]], const filewatch::Event change_type) {
+        switch (change_type) {
+        case filewatch::Event::modified:
+        case filewatch::Event::added:
 #ifdef _WIN32
-				if (path.find(L"webp") != TYPE::npos)
+            if (path.find(L"webp") != TYPE::npos)
 #elif __unix__
-				if (true)
+            if (true)
 #else // Mac has no file extension here
-				if (true)
+            if (true)
 #endif
-				{
-					reload = true;
-				}
-				break;
-			default:
-				break;
-			}
-		});
+            {
+                reload = true;
+            }
+            break;
+        default:
+            break;
+        }
+    });
 #endif
 }
 
-void Game::init(bool game_start)
-{
-	configToLua();
-	setupLuaFunctions();
-	dialogManager = std::make_shared<DialogManager>(shared_from_this());
-	if (!game_start || config["auto_load_savegame"].as<bool>(true)) {
-		loadLuaState();
-	} else {
-		loadLuaState(std::nullopt);
-	}
+void Game::init(bool game_start) {
+    configToLua();
+    setupLuaFunctions();
+    dialogManager = std::make_shared<DialogManager>(shared_from_this());
+    if (!game_start || config["auto_load_savegame"].as<bool>(true)) {
+        loadLuaState();
+    } else {
+        loadLuaState(std::nullopt);
+    }
     jngl::resetFrameLimiter();
 }
 
-void Game::configToLua()
-{
-	(*lua_state)["config"] = (*lua_state).create_table();
-	(*lua_state)["config"]["name"] = config["name"].as<std::string>();
+void Game::configToLua() {
+    (*lua_state)["config"] = (*lua_state).create_table();
+    (*lua_state)["config"]["name"] = config["name"].as<std::string>();
     (*lua_state)["config"]["screenSize"] = (*lua_state).create_table();
     (*lua_state)["config"]["screenSize"]["x"] = config["screenSize"]["x"].as<int>();
     (*lua_state)["config"]["screenSize"]["y"] = config["screenSize"]["y"].as<int>();
@@ -195,43 +185,38 @@ void Game::configToLua()
     (*lua_state)["config"]["border"] = (*lua_state).create_table();
     (*lua_state)["config"]["border"]["x"] = config["border"]["x"].as<int>();
     (*lua_state)["config"]["border"]["y"] = config["border"]["y"].as<int>();
-	(*lua_state)["config"]["supportedLanguages"] = sol::as_table(config["supportedLanguages"].as<std::vector<std::string>>());
+    (*lua_state)["config"]["supportedLanguages"] = sol::as_table(config["supportedLanguages"].as<std::vector<std::string>>());
 }
 
-void Game::loadSceneWithFade(const std::string &level)
-{
-	if(enable_fade){
-		// Dirty way to get the background audio for the next scene
-		std::optional<std::string> backgroundMusic;
-		auto nextSceneJson = YAML::Node(YAML::Load(jngl::readAsset("scenes/" + level + ".json").str()));
-		if (nextSceneJson["backgroundMusic"].IsDefined() && !nextSceneJson["backgroundMusic"].IsNull())
-		{
-			backgroundMusic = nextSceneJson["backgroundMusic"].as<std::string>();
-		}
+void Game::loadSceneWithFade(const std::string& level) {
+    if (enable_fade) {
+        // Dirty way to get the background audio for the next scene
+        std::optional<std::string> backgroundMusic;
+        auto nextSceneJson = YAML::Node(YAML::Load(jngl::readAsset("scenes/" + level + ".json").str()));
+        if (nextSceneJson["backgroundMusic"].IsDefined() && !nextSceneJson["backgroundMusic"].IsNull()) {
+            backgroundMusic = nextSceneJson["backgroundMusic"].as<std::string>();
+        }
 
-		jngl::setScene<SceneFade>(shared_from_this(), [this, level]() {
-			loadScene(level);
-		}, backgroundMusic);
-	}else{
-		loadScene(level);
-	}
+        jngl::setScene<SceneFade>(shared_from_this(), [this, level]() {
+            loadScene(level);
+        }, backgroundMusic);
+    } else {
+        loadScene(level);
+    }
 #ifndef NDEBUG
-	// Run tests to get a savegame at the start of each scene
-	auto old_savegame = jngl::readConfig(level);
-	if(old_savegame.empty())
-	{
-		saveLuaState(level);
-	}
+    // Run tests to get a savegame at the start of each scene
+    auto old_savegame = jngl::readConfig(level);
+    if (old_savegame.empty()) {
+        saveLuaState(level);
+    }
 #endif
 }
 
-void Game::loadScene(const std::string& level)
-{
-	nextScene = level;
+void Game::loadScene(const std::string& level) {
+    nextScene = level;
 }
 
-void Game::loadScene_internal()
-{
+void Game::loadScene_internal() {
     jngl::debug("loadScene scenes/{}.json", nextScene);
     std::string old_scene;
     if (currentScene) {
@@ -240,38 +225,34 @@ void Game::loadScene_internal()
     dialogManager->cancelDialog();
 
     // Clear the level if there is already a level loaded, but keep the pointer
-    for (auto it = gameObjects.rbegin(); it != gameObjects.rend();)
-	{
-		if ((*it) == pointer)
-		{
-			std::advance(it, 1);
-			continue;
-		}
-		remove(*it);
-		std::advance(it, 1);
-	}
-	player = nullptr;
-	removeObjects();
+    for (auto it = gameObjects.rbegin(); it != gameObjects.rend();) {
+        if ((*it) == pointer) {
+            std::advance(it, 1);
+            continue;
+        }
+        remove(*it);
+        std::advance(it, 1);
+    }
+    player = nullptr;
+    removeObjects();
 
-	auto newScene = std::make_shared<Scene>(nextScene, shared_from_this());
-	if (!newScene->background)
-	{
-		jngl::error("There is no scene with the name: " + nextScene);
-		newScene = std::make_shared<Scene>(old_scene, shared_from_this());
-	}
+    auto newScene = std::make_shared<Scene>(nextScene, shared_from_this());
+    if (!newScene->background) {
+        jngl::error("There is no scene with the name: " + nextScene);
+        newScene = std::make_shared<Scene>(old_scene, shared_from_this());
+    }
 
-	currentScene = newScene;
-	currentScene->background->step();
-	currentScene->playMusic();
+    currentScene = newScene;
+    currentScene->background->step();
+    currentScene->playMusic();
 
-	// Pointer should be last in gameObjects so it's on top
-	if (pointer == nullptr)
-	{
-		pointer = std::make_shared<Pointer>(shared_from_this(), (*lua_state)["config"]["pointer"]);
-		pointer->setCrossScene(true);
-		pointer->setPosition(Vec2(0, 0));
-		add(pointer);
-	}
+    // Pointer should be last in gameObjects so it's on top
+    if (pointer == nullptr) {
+        pointer = std::make_shared<Pointer>(shared_from_this(), (*lua_state)["config"]["pointer"]);
+        pointer->setCrossScene(true);
+        pointer->setPosition(Vec2(0, 0));
+        add(pointer);
+    }
 
     if (hotspot == nullptr) {
         auto atlas = std::make_unique<spine::Atlas>("hotspot/hotspot.atlas",
@@ -284,119 +265,107 @@ void Game::loadScene_internal()
         }
     }
 
-    if (player)
-	{
-		auto position = currentScene->background->getPoint(old_scene);
-		if (position)
-		{
-			player->setPosition(position.value());
-		}
-		player->stop_walking();
-		setCameraPositionImmediately(player->calcCamPos());
-	}
+    if (player) {
+        auto position = currentScene->background->getPoint(old_scene);
+        if (position) {
+            player->setPosition(position.value());
+        }
+        player->stop_walking();
+        setCameraPositionImmediately(player->calcCamPos());
+    }
 
-	runAction(nextScene, newScene->background);
-	nextScene = "";
+    runAction(nextScene, newScene->background);
+    nextScene = "";
 }
 
-Game::~Game()
-{
-	saveLuaState();
-	reset();
+Game::~Game() {
+    saveLuaState();
+    reset();
 }
 
-void Game::reset()
-{
-	gameObjects.clear();
-	needToAdd.clear();
-	needToRemove.clear();
-	lua_state = {};
-	currentScene = nullptr;
-	player = nullptr;
-	pointer = nullptr;
+void Game::reset() {
+    gameObjects.clear();
+    needToAdd.clear();
+    needToRemove.clear();
+    lua_state = {};
+    currentScene = nullptr;
+    player = nullptr;
+    pointer = nullptr;
 }
 
-void Game::step()
-{
-	if (!nextScene.empty())
-	{
-		loadScene_internal();
-	}
+void Game::step() {
+    if (!nextScene.empty()) {
+        loadScene_internal();
+    }
 
-	addObjects();
-	stepCamera();
+    addObjects();
+    stepCamera();
 
-	pointer->step();
+    pointer->step();
 #ifndef NDEBUG
-	if (editMode) {
-		jngl::Mat3 worldToScreen;
-		worldToScreen.translate(-cameraPosition);
-		worldToScreen.scale(static_cast<float>(1. / cameraZoom));
-		jngl::input().transform(worldToScreen);
-	}
+    if (editMode) {
+        jngl::Mat3 worldToScreen;
+        worldToScreen.translate(-cameraPosition);
+        worldToScreen.scale(static_cast<float>(1. / cameraZoom));
+        jngl::input().transform(worldToScreen);
+    }
 #endif
 
-	for (auto it = gameObjects.rbegin(); it != gameObjects.rend();)
-	{
-		if ((*it) == pointer)
-		{
-			std::advance(it, 1);
-			continue;
-		}
-		if ((*it) == nullptr) {
-			jngl::error("nullptr in obj");
-		}
-		if ((*it)->step())
-		{
-			remove(*it);
-		}
-		std::advance(it, 1);
-	}
+    for (auto it = gameObjects.rbegin(); it != gameObjects.rend();) {
+        if ((*it) == pointer) {
+            std::advance(it, 1);
+            continue;
+        }
+        if ((*it) == nullptr) {
+            jngl::error("nullptr in obj");
+        }
+        if ((*it)->step()) {
+            remove(*it);
+        }
+        std::advance(it, 1);
+    }
 
-	dialogManager->step();
+    dialogManager->step();
     if (hotspot) {
         hotspot->step();
     }
 
     // Sort game objects depending on each object's z value (layer):
-	sort(gameObjects.begin(), gameObjects.end(), [](const auto &lhs, const auto &rhs)
-		 { return lhs->getZ() < rhs->getZ(); });
+    sort(gameObjects.begin(), gameObjects.end(), [](const auto& lhs, const auto& rhs) { return lhs->getZ() < rhs->getZ(); });
 
-	enableHotspotHighlight = jngl::keyDown(jngl::key::Space) || jngl::mouseDown(jngl::mouse::Button::Right);
+    enableHotspotHighlight = jngl::keyDown(jngl::key::Space) || jngl::mouseDown(jngl::mouse::Button::Right);
 #ifndef NDEBUG
-	debugStep();
+    debugStep();
 #endif
-	if(pointer)
-		pointer->resetHandledFlags();
-	removeObjects();
+    if (pointer)
+        pointer->resetHandledFlags();
+    removeObjects();
 }
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
-static std::string currentDateTime()
-{
-	const time_t now = time(nullptr);
-	struct tm tstruct;
-	char buf[80];
-	tstruct = *localtime(&now);
-	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
-	// for more information about date/time format
-	strftime(buf, sizeof(buf), "%Y-%m-%d-%H-%M-%S", &tstruct);
+static std::string currentDateTime() {
+    const time_t now = time(nullptr);
+    struct tm tstruct;
+    char buf[80];
+    tstruct = *localtime(&now);
+    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+    // for more information about date/time format
+    strftime(buf, sizeof(buf), "%Y-%m-%d-%H-%M-%S", &tstruct);
 
-	return buf;
+    return buf;
 }
 #endif
 
 #ifndef NDEBUG
-void Game::debugStep()
-{
-	// Reload Scene
+void Game::debugStep() {
+    // Reload Scene
     if (jngl::keyPressed("r") || reload) {
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
-		ShaderCache::handle().clear();
-		for (auto& obj : gameObjects) {
-			obj->setShader(obj->shader);
-		}
+        ShaderCache::handle().clear();
+        for (auto& obj : gameObjects) {
+            obj->setShader(obj->shader);
+        }
         auto dialogFilePath = (*lua_state)["config"]["dialog"];
         getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
         loadScene(currentScene->getSceneName());
@@ -408,49 +377,39 @@ void Game::debugStep()
         enableDebugDraw = !enableDebugDraw;
     }
 
-    if (jngl::keyPressed('m'))
-	{
-		if (jngl::getVolume() > 0.0)
-		{
-			jngl::setVolume(0);
-		}
-		else
-		{
-			jngl::setVolume(1.0);
-		}
-	}
-	if (jngl::keyPressed('z'))
-	{
-		enablezMapDebugDraw = !enablezMapDebugDraw;
-	}
-	if (jngl::keyPressed(jngl::key::Tab))
-	{
-		editMode = !editMode;
-	}
-	if (editMode && jngl::keyPressed("s"))
-	{
-		currentScene->writeToFile();
-	}
+    if (jngl::keyPressed('m')) {
+        if (jngl::getVolume() > 0.0) {
+            jngl::setVolume(0);
+        } else {
+            jngl::setVolume(1.0);
+        }
+    }
+    if (jngl::keyPressed('z')) {
+        enablezMapDebugDraw = !enablezMapDebugDraw;
+    }
+    if (jngl::keyPressed(jngl::key::Tab)) {
+        editMode = !editMode;
+    }
+    if (editMode && jngl::keyPressed("s")) {
+        currentScene->writeToFile();
+    }
 
-	if (jngl::keyPressed("x"))
-	{
-		show_debug_info = !show_debug_info;
-	}
+    if (jngl::keyPressed("x")) {
+        show_debug_info = !show_debug_info;
+    }
 
-	// Quick Save
-	if (jngl::keyPressed("c"))
-	{
-		saveLuaState();
-	}
+    // Quick Save
+    if (jngl::keyPressed("c")) {
+        saveLuaState();
+    }
 
-	// Quick Load
-	if (jngl::keyPressed("v"))
-	{
-		reset();
-		lua_state = std::make_shared<sol::state>();
-		lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
-		init();
-	}
+    // Quick Load
+    if (jngl::keyPressed("v")) {
+        reset();
+        lua_state = std::make_shared<sol::state>();
+        lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+        init();
+    }
 
     // Restart Game
     if (jngl::keyPressed("l")) {
@@ -458,25 +417,24 @@ void Game::debugStep()
         jngl::writeConfig("savegame", "");
         reset();
         lua_state = std::make_shared<sol::state>();
-		lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
-		init();
+        lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+        init();
     }
 
 #ifdef JNGL_RECORD
-	// Record movie
-	if (jngl::keyPressed("b"))
-	{
-		if (auto v = jngl::getJob<jngl::VideoRecorder>()) {
-			jngl::removeJob(v.get());
-			show_debug_info = true;
-		}else {
-			show_debug_info = false;
-			std::string filename = "./../";
-			filename += currentDateTime() + ".mp4";
-			jngl::debug("start recording {}", filename);
-			jngl::addJob<jngl::VideoRecorder>(filename);
-		}
-	}
+    // Record movie
+    if (jngl::keyPressed("b")) {
+        if (auto v = jngl::getJob<jngl::VideoRecorder>()) {
+            jngl::removeJob(v.get());
+            show_debug_info = true;
+        } else {
+            show_debug_info = false;
+            std::string filename = "./../";
+            filename += currentDateTime() + ".mp4";
+            jngl::debug("start recording {}", filename);
+            jngl::addJob<jngl::VideoRecorder>(filename);
+        }
+    }
 #endif
 
     // Record movie
@@ -495,139 +453,121 @@ void Game::debugStep()
     }
 
     // execute cheat
-	if (jngl::keyPressed(jngl::key::F9))
-	{
-		if(!dialogManager->isActive())
-		{
-			std::optional<sol::function> callback;
-			dialogManager->play("_cheats", std::move(callback));
-		}
-	}
+    if (jngl::keyPressed(jngl::key::F9)) {
+        if (!dialogManager->isActive()) {
+            std::optional<sol::function> callback;
+            dialogManager->play("_cheats", std::move(callback));
+        }
+    }
 
-	// Jump to a room
-	if (jngl::keyPressed("j"))
-	{
-		int i = 0;
-		std::string files;
+    // Jump to a room
+    if (jngl::keyPressed("j")) {
+        int i = 0;
+        std::string files;
 
-		const std::string path = jngl::internal::getConfigPath();
-		for (const auto & entry : std::filesystem::directory_iterator(path))
-		{
+        const std::string path = jngl::internal::getConfigPath();
+        for (const auto& entry : std::filesystem::directory_iterator(path)) {
 #ifdef _WIN32
-			std::wstring wide = std::wstring(entry.path().filename());
-			std::string str( wide.begin(), wide.end() );
-			files += std::to_string(i) + " " + str + "\n";
+            std::wstring wide = std::wstring(entry.path().filename());
+            std::string str(wide.begin(), wide.end());
+            files += std::to_string(i) + " " + str + "\n";
 #else
-			files += std::to_string(i) + " " + std::string(entry.path().filename()) + "\n";
+            files += std::to_string(i) + " " + std::string(entry.path().filename()) + "\n";
 #endif
-			i++;
-		}
+            i++;
+        }
 
-		debug_info.setText(files);
-		room_select_mode = true;
-	}
+        debug_info.setText(files);
+        room_select_mode = true;
+    }
 
-	if (!room_select_mode)
-		{
-		// Save with Control + 1-9 and Load with 1-9
-		for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
-		{
-			if (jngl::keyDown(jngl::key::ControlL) && jngl::keyPressed(number))
-			{
-				jngl::debug("Save to Save " + std::string(number));
-				saveLuaState("savegame" + std::string(number));
-			}
-			else if (jngl::keyPressed(number))
-			{
-				reset();
-				lua_state = std::make_shared<sol::state>();
-				lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+    if (!room_select_mode) {
+        // Save with Control + 1-9 and Load with 1-9
+        for (const auto& number : { "1", "2", "3", "4", "5", "6", "7", "8", "9" }) {
+            if (jngl::keyDown(jngl::key::ControlL) && jngl::keyPressed(number)) {
+                jngl::debug("Save to Save " + std::string(number));
+                saveLuaState("savegame" + std::string(number));
+            } else if (jngl::keyPressed(number)) {
+                reset();
+                lua_state = std::make_shared<sol::state>();
+                lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 
-				configToLua();
-				setupLuaFunctions();
-				loadLuaState("savegame" + std::string(number));
-				dialogManager = std::make_shared<DialogManager>(shared_from_this());
-			}
-		}
-	}
+                configToLua();
+                setupLuaFunctions();
+                loadLuaState("savegame" + std::string(number));
+                dialogManager = std::make_shared<DialogManager>(shared_from_this());
+            }
+        }
+    }
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
-	for (const auto &number : {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"})
-	{
-		int x = static_cast<int>(number[0]) - static_cast<int>('0');
-		if (room_select_mode && jngl::keyPressed(number) && tens.has_value())
-		{
-			const std::string path = jngl::internal::getConfigPath();
-			const int target = tens.value() * 10 + x;
+    for (const auto& number : { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" }) {
+        int x = static_cast<int>(number[0]) - static_cast<int>('0');
+        if (room_select_mode && jngl::keyPressed(number) && tens.has_value()) {
+            const std::string path = jngl::internal::getConfigPath();
+            const int target = tens.value() * 10 + x;
 
-			int i = 0;
-			for (const auto & entry [[maybe_unused]] : std::filesystem::directory_iterator(path))
-			{
-				i++;
-			}
-			if (target < i) {
-				reset();
-				lua_state = std::make_shared<sol::state>();
-				lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
+            int i = 0;
+            for (const auto& entry [[maybe_unused]] : std::filesystem::directory_iterator(path)) {
+                i++;
+            }
+            if (target < i) {
+                reset();
+                lua_state = std::make_shared<sol::state>();
+                lua_state->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::math);
 
-				configToLua();
-				setupLuaFunctions();
+                configToLua();
+                setupLuaFunctions();
 
-				i = 0;
-				for (const auto & entry : std::filesystem::directory_iterator(path))
-				{
-					if (i == target) {
+                i = 0;
+                for (const auto& entry : std::filesystem::directory_iterator(path)) {
+                    if (i == target) {
 #ifdef _WIN32
-						std::wstring wide = std::wstring(entry.path().filename());
-						std::string str( wide.begin(), wide.end() );
-						loadLuaState(str);
+                        std::wstring wide = std::wstring(entry.path().filename());
+                        std::string str(wide.begin(), wide.end());
+                        loadLuaState(str);
 #else
-						loadLuaState(std::string(entry.path().filename()));
+                        loadLuaState(std::string(entry.path().filename()));
 #endif
-						dialogManager = std::make_shared<DialogManager>(shared_from_this());
-						const std::string dialogFilePath = (*lua_state)["config"]["dialog"];
-						dialogManager->loadDialogsFromFile(dialogFilePath, false);
+                        dialogManager = std::make_shared<DialogManager>(shared_from_this());
+                        const std::string dialogFilePath = (*lua_state)["config"]["dialog"];
+                        dialogManager->loadDialogsFromFile(dialogFilePath, false);
 #ifdef _WIN32
-						runAction(std::string(str), std::static_pointer_cast<SpineObject>(currentScene->background));
+                        runAction(std::string(str), std::static_pointer_cast<SpineObject>(currentScene->background));
 #else
-						runAction(std::string(entry.path().filename()), std::static_pointer_cast<SpineObject>(currentScene->background));
+                        runAction(std::string(entry.path().filename()), std::static_pointer_cast<SpineObject>(currentScene->background));
 #endif
-					}
-					i++;
-				}
-				room_select_mode = false;
-				tens.reset();
-				debug_info.setText(debug_text);
-			}else {
-				room_select_mode = false;
-				tens.reset();
-				debug_info.setText(debug_text);
-			}
-		}
-		else if (room_select_mode && jngl::keyPressed(number) && !tens.has_value())
-		{
-			tens = x;
-		}
-	}
+                    }
+                    i++;
+                }
+                room_select_mode = false;
+                tens.reset();
+                debug_info.setText(debug_text);
+            } else {
+                room_select_mode = false;
+                tens.reset();
+                debug_info.setText(debug_text);
+            }
+        } else if (room_select_mode && jngl::keyPressed(number) && !tens.has_value()) {
+            tens = x;
+        }
+    }
 #endif
 }
 #endif
 
-void Game::draw() const
-{
-	auto originalMv = jngl::modelview();
-	const jngl::FrameBuffer* fb1 = &frameBuffer1;
-	const jngl::FrameBuffer* fb2 = &frameBuffer2;
-	std::optional<jngl::FrameBuffer::Context> context = frameBuffer1.use();
-	jngl::pushMatrix();
-	jngl::setBackgroundColor(jngl::Color(0, 0, 0));
-	applyCamera();
-	jngl::setColor(30, 200, 30, 255);
+void Game::draw() const {
+    auto originalMv = jngl::modelview();
+    const jngl::FrameBuffer* fb1 = &frameBuffer1;
+    const jngl::FrameBuffer* fb2 = &frameBuffer2;
+    std::optional<jngl::FrameBuffer::Context> context = frameBuffer1.use();
+    jngl::pushMatrix();
+    jngl::setBackgroundColor(jngl::Color(0, 0, 0));
+    applyCamera();
+    jngl::setColor(30, 200, 30, 255);
 
-	for (auto &obj : gameObjects)
-	{
-		if ((obj) == pointer)
-		{
+    for (auto& obj : gameObjects) {
+        if ((obj) == pointer) {
             continue;
         }
         if (const auto* shader = obj->getShaderProgram()) {
@@ -658,163 +598,135 @@ void Game::draw() const
         obj->draw();
     }
     jngl::popMatrix();
-	context = std::nullopt;
-	fb1->draw(originalMv);
+    context = std::nullopt;
+    fb1->draw(originalMv);
 
-	jngl::pushMatrix();
-	dialogManager->draw();
-	// Der Pointer wird doppelt gedrawed, damit der immer vorne ist.
-	if(pointer)
-		pointer->draw();
+    jngl::pushMatrix();
+    dialogManager->draw();
+    // Der Pointer wird doppelt gedrawed, damit der immer vorne ist.
+    if (pointer)
+        pointer->draw();
 
 #ifndef NDEBUG
-	if (show_debug_info)
-	{
-		jngl::setFontColor(0, 0, 0, 255);
-		debug_info.draw();
-	}
+    if (show_debug_info) {
+        jngl::setFontColor(0, 0, 0, 255);
+        debug_info.draw();
+    }
 #endif
 
-	jngl::popMatrix();
+    jngl::popMatrix();
 }
 
-void Game::applyCamera() const
-{
-	jngl::scale(cameraZoom);
-	jngl::translate(-1 * cameraPosition / cameraZoom);
+void Game::applyCamera() const {
+    jngl::scale(cameraZoom);
+    jngl::translate(-1 * cameraPosition / cameraZoom);
 }
 
-double Game::getCameraZoom() const
-{
-	return cameraZoom;
+double Game::getCameraZoom() const {
+    return cameraZoom;
 }
 
-Vec2 Game::getCameraSpeed() const
-{
-	return targetCameraPosition - cameraPosition;
+Vec2 Game::getCameraSpeed() const {
+    return targetCameraPosition - cameraPosition;
 }
 
-Vec2 Game::getCameraPosition() const
-{
-	return cameraPosition;
+Vec2 Game::getCameraPosition() const {
+    return cameraPosition;
 }
 
 template <typename T>
-int sgn(T val)
-{
-	return (T(0) < val) - (val < T(0));
+int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
 }
 
 void Game::setCameraPosition(Vec2 position, const double deadzoneFactorX,
-							 const double deadzoneFactorY)
-{
-	if (position.x < currentScene->left_border)
-	{
-		position.x = currentScene->left_border;
-	}
-	if (position.x > currentScene->right_border)
-	{
-		position.x = currentScene->right_border;
-	}
-	if (position.y < currentScene->top_border)
-	{
-		position.y = currentScene->top_border;
-	}
-	if (position.y > currentScene->bottom_border)
-	{
-		position.y = currentScene->bottom_border;
-	}
+                             const double deadzoneFactorY) {
+    if (position.x < currentScene->left_border) {
+        position.x = currentScene->left_border;
+    }
+    if (position.x > currentScene->right_border) {
+        position.x = currentScene->right_border;
+    }
+    if (position.y < currentScene->top_border) {
+        position.y = currentScene->top_border;
+    }
+    if (position.y > currentScene->bottom_border) {
+        position.y = currentScene->bottom_border;
+    }
 
-	cameraDeadzone = position - targetCameraPosition;
-	const double x = 160 * deadzoneFactorX;
-	const double y = 90 * deadzoneFactorY;
-	if (std::abs(cameraDeadzone.x) > x)
-	{
-		cameraDeadzone.x =
-			sgn(cameraDeadzone.x) *
-			(x + (std::abs(cameraDeadzone.x) - x) / std::exp(std::abs(cameraDeadzone.x) - x));
-	}
-	if (std::abs(cameraDeadzone.y) > y)
-	{
-		cameraDeadzone.y =
-			sgn(cameraDeadzone.y) *
-			(y + (std::abs(cameraDeadzone.y) - y) / std::exp(std::abs(cameraDeadzone.y) - y));
-	}
-	targetCameraPosition = position - cameraDeadzone;
+    cameraDeadzone = position - targetCameraPosition;
+    const double x = 160 * deadzoneFactorX;
+    const double y = 90 * deadzoneFactorY;
+    if (std::abs(cameraDeadzone.x) > x) {
+        cameraDeadzone.x =
+            sgn(cameraDeadzone.x) *
+            (x + (std::abs(cameraDeadzone.x) - x) / std::exp(std::abs(cameraDeadzone.x) - x));
+    }
+    if (std::abs(cameraDeadzone.y) > y) {
+        cameraDeadzone.y =
+            sgn(cameraDeadzone.y) *
+            (y + (std::abs(cameraDeadzone.y) - y) / std::exp(std::abs(cameraDeadzone.y) - y));
+    }
+    targetCameraPosition = position - cameraDeadzone;
 }
 
-void Game::setCameraPositionImmediately(Vec2 position)
-{
-	if (position.x < currentScene->left_border)
-	{
-		position.x = currentScene->left_border;
-	}
-	if (position.x > currentScene->right_border)
-	{
-		position.x = currentScene->right_border;
-	}
-	if (position.y < currentScene->top_border)
-	{
-		position.y = currentScene->top_border;
-	}
-	if (position.y > currentScene->bottom_border)
-	{
-		position.y = currentScene->bottom_border;
-	}
-	targetCameraPosition = cameraPosition = position;
+void Game::setCameraPositionImmediately(Vec2 position) {
+    if (position.x < currentScene->left_border) {
+        position.x = currentScene->left_border;
+    }
+    if (position.x > currentScene->right_border) {
+        position.x = currentScene->right_border;
+    }
+    if (position.y < currentScene->top_border) {
+        position.y = currentScene->top_border;
+    }
+    if (position.y > currentScene->bottom_border) {
+        position.y = currentScene->bottom_border;
+    }
+    targetCameraPosition = cameraPosition = position;
 }
 
-void Game::stepCamera()
-{
-	const auto speed = getCameraSpeed();
-	cameraPosition += speed / 36.0;
+void Game::stepCamera() {
+    const auto speed = getCameraSpeed();
+    cameraPosition += speed / 36.0;
 }
 
-void Game::add(const std::shared_ptr<SpineObject> &obj)
-{
-	needToAdd.emplace_back(obj);
+void Game::add(const std::shared_ptr<SpineObject>& obj) {
+    needToAdd.emplace_back(obj);
 }
 
-void Game::remove(const std::shared_ptr<SpineObject> &object)
-{
-	needToRemove.push_back(object);
+void Game::remove(const std::shared_ptr<SpineObject>& object) {
+    needToRemove.push_back(object);
 }
 
-void Game::addObjects()
-{
-	std::copy(needToAdd.begin(), needToAdd.end(), std::back_inserter(gameObjects));
-	needToAdd.clear();
+void Game::addObjects() {
+    std::copy(needToAdd.begin(), needToAdd.end(), std::back_inserter(gameObjects));
+    needToAdd.clear();
 }
 
-void Game::removeObjects()
-{
-	for (const auto &toRemove : needToRemove)
-	{
-		for (auto it = gameObjects.begin(); it != gameObjects.end(); ++it)
-		{
-			if (*it == toRemove)
-			{
-				gameObjects.erase(it);
-				break;
-			}
-		}
-	}
-	needToRemove.clear();
+void Game::removeObjects() {
+    for (const auto& toRemove : needToRemove) {
+        for (auto it = gameObjects.begin(); it != gameObjects.end(); ++it) {
+            if (*it == toRemove) {
+                gameObjects.erase(it);
+                break;
+            }
+        }
+    }
+    needToRemove.clear();
 }
 
-std::shared_ptr<DialogManager> Game::getDialogManager()
-{
-	return dialogManager;
+std::shared_ptr<DialogManager> Game::getDialogManager() {
+    return dialogManager;
 }
 
 void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject> thisObject) {
-    if (actionName.empty())
-	{
-		return;
-	}
+    if (actionName.empty()) {
+        return;
+    }
 
-	std::string script;
-	lua_state->set("this", thisObject);
+    std::string script;
+    lua_state->set("this", thisObject);
 
     if (!pointer->attachedObjects.empty()) {
         const std::string file = "scripts/" + actionName + "_item.lua";
@@ -853,12 +765,12 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
 
             sol::optional<sol::function> funcOpt = env[attached_object_ids_string];
             if (funcOpt && funcOpt->valid()) {
-				auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
-				if (!result.valid()) {
-					const sol::error err = result;
-					jngl::error(err.what());
-				}
-				(*lua_state)[attached_object_ids_string]();
+                auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
+                if (!result.valid()) {
+                    const sol::error err = result;
+                    jngl::error(err.what());
+                }
+                (*lua_state)[attached_object_ids_string]();
                 return;
 
             } else {
@@ -867,12 +779,12 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
             // Call all_items if exist
             sol::optional<sol::function> funcOptAll = env["all_items"];
             if (funcOptAll && funcOptAll->valid()) {
-				auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
-				if (!result.valid()) {
-					const sol::error err = result;
-					jngl::error(err.what());
-				}
-				(*lua_state)["all_items"]();
+                auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
+                if (!result.valid()) {
+                    const sol::error err = result;
+                    jngl::error(err.what());
+                }
+                (*lua_state)["all_items"]();
                 return;
             } else {
                 jngl::error("No function all_items in " + file);
@@ -890,58 +802,54 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
 
         return;
     }
-	// if the name starts with "dlg:", play the dialog,
-	// no need for a separate Lua file
-	else if (actionName.substr(0, 4) == "dlg:")
-	{
-		const std::string dialogName = actionName.substr(4);
-		sol::protected_function fn = (*lua_state)["PlayDialog"];
-		auto result = fn(dialogName);
-		if (!result.valid()) {
-			const sol::error err = result;
-			jngl::error("Failed to play dialog {}: {}", dialogName, err.what());
-		}
-		return;
-	}
-	else if (actionName.substr(0, 5) == "anim:")
-	{
-		const std::string animName = actionName.substr(5);
-		sol::protected_function fn = (*lua_state)["PlayAnimationOn"];
-		auto result = fn(thisObject->getId(), 0, animName, false);
-		if (!result.valid()) {
-			const sol::error err = result;
-			jngl::error("Failed to play animation {}: {}", animName, err.what());
-		}
-		return;
-	}
+    // if the name starts with "dlg:", play the dialog,
+    // no need for a separate Lua file
+    else if (actionName.substr(0, 4) == "dlg:") {
+        const std::string dialogName = actionName.substr(4);
+        sol::protected_function fn = (*lua_state)["PlayDialog"];
+        auto result = fn(dialogName);
+        if (!result.valid()) {
+            const sol::error err = result;
+            jngl::error("Failed to play dialog {}: {}", dialogName, err.what());
+        }
+        return;
+    } else if (actionName.substr(0, 5) == "anim:") {
+        const std::string animName = actionName.substr(5);
+        sol::protected_function fn = (*lua_state)["PlayAnimationOn"];
+        auto result = fn(thisObject->getId(), 0, animName, false);
+        if (!result.valid()) {
+            const sol::error err = result;
+            jngl::error("Failed to play animation {}: {}", animName, err.what());
+        }
+        return;
+    }
     // if there is no specific prefix, just load the according Lua file
     else {
         const std::string file = "scripts/" + actionName + ".lua";
-		const std::stringstream scriptstream = jngl::readAsset(file);
+        const std::stringstream scriptstream = jngl::readAsset(file);
 
-		if (!scriptstream)
-		{
-			jngl::error("Can not load lua script " + file);
-			return;
-		}
-		script = scriptstream.str();
-		jngl::log("lua", file);
-		auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
-		if (!result.valid()) {
-			const sol::error err = result;
-			jngl::error(err.what());
-		}
-		return;
+        if (!scriptstream) {
+            jngl::error("Can not load lua script " + file);
+            return;
+        }
+        script = scriptstream.str();
+        jngl::log("lua", file);
+        auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
+        if (!result.valid()) {
+            const sol::error err = result;
+            jngl::error(err.what());
+        }
+        return;
     }
- }
+}
 
 void Game::saveLuaState(const std::string& savefile) {
     if (savefile.empty()) {
         return;
     }
     if (!player->interruptible) {
-		jngl::debug("Game can not be saved in this state.");
-		return;
+        jngl::debug("Game can not be saved in this state.");
+        return;
     }
     // jngl::debug("Backup all globals start");
     const sol::table& globals = lua_state->globals();
@@ -951,188 +859,156 @@ void Game::saveLuaState(const std::string& savefile) {
     jngl::writeConfig(savefile, backup);
 }
 
-void Game::loadLuaState(const std::optional<std::string> &savefile)
-{
-	if (savefile) {
-		const std::string state = jngl::readConfig(savefile.value());
+void Game::loadLuaState(const std::optional<std::string>& savefile) {
+    if (savefile) {
+        const std::string state = jngl::readConfig(savefile.value());
         jngl::debug("Load lua state with savefile ({} KB)", state.size() / 1024);
         auto result = lua_state->safe_script(state, sol::script_pass_on_error, savefile.value());
 
-		if (!result.valid())
-		{
-			const sol::error err = result;
-			jngl::error("Failed to load savgame {}\n{}", savefile.value(),
-					err.what());
-		}
-	} else {
-		jngl::debug("Load lua state");
-	}
+        if (!result.valid()) {
+            const sol::error err = result;
+            jngl::error("Failed to load savgame {}\n{}", savefile.value(),
+                        err.what());
+        }
+    } else {
+        jngl::debug("Load lua state");
+    }
 
-	const std::string dialogFilePath = (*lua_state)["config"]["dialog"];
-	if ((*lua_state)["game"].valid() && (*lua_state)["game"]["scene"].valid())
-	{
-		getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
-		const std::string scene = (*lua_state)["game"]["scene"];
-		nextScene = scene;
-		loadScene_internal();
-	}
-	else
-	{
-		getDialogManager()->loadDialogsFromFile(dialogFilePath, true);
-		const std::string startscene = (*lua_state)["config"]["start_scene"];
-		nextScene = startscene;
-		loadScene_internal();
-	}
-	// TODO Error handling
-	jngl::debug("Loaded all globals");
+    const std::string dialogFilePath = (*lua_state)["config"]["dialog"];
+    if ((*lua_state)["game"].valid() && (*lua_state)["game"]["scene"].valid()) {
+        getDialogManager()->loadDialogsFromFile(dialogFilePath, false);
+        const std::string scene = (*lua_state)["game"]["scene"];
+        nextScene = scene;
+        loadScene_internal();
+    } else {
+        getDialogManager()->loadDialogsFromFile(dialogFilePath, true);
+        const std::string startscene = (*lua_state)["config"]["start_scene"];
+        nextScene = startscene;
+        loadScene_internal();
+    }
+    // TODO Error handling
+    jngl::debug("Loaded all globals");
 }
 
-const std::string Game::cleanLuaString(std::string variable)
-{
-	// The following strings denote other tokens:
+const std::string Game::cleanLuaString(std::string variable) {
+    // The following strings denote other tokens:
 
-	//  +     -     *     /     %     ^     #
-	//  ==    ~=    <=    >=    <     >     =
-	//  (     )     {     }     [     ]
-	//  ;     :     ,     .     ..    ...
-	for (const char *const &invalidChar : {"+", "-", "*", "/", "%", "^", "#", "<", ">", "=", "(", ")", "{", "}", "[", "]", ";", ":", ",", "."})
-	{
-		while (variable.find(invalidChar) != std::string::npos)
-		{
-			variable.replace(variable.find(invalidChar), 1, "_");
-		}
-	}
+    //  +     -     *     /     %     ^     #
+    //  ==    ~=    <=    >=    <     >     =
+    //  (     )     {     }     [     ]
+    //  ;     :     ,     .     ..    ...
+    for (const char* const& invalidChar : { "+", "-", "*", "/", "%", "^", "#", "<", ">", "=", "(", ")", "{", "}", "[", "]", ";", ":", ",", "." }) {
+        while (variable.find(invalidChar) != std::string::npos) {
+            variable.replace(variable.find(invalidChar), 1, "_");
+        }
+    }
 
-	return variable;
+    return variable;
 }
 
-std::string Game::backupLuaTable(const sol::table table, const std::string &parent)
-{
-	std::string result;
-	for (const auto &key_value_pair : table)
-	{
-		const sol::object key = key_value_pair.first;
-		const sol::object value = key_value_pair.second;
+std::string Game::backupLuaTable(const sol::table table, const std::string& parent) {
+    std::string result;
+    for (const auto& key_value_pair : table) {
+        const sol::object key = key_value_pair.first;
+        const sol::object value = key_value_pair.second;
 
-		std::string k;
-		if (key.get_type() == sol::type::string)
-		{
-			k = key.as<std::string>();
-		}
-		else if (key.get_type() == sol::type::number)
-		{
-			k = std::to_string(key.as<int>());
-		}
+        std::string k;
+        if (key.get_type() == sol::type::string) {
+            k = key.as<std::string>();
+        } else if (key.get_type() == sol::type::number) {
+            k = std::to_string(key.as<int>());
+        }
 
-		if (!parent.empty())
-		{
-			if (key.get_type() == sol::type::string)
-			{
-				k = "[\"" + k + "\"]";
-			}
-			else if (key.get_type() == sol::type::number)
-			{
-				k = "[" + k + "]";
-			}
-		}
+        if (!parent.empty()) {
+            if (key.get_type() == sol::type::string) {
+                k = "[\"" + k + "\"]";
+            } else if (key.get_type() == sol::type::number) {
+                k = "[" + k + "]";
+            }
+        }
 
-		if (k != "_entry_node" &&
-			k != "_VERSION" &&
-			k.substr(0, 4) != "sol." &&
-			k != "_G" &&
-			k != "base" &&
-			k != "package" &&
-			k != "math" &&
-			k != "string" &&
-			k != "searches")
-		{
-			std::string v;
-			switch (value.get_type())
-			{
-				// All this types are not saved in our savegame file.
-			case sol::type::none:
-			case sol::type::lua_nil:
-			case sol::type::thread:
-			case sol::type::function:
-			case sol::type::userdata:
-			case sol::type::poly:
-			case sol::type::lightuserdata:
-				break;
+        if (k != "_entry_node" &&
+            k != "_VERSION" &&
+            k.substr(0, 4) != "sol." &&
+            k != "_G" &&
+            k != "base" &&
+            k != "package" &&
+            k != "math" &&
+            k != "string" &&
+            k != "searches") {
+            std::string v;
+            switch (value.get_type()) {
+                // All this types are not saved in our savegame file.
+            case sol::type::none:
+            case sol::type::lua_nil:
+            case sol::type::thread:
+            case sol::type::function:
+            case sol::type::userdata:
+            case sol::type::poly:
+            case sol::type::lightuserdata:
+                break;
 
-			case sol::type::string:
-				v = value.as<std::string>();
-				result += parent + k + " = \"" + v + "\"\n";
-				break;
-			case sol::type::number:
-				if (value.is<int>())
-				{
-					v = std::to_string(value.as<int>());
-				}else{
-				v = std::to_string(value.as<double>());
-				}
-				result += parent + k + " = " + v + "\n";
-				break;
-			case sol::type::boolean:
+            case sol::type::string:
+                v = value.as<std::string>();
+                result += parent + k + " = \"" + v + "\"\n";
+                break;
+            case sol::type::number:
+                if (value.is<int>()) {
+                    v = std::to_string(value.as<int>());
+                } else {
+                    v = std::to_string(value.as<double>());
+                }
+                result += parent + k + " = " + v + "\n";
+                break;
+            case sol::type::boolean:
 
-				if (value.as<bool>())
-				{
-					v = "true";
-				}
-				else
-				{
-					v = "false";
-				}
+                if (value.as<bool>()) {
+                    v = "true";
+                } else {
+                    v = "false";
+                }
 
-				result += parent + k + " = " + v + "\n";
-				break;
-			case sol::type::table:
-				result += parent + k + " = {}\n";
-				result += backupLuaTable(value.as<sol::table>(), parent + k);
-				break;
-			}
-		}
-	}
+                result += parent + k + " = " + v + "\n";
+                break;
+            case sol::type::table:
+                result += parent + k + " = {}\n";
+                result += backupLuaTable(value.as<sol::table>(), parent + k);
+                break;
+            }
+        }
+    }
 
-	return result;
+    return result;
 }
 
-const std::shared_ptr<SpineObject> Game::getObjectById(const std::string &objectId)
-{
-	if (objectId == "Player" || objectId == "player" || player->getName() == objectId)
-	{
-		return (*this->lua_state)["scenes"]["cross_scene"]["items"]["player"]["object"];
-	}
-	if (objectId == "Background")
-	{
-		return currentScene->background;
-	}
+const std::shared_ptr<SpineObject> Game::getObjectById(const std::string& objectId) {
+    if (objectId == "Player" || objectId == "player" || player->getName() == objectId) {
+        return (*this->lua_state)["scenes"]["cross_scene"]["items"]["player"]["object"];
+    }
+    if (objectId == "Background") {
+        return currentScene->background;
+    }
 
-	std::shared_ptr<SpineObject> obj = nullptr;
-	// if ((*this->lua_state)[objectId].valid())
-	// {
-	// 	obj = (*this->lua_state)[objectId];
-	// }
-	// else
-	if ((*this->lua_state)["inventory_items"][objectId].valid())
-	{
-		obj = (*this->lua_state)["inventory_items"][objectId]["object"];
-	}
-	else
-	{
-		std::string scene = (*this->lua_state)["game"]["scene"];
-		if ((*this->lua_state)["scenes"][scene]["items"][objectId].valid())
-		{
-			obj = (*this->lua_state)["scenes"][scene]["items"][objectId]["object"];
-		}
-	}
-	if (obj == nullptr)
-	{
-		if ((*this->lua_state)["scenes"]["cross_scene"]["items"][objectId].valid())
-		{
-			obj = (*this->lua_state)["scenes"]["cross_scene"]["items"][objectId]["object"];
-		}
-	}
-	return obj;
+    std::shared_ptr<SpineObject> obj = nullptr;
+    // if ((*this->lua_state)[objectId].valid())
+    // {
+    // 	obj = (*this->lua_state)[objectId];
+    // }
+    // else
+    if ((*this->lua_state)["inventory_items"][objectId].valid()) {
+        obj = (*this->lua_state)["inventory_items"][objectId]["object"];
+    } else {
+        std::string scene = (*this->lua_state)["game"]["scene"];
+        if ((*this->lua_state)["scenes"][scene]["items"][objectId].valid()) {
+            obj = (*this->lua_state)["scenes"][scene]["items"][objectId]["object"];
+        }
+    }
+    if (obj == nullptr) {
+        if ((*this->lua_state)["scenes"]["cross_scene"]["items"][objectId].valid()) {
+            obj = (*this->lua_state)["scenes"]["cross_scene"]["items"][objectId]["object"];
+        }
+    }
+    return obj;
 }
 
 sol::table_proxy<sol::table, std::tuple<std::string>> Game::getObjectTable(const std::string& objectId) {
@@ -1165,19 +1041,18 @@ sol::table_proxy<sol::table, std::tuple<std::string>> Game::getObjectTable(const
 }
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
-void Game::onFileDrop(const std::filesystem::path& path)
-{
-	std::string spine_file = path.stem().string();
+void Game::onFileDrop(const std::filesystem::path& path) {
+    std::string spine_file = path.stem().string();
 
     auto atlas = std::make_unique<spine::Atlas>((spine_file + "/" + spine_file + ".atlas").c_str(), &SkeletonDrawable::textureLoader);
     assert(atlas);
     auto json = std::make_unique<spine::SkeletonJson>(*atlas);
     std::unique_ptr<spine::SkeletonData> skeletonData;
-	skeletonData.reset((json->readSkeletonDataFile((spine_file + "/" + spine_file + ".json").c_str())));
+    skeletonData.reset((json->readSkeletonDataFile((spine_file + "/" + spine_file + ".json").c_str())));
 
     if (!skeletonData) {
         jngl::error("Error loading " + spine_file + " Spine project. Make sure it is saved in data-src and prepare_assets is running.");
-		return;
+        return;
     }
     currentScene->addToFile(spine_file);
     currentScene->writeToFile();
@@ -1187,56 +1062,56 @@ void Game::onFileDrop(const std::filesystem::path& path)
 
 #ifndef NDEBUG
 void Game::writeTGA(const std::filesystem::path& filename, int width, int height,
-                              const uint8_t* pixels) {
-	std::ofstream file(filename, std::ios::binary);
-	if (!file) {
-		throw std::runtime_error("Failed to open file for writing: " + filename.string());
-	}
+                    const uint8_t* pixels) {
+    std::ofstream file(filename, std::ios::binary);
+    if (!file) {
+        throw std::runtime_error("Failed to open file for writing: " + filename.string());
+    }
 
-	// TGA header (18 bytes)
-	uint8_t header[18] = {
-		0, // ID length
-		0, // Color map type
-		2, // Image type (2 = uncompressed RGB)
-		0,
-		0,
-		0,
-		0,
-		0, // Color map specification (not used)
-		0,
-		0, // X origin
-		0,
-		0, // Y origin
-		static_cast<uint8_t>(width & 0xFF),
-		static_cast<uint8_t>((width >> 8) & 0xFF), // Width
-		static_cast<uint8_t>(height & 0xFF),
-		static_cast<uint8_t>((height >> 8) & 0xFF), // Height
-		24,                                         // Bits per pixel (RGB = 24)
-		0                                           // Image descriptor
-	};
+    // TGA header (18 bytes)
+    uint8_t header[18] = {
+        0, // ID length
+        0, // Color map type
+        2, // Image type (2 = uncompressed RGB)
+        0,
+        0,
+        0,
+        0,
+        0, // Color map specification (not used)
+        0,
+        0, // X origin
+        0,
+        0, // Y origin
+        static_cast<uint8_t>(width & 0xFF),
+        static_cast<uint8_t>((width >> 8) & 0xFF), // Width
+        static_cast<uint8_t>(height & 0xFF),
+        static_cast<uint8_t>((height >> 8) & 0xFF), // Height
+        24,                                         // Bits per pixel (RGB = 24)
+        0                                           // Image descriptor
+    };
 
-	file.write(reinterpret_cast<const char*>(header), sizeof(header));
+    file.write(reinterpret_cast<const char*>(header), sizeof(header));
 
-	// TGA stores images in BGR format and from bottom to top
-	// OpenGL's glReadPixels returns RGB from bottom to top by default
-	// So we need to convert RGB to BGR
-	std::vector<uint8_t> bgrPixels(static_cast<size_t>(width * height * 3));
-	for (int y = 0; y < height; ++y) {
-		for (int x = 0; x < width; ++x) {
-			int idx = (y * width + x) * 3;
-			bgrPixels[idx + 0] = pixels[idx + 2]; // B
-			bgrPixels[idx + 1] = pixels[idx + 1]; // G
-			bgrPixels[idx + 2] = pixels[idx + 0]; // R
-		}
-	}
+    // TGA stores images in BGR format and from bottom to top
+    // OpenGL's glReadPixels returns RGB from bottom to top by default
+    // So we need to convert RGB to BGR
+    std::vector<uint8_t> bgrPixels(static_cast<size_t>(width * height * 3));
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int idx = (y * width + x) * 3;
+            bgrPixels[idx + 0] = pixels[idx + 2]; // B
+            bgrPixels[idx + 1] = pixels[idx + 1]; // G
+            bgrPixels[idx + 2] = pixels[idx + 0]; // R
+        }
+    }
 
-	file.write(reinterpret_cast<const char*>(bgrPixels.data()),
-	           static_cast<std::streamsize>(bgrPixels.size()));
+    file.write(reinterpret_cast<const char*>(bgrPixels.data()),
+               static_cast<std::streamsize>(bgrPixels.size()));
 
-	if (!file) {
-		throw std::runtime_error("Failed to write TGA data");
-	}
+    if (!file) {
+        throw std::runtime_error("Failed to write TGA data");
+    }
 
-	jngl::debug("TGA file written successfully: {}", filename.string());
+    jngl::debug("TGA file written successfully: {}", filename.string());
 }
 #endif

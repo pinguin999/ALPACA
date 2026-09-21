@@ -15,8 +15,8 @@ namespace detail {
 
 // get squared distance from a point to a segment
 inline double getSegDistSq(const jngl::Vec2& p,
-               const jngl::Vec2& a,
-               const jngl::Vec2& b) {
+                           const jngl::Vec2& a,
+                           const jngl::Vec2& b) {
     auto x = a.x;
     auto y = a.y;
     auto dx = b.x - x;
@@ -53,10 +53,9 @@ inline double pointToPolygonDist(const jngl::Vec2& point, const std::vector<std:
             const jngl::Vec2& b = ring[j];
 
             if ((a.y > point.y) != (b.y > point.y) &&
-                (point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x))
-                {
-                    inside = !inside;
-                }
+                (point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x)) {
+                inside = !inside;
+            }
 
             minDistSq = std::min(minDistSq, getSegDistSq(point, a, b));
         }
@@ -67,22 +66,22 @@ inline double pointToPolygonDist(const jngl::Vec2& point, const std::vector<std:
 
 struct Cell {
     Cell(const jngl::Vec2& c_, double h_, const std::vector<std::vector<jngl::Vec2>>& polygon)
-        : c(c_),
-          h(h_),
-          d(pointToPolygonDist(c, polygon)),
-          max(d + (h * std::sqrt(2)))
-        {}
+    : c(c_),
+      h(h_),
+      d(pointToPolygonDist(c, polygon)),
+      max(d + (h * std::sqrt(2))) {
+    }
 
     jngl::Vec2 c; // cell center
-    double h; // half the cell size
-    double d; // distance from cell center to polygon
-    double max; // max distance to polygon within a cell
+    double h;     // half the cell size
+    double d;     // distance from cell center to polygon
+    double max;   // max distance to polygon within a cell
 };
 
 // get polygon centroid
 inline Cell getCentroidCell(const std::vector<std::vector<jngl::Vec2>>& polygon) {
     double area = 0;
-    jngl::Vec2 c { 0, 0 };
+    jngl::Vec2 c{ 0, 0 };
     const auto& ring = polygon.at(0);
 
     for (std::size_t i = 0, len = ring.size(), j = len - 1; i < len; j = i++) {
@@ -99,23 +98,21 @@ inline Cell getCentroidCell(const std::vector<std::vector<jngl::Vec2>>& polygon)
 
 } // namespace detail
 
-inline std::tuple<jngl::Vec2, jngl::Vec2> create_envelope(std::vector<jngl::Vec2> const& geometry)
-{
+inline std::tuple<jngl::Vec2, jngl::Vec2> create_envelope(std::vector<jngl::Vec2> const& geometry) {
     double min_t = std::numeric_limits<double>::lowest();
     double max_t = std::numeric_limits<double>::max();
 
     jngl::Vec2 min(max_t, max_t);
     jngl::Vec2 max(min_t, min_t);
 
-    for (auto point : geometry)
-    {
+    for (auto point : geometry) {
         min.x = std::min(min.x, point.x);
         min.y = std::min(min.y, point.y);
         max.x = std::max(max.x, point.x);
         max.y = std::max(max.y, point.y);
     }
 
-    return {min, max};
+    return { min, max };
 }
 
 inline jngl::Vec2 polylabel(const std::vector<std::vector<jngl::Vec2>>& polygon, double precision = 1, bool debug = false) {
@@ -149,7 +146,7 @@ inline jngl::Vec2 polylabel(const std::vector<std::vector<jngl::Vec2>>& polygon,
 
     const auto getCentroid = [&]() {
         double area = 0;
-        jngl::Vec2 c { 0, 0 };
+        jngl::Vec2 c{ 0, 0 };
         for (std::size_t i = 0, len = outerRing.size(), j = len - 1; i < len; j = i++) {
             const jngl::Vec2& a = outerRing[i];
             const jngl::Vec2& b = outerRing[j];
@@ -170,7 +167,7 @@ inline jngl::Vec2 polylabel(const std::vector<std::vector<jngl::Vec2>>& polygon,
     const jngl::Vec2 envelope_min = std::get<0>(envelope);
     const jngl::Vec2 envelope_max = std::get<1>(envelope);
 
-    const jngl::Vec2 size {
+    const jngl::Vec2 size{
         envelope_max.x - envelope_min.x,
         envelope_max.y - envelope_min.y
     };
@@ -179,7 +176,7 @@ inline jngl::Vec2 polylabel(const std::vector<std::vector<jngl::Vec2>>& polygon,
     double h = cellSize / 2;
 
     // a priority queue of cells in order of their "potential" (max distance to polygon)
-    auto compareMax = [] (const Cell& a, const Cell& b) {
+    auto compareMax = [](const Cell& a, const Cell& b) {
         return a.max < b.max;
     };
     using Queue = std::priority_queue<Cell, std::vector<Cell>, decltype(compareMax)>;
@@ -192,7 +189,7 @@ inline jngl::Vec2 polylabel(const std::vector<std::vector<jngl::Vec2>>& polygon,
     // cover polygon with initial cells
     for (double x = envelope_min.x; x < envelope_max.x; x += cellSize) {
         for (double y = envelope_min.y; y < envelope_max.y; y += cellSize) {
-            cellQueue.push(Cell({x + h, y + h}, h, polygon));
+            cellQueue.push(Cell({ x + h, y + h }, h, polygon));
         }
     }
 
@@ -218,17 +215,16 @@ inline jngl::Vec2 polylabel(const std::vector<std::vector<jngl::Vec2>>& polygon,
         }
 
         // do not drill down further if there's no chance of a better solution
-        if (cell.max - bestCell.d <= precision)
-        {
+        if (cell.max - bestCell.d <= precision) {
             continue;
         }
 
         // split the cell into four cells
         h = cell.h / 2;
-        cellQueue.push(Cell({cell.c.x - h, cell.c.y - h}, h, polygon));
-        cellQueue.push(Cell({cell.c.x + h, cell.c.y - h}, h, polygon));
-        cellQueue.push(Cell({cell.c.x - h, cell.c.y + h}, h, polygon));
-        cellQueue.push(Cell({cell.c.x + h, cell.c.y + h}, h, polygon));
+        cellQueue.push(Cell({ cell.c.x - h, cell.c.y - h }, h, polygon));
+        cellQueue.push(Cell({ cell.c.x + h, cell.c.y - h }, h, polygon));
+        cellQueue.push(Cell({ cell.c.x - h, cell.c.y + h }, h, polygon));
+        cellQueue.push(Cell({ cell.c.x + h, cell.c.y + h }, h, polygon));
         numProbes += 4;
     }
 

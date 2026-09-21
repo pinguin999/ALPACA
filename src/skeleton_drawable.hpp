@@ -6,48 +6,45 @@
 
 class TextureLoader : public spine::TextureLoader {
 public:
-	void load(spine::AtlasPage& page, const spine::String& path) override;
-	void unload(void* texture) override;
+    void load(spine::AtlasPage& page, const spine::String& path) override;
+    void unload(void* texture) override;
 };
-
 
 class SkeletonDrawable {
 public:
-	static TextureLoader textureLoader;
-	std::unique_ptr<spine::Skeleton> skeleton;
-	std::unique_ptr<spine::AnimationState> state;
-	float timeScale;
+    static TextureLoader textureLoader;
+    std::unique_ptr<spine::Skeleton> skeleton;
+    std::unique_ptr<spine::AnimationState> state;
+    float timeScale;
 
-	explicit SkeletonDrawable(spine::SkeletonData& skeleton,
-	                          std::unique_ptr<spine::AnimationStateData> = nullptr);
-	~SkeletonDrawable();
+    explicit SkeletonDrawable(spine::SkeletonData& skeleton,
+                              std::unique_ptr<spine::AnimationStateData> = nullptr);
+    ~SkeletonDrawable();
 
     void step();
-	void setAlpha(float);
+    void setAlpha(float);
 
-	void draw(const jngl::Mat3& modelview = jngl::modelview()) const;
+    void draw(const jngl::Mat3& modelview = jngl::modelview()) const;
 
-	bool hotspot_highlight = false;
-	mutable std::vector<jngl::Vec2> hotspots;
+    bool hotspot_highlight = false;
+    mutable std::vector<jngl::Vec2> hotspots;
 #ifndef NDEBUG
-	bool debugdraw = false;
+    bool debugdraw = false;
 #endif
 
 private:
-	struct alignas(64) HotspotCache {
-		std::vector<float> vertices;
-		jngl::Vec2 center;
-	};
-	std::vector<HotspotCache> hotspotCache;
+    struct alignas(64) HotspotCache {
+        std::vector<float> vertices;
+        jngl::Vec2 center;
+    };
+    std::vector<HotspotCache> hotspotCache;
 
-	std::unique_ptr<spine::AnimationStateData> animationStateData;
-	mutable spine::Array<float> worldVertices;
-	mutable spine::Array<unsigned short> quadIndices;
-	mutable spine::SkeletonClipping clipper;
-	float alpha = 1.f;
-
+    std::unique_ptr<spine::AnimationStateData> animationStateData;
+    mutable spine::Array<float> worldVertices;
+    mutable spine::Array<unsigned short> quadIndices;
+    mutable spine::SkeletonClipping clipper;
+    float alpha = 1.f;
 };
 
-
-spine::BoundingBoxAttachment *spSkeletonBounds_containsPointMatchingName(spine::SkeletonBounds *self, const std::string &name, float x, float y);
-spine::BoundingBoxAttachment *spSkeletonBounds_containsPointNotMatchingName(spine::SkeletonBounds *self, const std::string &name, float x, float y);
+spine::BoundingBoxAttachment* spSkeletonBounds_containsPointMatchingName(spine::SkeletonBounds* self, const std::string& name, float x, float y);
+spine::BoundingBoxAttachment* spSkeletonBounds_containsPointNotMatchingName(spine::SkeletonBounds* self, const std::string& name, float x, float y);
