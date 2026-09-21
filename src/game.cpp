@@ -836,7 +836,7 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
             }
 
             // Only runs the function if it is defined in the Lua file
-            sol::environment env((*lua_state), sol::create, (*lua_state).globals());
+            sol::environment env((*lua_state), sol::create);
             sol::load_result load_res = (*lua_state).load(script);
             if (!load_res.valid()) {
                 jngl::error("Can not parse lua script " + file);
