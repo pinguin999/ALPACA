@@ -6,10 +6,9 @@
 #include <jngl.hpp>
 #include <sol/sol.hpp>
 
-class Player : public SpineObject
-{
+class Player : public SpineObject {
 public:
-    explicit Player(const std::shared_ptr<Game> &game, const std::string &spine_file);
+    explicit Player(const std::shared_ptr<Game>& game, const std::string& spine_file);
     ~Player() override = default;
 
     bool step(bool force) override;

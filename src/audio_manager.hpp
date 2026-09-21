@@ -13,16 +13,15 @@ struct Channels : public jngl::Singleton<Channels> {
     jngl::Channel music_fadeout;
 };
 
-class AudioManager : public jngl::Singleton<AudioManager>
-{
+class AudioManager : public jngl::Singleton<AudioManager> {
 public:
     void step();
-    void fadeLoopMuisc(const std::string &filePath);
+    void fadeLoopMuisc(const std::string& filePath);
 
-    void loopMusic(const std::string &filePath);
+    void loopMusic(const std::string& filePath);
     void stopMusic();
 
-    void loopAmbient(const std::string &filePath);
+    void loopAmbient(const std::string& filePath);
 
     void stopFadeMusic();
 

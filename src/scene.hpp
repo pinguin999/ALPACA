@@ -7,24 +7,21 @@
 class Game;
 class InteractableObject;
 
-class LoadException : public std::runtime_error
-{
+class LoadException : public std::runtime_error {
 public:
-    explicit LoadException(const char *details);
+    explicit LoadException(const char* details);
 };
 
-class SceneExit
-{
+class SceneExit {
 };
 
-class Scene
-{
+class Scene {
 public:
-    explicit Scene(const std::string &fileName, const std::shared_ptr<Game> &game);
+    explicit Scene(const std::string& fileName, const std::shared_ptr<Game>& game);
 
     void playMusic();
-    std::shared_ptr<InteractableObject> createObject(const std::string &spine_file, const std::string &id, float scale);
-    void createObjectJSON(const YAML::Node &object);
+    std::shared_ptr<InteractableObject> createObject(const std::string& spine_file, const std::string& id, float scale);
+    void createObjectJSON(const YAML::Node& object);
     void createObjectLua(std::string id, std::string scene);
     void loadObjects(YAML::Node objects);
 
@@ -40,8 +37,8 @@ public:
     std::unique_ptr<jngl::ImageData> zBufferMap;
 #ifndef NDEBUG
     void writeToFile();
-    void addToFile(const std::string &spine_file);
-    void updateObjectPosition(const std::string &id, jngl::Vec2 position);
+    void addToFile(const std::string& spine_file);
+    void updateObjectPosition(const std::string& id, jngl::Vec2 position);
 #endif
 private:
     std::string fileName;

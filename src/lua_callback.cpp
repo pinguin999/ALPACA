@@ -9,19 +9,18 @@ LuaCallback::LuaCallback(sol::function callback, std::shared_ptr<sol::state> lua
 }
 
 bool LuaCallback::calls_function(const sol::function& function) {
-	return callback == function;
+    return callback == function;
 }
 
 void LuaCallback::operator()() {
-	lua_state->set("this", thisObject);
-	sol::protected_function_result result = callback();
-	if(!result.valid())
-	{
-		const sol::error err = result;
-		jngl::error("Error in Lua callback: {}", err.what());
-	}
+    lua_state->set("this", thisObject);
+    sol::protected_function_result result = callback();
+    if (!result.valid()) {
+        const sol::error err = result;
+        jngl::error("Error in Lua callback: {}", err.what());
+    }
 }
 
 bool operator==(const LuaCallback& a, const LuaCallback& b) {
-	return a.callback == b.callback && a.thisObject == b.thisObject;
+    return a.callback == b.callback && a.thisObject == b.thisObject;
 }

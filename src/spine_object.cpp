@@ -62,79 +62,79 @@ SpineObject::SpineObject(const std::shared_ptr<Game>& game, const std::string& s
                          std::string id, float scale)
 : scale(scale), spine_name(spine_file),
   id(std::move(id)), game(game) {
-	atlas = std::make_unique<spine::Atlas>((spine_file + "/" + spine_file + ".atlas").c_str(),
-	                                       &SkeletonDrawable::textureLoader);
-	assert(atlas);
-	auto json = std::make_unique<spine::SkeletonJson>(*atlas);
-	json->setScale(scale);
+    atlas = std::make_unique<spine::Atlas>((spine_file + "/" + spine_file + ".atlas").c_str(),
+                                           &SkeletonDrawable::textureLoader);
+    assert(atlas);
+    auto json = std::make_unique<spine::SkeletonJson>(*atlas);
+    json->setScale(scale);
 
 #ifndef NDEBUG
-	while (true) {
+    while (true) {
 #endif
-		skeletonData.reset(
-		    json->readSkeletonDataFile((spine_file + "/" + spine_file + ".json").c_str()));
-		if (!skeletonData) {
-			jngl::error("Fatal Error loading {}: {}", spine_file, json->getError().buffer());
+        skeletonData.reset(
+            json->readSkeletonDataFile((spine_file + "/" + spine_file + ".json").c_str()));
+        if (!skeletonData) {
+            jngl::error("Fatal Error loading {}: {}", spine_file, json->getError().buffer());
 #ifndef NDEBUG
-			atlas =
-			    std::make_unique<spine::Atlas>((spine_file + "/" + spine_file + ".atlas").c_str(),
-			                                   &SkeletonDrawable::textureLoader);
-			json = std::make_unique<spine::SkeletonJson>(*atlas);
+            atlas =
+                std::make_unique<spine::Atlas>((spine_file + "/" + spine_file + ".atlas").c_str(),
+                                               &SkeletonDrawable::textureLoader);
+            json = std::make_unique<spine::SkeletonJson>(*atlas);
             json->setScale(scale);
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
         }
-		break;
+        break;
 #endif
-	}
+    }
 
-	auto animationStateData = std::make_unique<spine::AnimationStateData>(*skeletonData);
-	skeleton = std::make_unique<SkeletonDrawable>(*skeletonData, std::move(animationStateData));
-	bounds = std::make_unique<spine::SkeletonBounds>();
+    auto animationStateData = std::make_unique<spine::AnimationStateData>(*skeletonData);
+    skeleton = std::make_unique<SkeletonDrawable>(*skeletonData, std::move(animationStateData));
+    bounds = std::make_unique<spine::SkeletonBounds>();
 
-	skeleton->step();
+    skeleton->step();
 }
 
 std::optional<jngl::Vec2> SpineObject::getPoint(const std::string& point_name) const {
-	if (point_name.empty()) {
-		return std::nullopt;
-	}
-	auto* slot = skeleton->skeleton->findSlot(point_name.c_str());
-	if (!slot) {
-		return std::nullopt;
-	}
-	// Possible Problem: Slot and Point have to have the same name
-	auto* att = skeleton->skeleton->getAttachment(point_name.c_str(), point_name.c_str());
-	if (!att) {
-		return std::nullopt;
-	}
-	if (att->getRTTI().isExactly(spine::PointAttachment::rtti)) {
-		spine::PointAttachment* point = static_cast<spine::PointAttachment*>(att);
-		float x = 0;
-		float y = 0;
-		point->computeWorldPosition(slot->getBone().getPose(), x, y);
-		return jngl::Vec2(x, y);
-	}
-	return std::nullopt;
+    if (point_name.empty()) {
+        return std::nullopt;
+    }
+    auto* slot = skeleton->skeleton->findSlot(point_name.c_str());
+    if (!slot) {
+        return std::nullopt;
+    }
+    // Possible Problem: Slot and Point have to have the same name
+    auto* att = skeleton->skeleton->getAttachment(point_name.c_str(), point_name.c_str());
+    if (!att) {
+        return std::nullopt;
+    }
+    if (att->getRTTI().isExactly(spine::PointAttachment::rtti)) {
+        spine::PointAttachment* point = static_cast<spine::PointAttachment*>(att);
+        float x = 0;
+        float y = 0;
+        point->computeWorldPosition(slot->getBone().getPose(), x, y);
+        return jngl::Vec2(x, y);
+    }
+    return std::nullopt;
 }
 
 std::vector<std::string> SpineObject::getPointNames() const {
-	std::vector<std::string> result;
+    std::vector<std::string> result;
 
-	spine::Array<spine::Skin*>& skins = skeleton->skeleton->getData().getSkins();
-	for (size_t i = 0; i < skins.size(); i++) {
-		spine::Skin* skin = skins[i];
-		auto entries = skin->getAttachments();
-		while (entries.hasNext()) {
-			auto& entry = entries.next();
-			if (entry._attachment &&
-			    entry._attachment->getRTTI().isExactly(spine::PointAttachment::rtti)) {
-				result.emplace_back(entry._attachment->getName().buffer());
-			}
-		}
-	}
-	sort(result.begin(), result.end());
-	return result;
+    spine::Array<spine::Skin*>& skins = skeleton->skeleton->getData().getSkins();
+    for (size_t i = 0; i < skins.size(); i++) {
+        spine::Skin* skin = skins[i];
+        auto entries = skin->getAttachments();
+        while (entries.hasNext()) {
+            auto& entry = entries.next();
+            if (entry._attachment &&
+                entry._attachment->getRTTI().isExactly(spine::PointAttachment::rtti)) {
+                result.emplace_back(entry._attachment->getName().buffer());
+            }
+        }
+    }
+    sort(result.begin(), result.end());
+    return result;
 }
 
 void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimation, bool loop,
@@ -184,12 +184,11 @@ void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimat
                             _game->runAction(event_string.erase(event_string.size() - 4),
                                              (*_game->lua_state)["this"]);
                         } else {
-							auto result = _game->lua_state->safe_script(event_string, sol::script_pass_on_error);
-							if (!result.valid())
-							{
-								const sol::error err = result;
-								jngl::debug("Failed run script via Event {} {}", event->getData().getName().buffer(), err.what());
-							}
+                            auto result = _game->lua_state->safe_script(event_string, sol::script_pass_on_error);
+                            if (!result.valid()) {
+                                const sol::error err = result;
+                                jngl::debug("Failed run script via Event {} {}", event->getData().getName().buffer(), err.what());
+                            }
                         }
                     }
                 }
@@ -215,31 +214,31 @@ void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimat
     if (trackIndex > 0 && loop == false) {
         skeleton->state->addEmptyAnimation(trackIndex, 0, 0);
     }
-	skeleton->state->apply(*skeleton->skeleton);
-	skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
+    skeleton->state->apply(*skeleton->skeleton);
+    skeleton->skeleton->updateWorldTransform(spine::Physics_Update);
 }
 
 void SpineObject::stopAnimation(int trackIndex) {
-	if (auto _game = game.lock()) {
-		skeleton->state->setEmptyAnimation(trackIndex, 0.1f);
-		animation_callback.erase(std::to_string(trackIndex) + "<empty>");
-	}
+    if (auto _game = game.lock()) {
+        skeleton->state->setEmptyAnimation(trackIndex, 0.1f);
+        animation_callback.erase(std::to_string(trackIndex) + "<empty>");
+    }
 }
 
 void SpineObject::addAnimation(int trackIndex, const std::string& currentAnimation, bool loop,
                                float delay, std::optional<sol::function> callback) {
-	if (auto _game = game.lock()) {
-		if (callback) {
-			this->animation_callback.emplace(std::to_string(trackIndex) + currentAnimation,
-			                                 LuaCallback(std::move(*callback), _game->lua_state));
-		}
-		if (trackIndex == 0) {
-			this->currentAnimation = currentAnimation;
-		}
-		spine::Animation* animation =
-		    skeleton->state->getData().getSkeletonData().findAnimation(currentAnimation.c_str());
-		if (animation) {
-			skeleton->state->addAnimation(trackIndex, *animation, static_cast<int>(loop), delay);
+    if (auto _game = game.lock()) {
+        if (callback) {
+            this->animation_callback.emplace(std::to_string(trackIndex) + currentAnimation,
+                                             LuaCallback(std::move(*callback), _game->lua_state));
+        }
+        if (trackIndex == 0) {
+            this->currentAnimation = currentAnimation;
+        }
+        spine::Animation* animation =
+            skeleton->state->getData().getSkeletonData().findAnimation(currentAnimation.c_str());
+        if (animation) {
+            skeleton->state->addAnimation(trackIndex, *animation, static_cast<int>(loop), delay);
         } else {
             jngl::error("The animation {} is missing for {}.spine", currentAnimation, spine_name);
         }
@@ -247,31 +246,31 @@ void SpineObject::addAnimation(int trackIndex, const std::string& currentAnimati
 }
 
 void SpineObject::onAnimationComplete(const int index, const std::string& animation) {
-	if (auto _game = game.lock()) {
-		if (!deleted && index == 0) {
-			// Set animation back to default animation in Lua state
-			auto lua_object = _game->getObjectTable(getId());
-			std::string animation = (*_game->lua_state)["config"]["spine_default_animation"];
-			lua_object["animation"] = animation;
-			lua_object["loop_animation"] = true;
-		}
-		const auto key = std::to_string(index) + animation;
-		auto it = animation_callback.find(key);
-		if (it != animation_callback.end()) {
-			it->second();
-			animation_callback.erase(it);
-		}
-	}
+    if (auto _game = game.lock()) {
+        if (!deleted && index == 0) {
+            // Set animation back to default animation in Lua state
+            auto lua_object = _game->getObjectTable(getId());
+            std::string animation = (*_game->lua_state)["config"]["spine_default_animation"];
+            lua_object["animation"] = animation;
+            lua_object["loop_animation"] = true;
+        }
+        const auto key = std::to_string(index) + animation;
+        auto it = animation_callback.find(key);
+        if (it != animation_callback.end()) {
+            it->second();
+            animation_callback.erase(it);
+        }
+    }
 }
 
 void SpineObject::setSkin(const std::string& skin) {
-	this->skins = { skin };
-	if (skin.empty()) {
-		skeleton->skeleton->setSkin((spine::Skin*)nullptr);
+    this->skins = { skin };
+    if (skin.empty()) {
+        skeleton->skeleton->setSkin((spine::Skin*)nullptr);
 
-	} else {
-		skeleton->skeleton->setSkin(skin.c_str());
-		skeleton->skeleton->setupPoseSlots();
+    } else {
+        skeleton->skeleton->setSkin(skin.c_str());
+        skeleton->skeleton->setupPoseSlots();
         if (!skeleton->skeleton->getSkin()) {
             jngl::error("The Skin {} is missing for {}.spine", skin, spine_name);
         }
@@ -279,48 +278,48 @@ void SpineObject::setSkin(const std::string& skin) {
 }
 
 void SpineObject::setSkins(const std::vector<std::string>& skins) {
-	this->skins = skins;
-	if (skins.size() == 1 && skins[0].empty()) {
-		skeleton->skeleton->setSkin(nullptr);
-		combinedSkin.reset();
-		return;
-	}
+    this->skins = skins;
+    if (skins.size() == 1 && skins[0].empty()) {
+        skeleton->skeleton->setSkin(nullptr);
+        combinedSkin.reset();
+        return;
+    }
 
     auto newSkin = std::make_unique<spine::Skin>("new-skin"); // 1. Create a new empty skin
     for (auto const& skin : skins) {
-		auto* skinPtr = skeletonData->findSkin(skin.c_str());
-		if (!skinPtr) {
-			jngl::error("The Skin " + skin + " is missing for " + spine_name + ".spine");
-			continue;
-		}
-		newSkin->addSkin(*skinPtr);
-	}
-	skeleton->skeleton->setSkin(newSkin.get());
-	combinedSkin = std::move(newSkin);
-	skeleton->skeleton->setupPoseSlots();
+        auto* skinPtr = skeletonData->findSkin(skin.c_str());
+        if (!skinPtr) {
+            jngl::error("The Skin " + skin + " is missing for " + spine_name + ".spine");
+            continue;
+        }
+        newSkin->addSkin(*skinPtr);
+    }
+    skeleton->skeleton->setSkin(newSkin.get());
+    combinedSkin = std::move(newSkin);
+    skeleton->skeleton->setupPoseSlots();
 }
 
 double SpineObject::getZ() const {
-	return position.y + (layer * 2000.0);
+    return position.y + (layer * 2000.0);
 }
 
 void SpineObject::toLuaState() {
-	if (auto _game = game.lock()) {
-		std::string scene = (*_game->lua_state)["game"]["scene"];
-		if (cross_scene) {
-			scene = "cross_scene";
-		}
+    if (auto _game = game.lock()) {
+        std::string scene = (*_game->lua_state)["game"]["scene"];
+        if (cross_scene) {
+            scene = "cross_scene";
+        }
 
-		(*_game->lua_state)["scenes"][scene]["items"][id] = _game->lua_state->create_table_with(
-		    "spine", spine_name, "object", shared_from_this(), "x", position.x, "y", position.y,
-		    "animation", currentAnimation, "loop_animation", true, "visible", visible,
-		    "cross_scene", cross_scene, "abs_position", abs_position, "shader", shader, "layer", layer, "skin",
-		    sol::as_table(skins), "scale", scale);
-	}
+        (*_game->lua_state)["scenes"][scene]["items"][id] = _game->lua_state->create_table_with(
+            "spine", spine_name, "object", shared_from_this(), "x", position.x, "y", position.y,
+            "animation", currentAnimation, "loop_animation", true, "visible", visible,
+            "cross_scene", cross_scene, "abs_position", abs_position, "shader", shader, "layer", layer, "skin",
+            sol::as_table(skins), "scale", scale);
+    }
 }
 
 void SpineObject::setCrossScene(bool cross_scene) {
-	this->cross_scene = cross_scene;
+    this->cross_scene = cross_scene;
 }
 
 jngl::ShaderProgram* SpineObject::getShaderProgram() const {

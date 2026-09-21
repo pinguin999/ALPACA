@@ -5,36 +5,30 @@
 #include "game.hpp"
 #include "player.hpp"
 
-LoadException::LoadException(const char *details)
-    : std::runtime_error(details)
-{
+LoadException::LoadException(const char* details)
+: std::runtime_error(details) {
 }
 
-Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : fileName(fileName), json(YAML::Load(jngl::readAsset("scenes/" + fileName + ".json").str())), game(game)
-{
+Scene::Scene(const std::string& fileName, const std::shared_ptr<Game>& game) : fileName(fileName), json(YAML::Load(jngl::readAsset("scenes/" + fileName + ".json").str())), game(game) {
 
     std::string scene = fileName;
 
-    if (json.IsNull())
-    {
+    if (json.IsNull()) {
         jngl::error("Wasn't able to load " + fileName);
         background = nullptr;
         return;
     }
 
-    if (!json.IsMap())
-    {
+    if (!json.IsMap()) {
         throw LoadException("Invalid JSON for Scene, expected a JSON object");
     }
 
     // Get old scene and set game.scene to current
-    if (!(*game->lua_state)["game"].valid())
-    {
+    if (!(*game->lua_state)["game"].valid()) {
         (*game->lua_state).script("game = {}");
     }
     std::string old_scene;
-    if ((*game->lua_state)["game"]["scene"].valid())
-    {
+    if ((*game->lua_state)["game"]["scene"].valid()) {
         old_scene = (*game->lua_state)["game"]["scene"];
     }
     (*game->lua_state)["game"]["scene"] = fileName;
@@ -42,67 +36,55 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         (*game->lua_state)["game"]["old_scene"] = old_scene;
     }
 
-    if (!(*game->lua_state)["scenes"].valid())
-    {
+    if (!(*game->lua_state)["scenes"].valid()) {
         (*game->lua_state)["scenes"] = game->lua_state->create_table();
     }
 
-    if (!(*game->lua_state)["scenes"][scene].valid())
-    {
+    if (!(*game->lua_state)["scenes"][scene].valid()) {
         (*game->lua_state)["scenes"][scene] = game->lua_state->create_table();
     }
 
-    if (!(*game->lua_state)["scenes"]["cross_scene"].valid())
-    {
+    if (!(*game->lua_state)["scenes"]["cross_scene"].valid()) {
         (*game->lua_state)["scenes"]["cross_scene"] = game->lua_state->create_table();
         (*game->lua_state)["scenes"]["cross_scene"]["items"] = game->lua_state->create_table();
     }
 
 #ifndef NDEBUG
     std::string old_hash;
-    if ((*game->lua_state)["scenes"][scene]["hash"].valid())
-    {
+    if ((*game->lua_state)["scenes"][scene]["hash"].valid()) {
         old_hash = (*game->lua_state)["scenes"][scene]["hash"];
     }
-    if (json["hash"].IsDefined() && !json["hash"].IsNull())
-    {
+    if (json["hash"].IsDefined() && !json["hash"].IsNull()) {
         const auto new_hash = json["hash"].as<std::string>();
-        if (old_hash != new_hash)
-        {
+        if (old_hash != new_hash) {
             (*game->lua_state)["scenes"][scene] = game->lua_state->create_table();
         }
         (*game->lua_state)["scenes"][scene]["hash"] = new_hash;
     }
 #endif
 
-    if (json["left_border"].IsDefined() && !json["left_border"].IsNull())
-    {
+    if (json["left_border"].IsDefined() && !json["left_border"].IsNull()) {
         left_border = json["left_border"].as<int>();
         (*game->lua_state)["scenes"][scene]["left_border"] = left_border;
     }
-    if (json["right_border"].IsDefined() && !json["right_border"].IsNull())
-    {
+    if (json["right_border"].IsDefined() && !json["right_border"].IsNull()) {
         right_border = json["right_border"].as<int>();
         (*game->lua_state)["scenes"][scene]["right_border"] = right_border;
     }
-    if (json["top_border"].IsDefined() && !json["top_border"].IsNull())
-    {
+    if (json["top_border"].IsDefined() && !json["top_border"].IsNull()) {
         top_border = json["top_border"].as<int>();
         (*game->lua_state)["scenes"][scene]["top_border"] = top_border;
     }
-    if (json["bottom_border"].IsDefined() && !json["bottom_border"].IsNull())
-    {
+    if (json["bottom_border"].IsDefined() && !json["bottom_border"].IsNull()) {
         bottom_border = json["bottom_border"].as<int>();
         (*game->lua_state)["scenes"][scene]["bottom_border"] = bottom_border;
     }
 
-    if ((*game->lua_state)["scenes"][scene]["background"].valid())
-    {
+    if ((*game->lua_state)["scenes"][scene]["background"].valid()) {
         background = std::make_shared<Background>(game, (*game->lua_state)["scenes"][scene]["background"]["spine"]);
         background->setPosition(jngl::Vec2(0, 0));
         background->layer = 0;
-        if ((*game->lua_state)["scenes"][scene]["background"]["skin"].valid())
-        {
+        if ((*game->lua_state)["scenes"][scene]["background"]["skin"].valid()) {
             std::vector<std::string> const skins = (*game->lua_state)["scenes"][scene]["background"]["skin"].get<sol::as_table_t<std::vector<std::string>>>();
 
             background->setSkins(skins);
@@ -113,43 +95,36 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         background->playAnimation(0, animation, loop_animation);
         game->add(background);
 
-        if ((*game->lua_state)["scenes"][scene]["zBufferMap"].valid())
-        {
+        if ((*game->lua_state)["scenes"][scene]["zBufferMap"].valid()) {
 #ifndef NDEBUG
-    while (true)
-    {
-        try {
+            while (true) {
+                try {
 #endif
-    zBufferMap = jngl::ImageData::load((*game->lua_state)["scenes"][scene]["zBufferMap"]);
+                    zBufferMap = jngl::ImageData::load((*game->lua_state)["scenes"][scene]["zBufferMap"]);
 
 #ifndef NDEBUG
-        } catch (std::exception &e) {
-        }
+                } catch (std::exception& e) {
+                }
 
-        if (!zBufferMap)
-        {
-            jngl::error("Fatal Error loading " + (*game->lua_state)["scenes"][scene]["zBufferMap"].get<std::string>());
-            continue;
-        }
-        break;
-    }
+                if (!zBufferMap) {
+                    jngl::error("Fatal Error loading " + (*game->lua_state)["scenes"][scene]["zBufferMap"].get<std::string>());
+                    continue;
+                }
+                break;
+            }
 #endif
 
 #ifndef NDEBUG
             background->sprite = std::make_unique<jngl::Sprite>(*zBufferMap, jngl::getScaleFactor());
 #endif
         }
-    }
-    else if (json["background"].IsDefined() && !json["background"].IsNull())
-    {
+    } else if (json["background"].IsDefined() && !json["background"].IsNull()) {
         std::string animation = (*game->lua_state)["config"]["background_default_animation"];
         auto const spine = json["background"]["spine"].as<std::string>();
-        if(json["background"]["animation"].IsDefined() && !json["background"]["animation"].IsNull())
-        {
+        if (json["background"]["animation"].IsDefined() && !json["background"]["animation"].IsNull()) {
             animation = json["background"]["animation"].as<std::string>();
         }
-        if (!(*game->lua_state)["scenes"][scene]["background"].valid())
-        {
+        if (!(*game->lua_state)["scenes"][scene]["background"].valid()) {
             (*game->lua_state)["scenes"][scene]["background"] = game->lua_state->create_table_with(
                 "animation", animation,
                 "loop_animation", true,
@@ -163,8 +138,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         background->setPosition(jngl::Vec2(0, 0));
         background->playAnimation(0, animation, true);
         background->layer = 0;
-        if (json["background"]["skin"])
-        {
+        if (json["background"]["skin"]) {
             std::vector<std::string> skins = {};
             skins.push_back(json["background"]["skin"].as<std::string>());
             (*game->lua_state)["scenes"][scene]["background"]["skin"] = sol::as_table(skins);
@@ -173,8 +147,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         }
         game->add(background);
 
-        if (json["zBufferMap"].IsDefined() && !json["zBufferMap"].IsNull())
-        {
+        if (json["zBufferMap"].IsDefined() && !json["zBufferMap"].IsNull()) {
             zBufferMap = jngl::ImageData::load(json["zBufferMap"].as<std::string>());
             (*game->lua_state)["scenes"][scene]["zBufferMap"] = json["zBufferMap"].as<std::string>();
 #ifndef NDEBUG
@@ -183,46 +156,34 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         }
     }
 
-    if (json["backgroundMusic"].IsDefined() && !json["backgroundMusic"].IsNull())
-    {
+    if (json["backgroundMusic"].IsDefined() && !json["backgroundMusic"].IsNull()) {
         this->backgroundMusic = json["backgroundMusic"].as<std::string>();
-    }
-    else
-    {
+    } else {
         this->backgroundMusic = {};
     }
 
-    if (json["ambientMusic"].IsDefined() && !json["ambientMusic"].IsNull())
-    {
+    if (json["ambientMusic"].IsDefined() && !json["ambientMusic"].IsNull()) {
         this->ambientMusic = json["ambientMusic"].as<std::vector<std::string>>();
-    }
-    else
-    {
+    } else {
         this->ambientMusic.clear();
     }
 
-
-    if (!(*game->lua_state)["inactivLayerBorder"].valid())
-    {
+    if (!(*game->lua_state)["inactivLayerBorder"].valid()) {
         game->setInactivLayerBorder(0);
     }
 
-    if (json["items"].IsDefined() && !json["items"].IsNull())
-    {
+    if (json["items"].IsDefined() && !json["items"].IsNull()) {
         this->loadObjects(json["items"]);
     }
 
-    if ((*game->lua_state)["config"]["player"] != std::string(""))
-    {
-        if (!(*game->lua_state)["scenes"]["cross_scene"]["items"]["player"].valid())
-        {
+    if ((*game->lua_state)["config"]["player"] != std::string("")) {
+        if (!(*game->lua_state)["scenes"]["cross_scene"]["items"]["player"].valid()) {
             // TODO der Player sollte hier nicht so eine extra behandlung bekommen.
             auto const animation = (*game->lua_state)["config"]["player_start_animation"];
-            if (game->player == nullptr)
-            {
+            if (game->player == nullptr) {
                 game->player = std::make_shared<Player>(game, (*game->lua_state)["config"]["player"]);
                 game->player->setCrossScene(true);
-                game->player->setPosition(jngl::Vec2{(*game->lua_state)["config"]["player_start_position"]["x"], (*game->lua_state)["config"]["player_start_position"]["y"]});
+                game->player->setPosition(jngl::Vec2{ (*game->lua_state)["config"]["player_start_position"]["x"], (*game->lua_state)["config"]["player_start_position"]["y"] });
                 game->player->setSkin((*game->lua_state)["config"]["player_default_skin"]);
                 game->player->playAnimation(0, animation, true);
 
@@ -230,11 +191,8 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
 
                 game->add(game->player);
             }
-        }
-        else
-        {
-            if (game->player == nullptr)
-            {
+        } else {
+            if (game->player == nullptr) {
                 game->player = std::make_shared<Player>(game, (*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["spine"]);
                 game->player->playAnimation(0, (*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["animation"], (*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["loop_animation"]);
                 game->player->setPosition(jngl::Vec2((*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["x"], (*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["y"]));
@@ -244,8 +202,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
                 game->player->layer = static_cast<int>(layer);
                 game->player->setSkins((*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["skin"].get<sol::as_table_t<std::vector<std::string>>>());
                 game->player->setCrossScene((*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["cross_scene"]);
-                if ((*game->lua_state)["game"].valid() && (*game->lua_state)["game"]["interruptible"].valid())
-                {
+                if ((*game->lua_state)["game"].valid() && (*game->lua_state)["game"]["interruptible"].valid()) {
                     game->player->interruptible = (*game->lua_state)["game"]["interruptible"];
                 }
                 (*game->lua_state)["scenes"]["cross_scene"]["items"]["player"]["object"] = std::static_pointer_cast<SpineObject>(game->player);
@@ -255,24 +212,21 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
         }
     }
 
-    if (!(*game->lua_state)["inventory_items"].valid())
-    {
+    if (!(*game->lua_state)["inventory_items"].valid()) {
         (*game->lua_state)["inventory_items"] = game->lua_state->create_table();
     }
 
     // TODO CLean up. Code Duplikat von weiter unten
     // Load from Lua and not from json
     sol::table const objects = (*game->lua_state)["inventory_items"];
-    for (const auto &key_value_pair : objects)
-    {
+    for (const auto& key_value_pair : objects) {
         sol::object const key = key_value_pair.first;
 
         std::string id = key.as<std::string>();
 
         if ((*game->lua_state)["inventory_items"][id]["spine"].valid() &&
             (*game->lua_state)["inventory_items"][id]["x"].valid() &&
-            (*game->lua_state)["inventory_items"][id]["y"].valid())
-        {
+            (*game->lua_state)["inventory_items"][id]["y"].valid()) {
             auto interactable = std::make_shared<InteractableObject>(game, (*game->lua_state)["inventory_items"][id]["spine"], id, (*game->lua_state)["inventory_items"][id]["scale"]);
 
             float const x = (*game->lua_state)["inventory_items"][id]["x"].get<float>();
@@ -289,8 +243,7 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
 
             (*game->lua_state)["inventory_items"][id]["object"] = std::static_pointer_cast<SpineObject>(interactable);
 
-            if ((*game->lua_state)["inventory_items"][id]["skin"].valid())
-            {
+            if ((*game->lua_state)["inventory_items"][id]["skin"].valid()) {
                 std::vector<std::string> const skins = (*game->lua_state)["inventory_items"][id]["skin"].get<sol::as_table_t<std::vector<std::string>>>();
 
                 interactable->setSkins(skins);
@@ -300,26 +253,20 @@ Scene::Scene(const std::string &fileName, const std::shared_ptr<Game> &game) : f
     }
 }
 
-void Scene::playMusic()
-{
-    if (auto _game = game.lock())
-    {
-        if (backgroundMusic.has_value())
-        {
+void Scene::playMusic() {
+    if (auto _game = game.lock()) {
+        if (backgroundMusic.has_value()) {
             AudioManager::handle().loopMusic(backgroundMusic.value());
-        }
-        else
-        {
+        } else {
             AudioManager::handle().stopMusic();
         }
-        for (auto ambient : ambientMusic)
-        {
+        for (auto ambient : ambientMusic) {
             AudioManager::handle().loopAmbient(ambient);
         }
     }
 }
 
-void Scene::createObjectJSON(const YAML::Node &object) {
+void Scene::createObjectJSON(const YAML::Node& object) {
     if (auto _game = game.lock()) {
         std::string scene = _game->cleanLuaString((*_game->lua_state)["game"]["scene"]);
 
@@ -357,7 +304,7 @@ void Scene::createObjectJSON(const YAML::Node &object) {
         interactable->toLuaState();
 
         if ((object)["skin"]) {
-            std::vector<std::string> skins = {(object)["skin"].as<std::string>()};
+            std::vector<std::string> skins = { (object)["skin"].as<std::string>() };
             (*_game->lua_state)["scenes"][scene]["items"][id]["skin"] =
                 sol::as_table(skins);
 
@@ -369,8 +316,7 @@ void Scene::createObjectJSON(const YAML::Node &object) {
 
 void Scene::createObjectLua(std::string id, std::string scene) {
     if (auto _game = game.lock()) {
-        if (id == "player")
-        {
+        if (id == "player") {
             return;
         }
         if ((*_game->lua_state)["scenes"][scene]["items"][id]["spine"].valid() &&
@@ -421,7 +367,7 @@ void Scene::loadObjects(YAML::Node objects) {
         if ((*_game->lua_state)["scenes"]["cross_scene"]["items"].valid()) {
             // Load from Lua and not from json
             sol::table const items = (*_game->lua_state)["scenes"]["cross_scene"]["items"];
-            for (const auto &key_value_pair : items) {
+            for (const auto& key_value_pair : items) {
                 sol::object const key = key_value_pair.first;
 
                 const std::string id = key.as<std::string>();
@@ -447,7 +393,7 @@ void Scene::loadObjects(YAML::Node objects) {
             // Load from Lua and not from json
             sol::table const items =
                 (*_game->lua_state)["scenes"][scene]["items"];
-            for (const auto &key_value_pair : items) {
+            for (const auto& key_value_pair : items) {
                 sol::object const key = key_value_pair.first;
 
                 const std::string id = key.as<std::string>();
@@ -458,18 +404,15 @@ void Scene::loadObjects(YAML::Node objects) {
     }
 }
 
-std::shared_ptr<InteractableObject> Scene::createObject(const std::string &spine_file, const std::string &id, float scale)
-{
-    if (auto _game = game.lock())
-    {
+std::shared_ptr<InteractableObject> Scene::createObject(const std::string& spine_file, const std::string& id, float scale) {
+    if (auto _game = game.lock()) {
         return std::make_shared<InteractableObject>(_game, spine_file, id, scale);
     }
     return nullptr;
 }
 
 #ifndef NDEBUG
-void Scene::writeToFile()
-{
+void Scene::writeToFile() {
     YAML::Emitter emitter1;
     emitter1 << YAML::DoubleQuoted << YAML::LowerNull << json;
     emitter1.SetIndent(4);
@@ -479,8 +422,7 @@ void Scene::writeToFile()
     fout << emitter1.c_str();
 }
 
-void Scene::addToFile(const std::string &spine_file)
-{
+void Scene::addToFile(const std::string& spine_file) {
     YAML::Node node;
     node["spine"] = spine_file;
     node["x"] = 0;
@@ -488,22 +430,17 @@ void Scene::addToFile(const std::string &spine_file)
     json["items"].push_back(node);
 }
 
-void Scene::updateObjectPosition(const std::string &id, jngl::Vec2 position)
-{
+void Scene::updateObjectPosition(const std::string& id, jngl::Vec2 position) {
     auto objects = json["items"].size();
-    for (std::size_t i = 0; i < objects; i++)
-    {
-        if (json["items"][i]["id"].as<std::string>("") == id)
-        {
+    for (std::size_t i = 0; i < objects; i++) {
+        if (json["items"][i]["id"].as<std::string>("") == id) {
             json["items"][i]["x"] = std::to_string(position.x);
             json["items"][i]["y"] = std::to_string(position.y);
             return;
         }
     }
-    for (std::size_t i = 0; i < objects; i++)
-    {
-        if (json["items"][i]["spine"].as<std::string>() == id)
-        {
+    for (std::size_t i = 0; i < objects; i++) {
+        if (json["items"][i]["spine"].as<std::string>() == id) {
             json["items"][i]["x"] = std::to_string(position.x);
             json["items"][i]["y"] = std::to_string(position.y);
             return;
@@ -516,17 +453,15 @@ std::string Scene::getSceneName() {
     return fileName;
 }
 
-double Scene::getScale(jngl::Vec2 position)
-{
-    if (!zBufferMap)
-    {
+double Scene::getScale(jngl::Vec2 position) {
+    if (!zBufferMap) {
         return 1.0;
     }
     int x = static_cast<int>(position.x + (zBufferMap->getWidth() / 2.0));
     int y = static_cast<int>(position.y + (zBufferMap->getHeight() / 2.0));
-    x = std::min(x, zBufferMap->getWidth()-1);
+    x = std::min(x, zBufferMap->getWidth() - 1);
     x = std::max(x, 0);
-    y = std::min(y, zBufferMap->getHeight()-1);
+    y = std::min(y, zBufferMap->getHeight() - 1);
     y = std::max(y, 0);
     const int scale_value = zBufferMap->pixels()[(x * 4) + (y * zBufferMap->getWidth() * 4) + 3];
     return scale_value / 255.0;

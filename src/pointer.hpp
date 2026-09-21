@@ -6,10 +6,9 @@
 #include <jngl.hpp>
 #include <memory>
 
-class Pointer : public SpineObject
-{
+class Pointer : public SpineObject {
 public:
-    explicit Pointer(std::shared_ptr<Game> game, const std::string &spine_file);
+    explicit Pointer(std::shared_ptr<Game> game, const std::string& spine_file);
     ~Pointer() override = default;
 
     bool step(bool force = false) override;

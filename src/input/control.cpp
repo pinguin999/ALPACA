@@ -1,5 +1,4 @@
 #include "control.hpp"
 
-void Control::vibrate()
-{
+void Control::vibrate() {
 }

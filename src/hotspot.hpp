@@ -7,10 +7,9 @@
 #include <jngl.hpp>
 #include <memory>
 
-class Hotspot : public SpineObject
-{
+class Hotspot : public SpineObject {
 public:
-    explicit Hotspot(std::shared_ptr<Game> game, const std::string &spine_file);
+    explicit Hotspot(std::shared_ptr<Game> game, const std::string& spine_file);
     ~Hotspot() override = default;
 
     bool step(bool force = false) override;
@@ -18,8 +17,5 @@ public:
     void draw() const override;
     void draw(jngl::Mat3 mv) const;
 
-
-
 private:
-
 };
