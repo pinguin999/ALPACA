@@ -52,7 +52,13 @@ bool InteractableObject::step(bool force) {
         }
 
         // TODO Double Click on Objekts
-        if (_game->pointer->primaryPressed() && visible && !_game->pointer->isPrimaryAlreadyHandled()) {
+        if (_game->pointer && (_game->pointer->primaryPressed()
+#ifndef NDEBUG
+            || _game->pointer->secondaryPressed())
+#else
+        )
+#endif
+ && visible && !_game->pointer->isPrimaryAlreadyHandled()) {
             jngl::Vec2 click_position = _game->pointer->getWorldPosition();
             if (abs_position) {
                 click_position = _game->pointer->getPosition();
@@ -63,6 +69,12 @@ bool InteractableObject::step(bool force) {
                 collision_script = collision->getName().buffer();
                 if (collision_script != "non_walkable_area") {
                     jngl::debug("clicked interactable item {}", collision_script);
+                    #ifndef NDEBUG
+                    if (_game->pointer->secondaryPressed()){
+                        std::system(("code ./../data-src/scripts/" + collision_script + ".lua").c_str());
+                        return deleted;
+                    }
+                    #endif
                     _game->pointer->setPrimaryHandled();
                     _game->runAction(collision_script, getptr());
                 }
