@@ -1,8 +1,8 @@
 #include "background.hpp"
 
+#include "game.hpp"
 #include "jngl/matrix.hpp"
 #include "skeleton_drawable.hpp"
-#include "game.hpp"
 
 #include <cmath>
 
@@ -39,11 +39,11 @@ bool Background::stepClickableRegions(bool force) {
 
         if (_game->pointer && (_game->pointer->primaryPressed()
 #ifndef NDEBUG
-        || _game->pointer->secondaryPressed())
-        #else
-    )
+                               || _game->pointer->secondaryPressed())
+#else
+                                   )
 #endif
-        && visible && !_game->pointer->isPrimaryAlreadyHandled()) {
+            && visible && !_game->pointer->isPrimaryAlreadyHandled()) {
             const jngl::Vec2 mousePos = _game->pointer->getWorldPosition();
             const auto* collision = spSkeletonBounds_containsPointNotMatchingName(
                 bounds.get(), "walkable_area",
@@ -53,12 +53,12 @@ bool Background::stepClickableRegions(bool force) {
             if (collision) {
                 collision_script = collision->getName().buffer();
                 jngl::debug("clicked interactable region {}", collision_script);
-                #ifndef NDEBUG
-                if (_game->pointer->secondaryPressed()){
+#ifndef NDEBUG
+                if (_game->pointer->secondaryPressed()) {
                     std::system(("code ./../data-src/scripts/" + collision_script + ".lua").c_str());
                     return deleted;
                 }
-                #endif
+#endif
                 _game->pointer->setPrimaryHandled();
                 _game->runAction(collision_script, getptr());
             }
