@@ -5,9 +5,9 @@
 
 #include "ut_config.hpp"
 #include <ctime>
-#include <jngl/message.hpp>
 #include <jngl/input.hpp>
 #include <jngl/job.hpp>
+#include <jngl/message.hpp>
 #include <random>
 
 #include "../src/game.hpp"
