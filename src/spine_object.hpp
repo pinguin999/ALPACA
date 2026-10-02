@@ -6,8 +6,8 @@
 #include <map>
 #include <memory>
 #include <sol/sol.hpp>
-#include <utility>
 #include <spine/spine.h>
+#include <utility>
 
 struct spSkeletonData;
 class Game;

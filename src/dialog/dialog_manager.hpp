@@ -37,8 +37,8 @@ public:
     };
 #endif
 private:
-    void showChoices(const std::shared_ptr<schnacker::AnswersStepResult> &answers);
-    void showCharacterText(const std::shared_ptr<schnacker::TextStepResult> &text);
+    void showChoices(const std::shared_ptr<schnacker::AnswersStepResult>& answers);
+    void showCharacterText(const std::shared_ptr<schnacker::TextStepResult>& text);
     void playCharacterVoice(const std::string& file);
     void stopCharacterVoiceAndAnimation();
     void playCharacterAnimation(const std::string& character, const std::string& id);

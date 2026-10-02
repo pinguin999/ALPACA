@@ -152,7 +152,7 @@ void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimat
     spine::Animation* animation =
         skeleton->state->getData().getSkeletonData().findAnimation(currentAnimation.c_str());
     if (animation) {
-        skeleton->state->setAnimation(trackIndex, currentAnimation.c_str(),loop)
+        skeleton->state->setAnimation(trackIndex, currentAnimation.c_str(), loop)
             .setListener([this](spine::AnimationState*, spine::EventType type,
                                 spine::TrackEntry* entry, spine::Event* event) {
             if (event) {

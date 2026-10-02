@@ -34,23 +34,23 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <windows.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <tchar.h>
 #include <pathcch.h>
 #include <shlwapi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <tchar.h>
+#include <windows.h>
 #endif // WIN32
 
 #if __unix__
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <sys/types.h>
 #include <sys/inotify.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <dirent.h>
+#include <sys/types.h>
 #include <unistd.h>
 #endif // __unix__
 
@@ -61,35 +61,35 @@
 #if defined(__APPLE__) || defined(__MACH__)
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
+#include <dirent.h>
+#include <fcntl.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <dirent.h>
 #define FILEWATCH_PLATFORM_MAC 1
 #endif
 
-#include <functional>
-#include <atomic>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
-#include <utility>
-#include <vector>
-#include <array>
-#include <unordered_map>
-#include <unordered_set>
-#include <system_error>
-#include <string>
 #include <algorithm>
-#include <type_traits>
-#include <future>
-#include <regex>
+#include <array>
+#include <atomic>
+#include <cassert>
+#include <condition_variable>
 #include <cstddef>
+#include <cstdlib>
 #include <cstring>
 #include <cwchar>
-#include <cassert>
-#include <cstdlib>
+#include <functional>
+#include <future>
 #include <iostream>
+#include <mutex>
+#include <regex>
+#include <string>
+#include <system_error>
+#include <thread>
+#include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 #ifdef FILEWATCH_PLATFORM_MAC
 extern "C" int __getdirentries64(int, char*, int, long*);
