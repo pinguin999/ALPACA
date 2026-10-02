@@ -69,6 +69,7 @@ public:
     std::unique_ptr<spine::SkeletonData> skeletonData;
     std::unique_ptr<spine::Atlas> atlas;
     std::optional<jngl::Vec2> getPoint(const std::string& point_name) const;
+    void SetSetupPose();
     void playAnimation(int trackIndex, const std::string& currentAnimation, bool loop, std::optional<sol::function> callback = std::nullopt);
     void stopAnimation(int trackIndex);
     void addAnimation(int trackIndex, const std::string& currentAnimation, bool loop, float delay, std::optional<sol::function> callback = std::nullopt);

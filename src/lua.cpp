@@ -65,6 +65,21 @@ void Game::setupLuaFunctions() {
         (*lua_state)["game"]["interruptible"] = true;
     });
 
+    /// Set Spine to Setup Pose
+    lua_state->set_function("SetSetupPose",
+                            [this]() {
+        const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
+        obj->SetSetupPose();
+    });
+
+    /// See SetSetupPose
+    lua_state->set_function("SetSetupPoseOn",
+                            [this](const LuaSpineObject& object) {
+        const std::shared_ptr<SpineObject> obj = getObjectById(object);
+        obj->SetSetupPose();
+    });
+
+
     /// Play an animation on the calling Spine object
     /// int trackIndex: Spine animation track.
     /// string newAnimation: Name of the animation to play.

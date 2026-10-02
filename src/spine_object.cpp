@@ -137,6 +137,11 @@ std::vector<std::string> SpineObject::getPointNames() const {
     return result;
 }
 
+void SpineObject::SetSetupPose()
+{
+    skeleton->skeleton->setupPose();
+}
+
 void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimation, bool loop,
                                 std::optional<sol::function> callback) {
 
