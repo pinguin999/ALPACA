@@ -15,7 +15,7 @@ using LuaLanguage = std::string;
 using LuaAudioChannel = std::string;
 using LuaScript = std::string;
 
- // NOLINTBEGIN(performance-unnecessary-value-param)
+// NOLINTBEGIN(performance-unnecessary-value-param)
 
 namespace {
 std::optional<jngl::Vec2> getPointPosition(const std::shared_ptr<Game>& game, const std::string& pointName) {
@@ -983,4 +983,4 @@ void Game::setupLuaFunctions() {
     });
 }
 
- // NOLINTEND(performance-unnecessary-value-param)
+// NOLINTEND(performance-unnecessary-value-param)
