@@ -1,8 +1,8 @@
 #include <utility>
 
+#include "audio_manager.hpp"
 #include "game.hpp"
 #include "interactable_object.hpp"
-#include "audio_manager.hpp"
 
 using LuaSpineObject = std::string;
 using LuaSpineAnimation = std::string;
@@ -14,6 +14,8 @@ using LuaAudio = std::string;
 using LuaLanguage = std::string;
 using LuaAudioChannel = std::string;
 using LuaScript = std::string;
+
+ // NOLINTBEGIN(performance-unnecessary-value-param)
 
 namespace {
 std::optional<jngl::Vec2> getPointPosition(const std::shared_ptr<Game>& game, const std::string& pointName) {
@@ -980,3 +982,5 @@ void Game::setupLuaFunctions() {
         }
     });
 }
+
+ // NOLINTEND(performance-unnecessary-value-param)

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <map>
 #include <jngl.hpp>
+#include <map>
 
 struct Channels : public jngl::Singleton<Channels> {
     jngl::Channel& main = jngl::Channel::main();

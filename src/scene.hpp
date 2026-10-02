@@ -1,8 +1,8 @@
 #pragma once
 
+#include "background.hpp"
 #include <jngl.hpp>
 #include <yaml-cpp/yaml.h>
-#include "background.hpp"
 
 class Game;
 class InteractableObject;

@@ -1,5 +1,5 @@
-#include <jngl/init.hpp>
 #include "game.hpp"
+#include <jngl/init.hpp>
 
 #ifndef NDEBUG
 void pac_unload_file(const char* path) {
@@ -32,9 +32,9 @@ jngl::AppParameters jnglInit() {
     if (fin) {
         config = YAML::Load(fin.str());
         params.displayName = (*config)["name"].as<std::string>();
-        params.screenSize = { double((*config)["screenSize"]["x"].as<int>()), double((*config)["screenSize"]["y"].as<int>()) };
-        params.minAspectRatio = { double((*config)["minAspectRatio"]["x"].as<int>()), double((*config)["minAspectRatio"]["y"].as<int>()) };
-        params.maxAspectRatio = { double((*config)["maxAspectRatio"]["x"].as<int>()), double((*config)["maxAspectRatio"]["y"].as<int>()) };
+        params.screenSize = { static_cast<double>((*config)["screenSize"]["x"].as<int>()), static_cast<double>((*config)["screenSize"]["y"].as<int>()) };
+        params.minAspectRatio = { static_cast<double>((*config)["minAspectRatio"]["x"].as<int>()), static_cast<double>((*config)["minAspectRatio"]["y"].as<int>()) };
+        params.maxAspectRatio = { static_cast<double>((*config)["maxAspectRatio"]["x"].as<int>()), static_cast<double>((*config)["maxAspectRatio"]["y"].as<int>()) };
     }
 
     params.start = [tmp = std::move(config)]() mutable {

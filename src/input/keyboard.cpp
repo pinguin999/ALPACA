@@ -1,5 +1,5 @@
-#include <jngl.hpp>
 #include "keyboard.hpp"
+#include <jngl.hpp>
 
 template <class Key>
 jngl::Vec2 findMovement(Key left, Key right, Key up, Key down) {

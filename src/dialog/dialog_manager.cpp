@@ -7,7 +7,7 @@ constexpr int BOX_PADDING = 20;
 constexpr double CHOICE_BOX_TOP = 280;
 constexpr int SPINE_MOUTH_TRACK = 5;
 
-DialogManager::DialogManager(std::shared_ptr<Game> game)
+DialogManager::DialogManager(const std::shared_ptr<Game>& game)
 : dialogFont((*game->lua_state)["config"]["default_font"], 25),
   bubble(nullptr),
   selected_index(-1),
@@ -78,7 +78,7 @@ void DialogManager::step() {
             }
 
             if (boost::qvm::mag_sqr(direction - jngl::Vec2(0, -1)) < 0.5) {
-                selected_index = std::min(selected_index - 1, (int)choiceTexts.size() - 1);
+                selected_index = std::min(selected_index - 1, static_cast<int>(choiceTexts.size()) - 1);
             }
         }
 
@@ -119,8 +119,9 @@ void DialogManager::draw() const {
 
             jngl::setFontColor(default_font_not_selected_color);
 
-            if (index == selected_index)
+            if (index == selected_index) {
                 jngl::setFontColor(default_font_selected_color);
+            }
             text.draw();
             index++;
         }
@@ -131,13 +132,13 @@ bool DialogManager::isActive() {
     return currentDialog != nullptr;
 }
 
-void DialogManager::showChoices(std::shared_ptr<schnacker::AnswersStepResult> answers) {
+void DialogManager::showChoices(const std::shared_ptr<schnacker::AnswersStepResult>& answers) {
     choiceTexts.clear();
     size_t pos = CHOICE_BOX_TOP; // BOX_HEIGHT * (answers->answers.size() -1);
-    for (auto answerResult = answers->answers.begin(); answerResult != answers->answers.end(); ++answerResult) {
+    for (auto& answer : answers->answers) {
         schnacker::NodeId id;
         std::string text;
-        std::tie(id, text) = (*answerResult);
+        std::tie(id, text) = answer;
 
         jngl::Text choiceText;
         choiceText.setFont(dialogFont);
@@ -185,7 +186,7 @@ const jngl::Rgba DialogManager::textToColor(const std::string& color_text) {
     return jngl::Rgba::u8(r, g, b, a);
 }
 
-void DialogManager::showCharacterText(std::shared_ptr<schnacker::TextStepResult> text) {
+void DialogManager::showCharacterText(const std::shared_ptr<schnacker::TextStepResult>& text) {
     // TODO: use player pos in order to determine direction preference for bubble
     jngl::Text bubbleText;
     bubbleText.setFont(dialogFont);
@@ -275,8 +276,9 @@ void DialogManager::continueCurrent() {
         } else {
             auto answersResult = std::dynamic_pointer_cast<schnacker::AnswersStepResult>(result);
 
-            if (answersResult)
+            if (answersResult) {
                 showChoices(answersResult);
+            }
         }
     }
 }

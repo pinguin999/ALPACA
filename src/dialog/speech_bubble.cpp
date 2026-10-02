@@ -1,9 +1,8 @@
 #include "speech_bubble.hpp"
 #include "../game.hpp"
 #include "jngl/matrix.hpp"
-#include <math.h>
 
-SpeechBubble::SpeechBubble(std::shared_ptr<Game> game,
+SpeechBubble::SpeechBubble(const std::shared_ptr<Game>& game,
                            const std::string& spine_file,
                            jngl::Text text,
                            jngl::Text characterName,

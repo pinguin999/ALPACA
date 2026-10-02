@@ -1,9 +1,10 @@
 #include "scene.hpp"
 
-#include <fstream>
-#include "interactable_object.hpp"
+#include "audio_manager.hpp"
 #include "game.hpp"
+#include "interactable_object.hpp"
 #include "player.hpp"
+#include <fstream>
 
 LoadException::LoadException(const char* details)
 : std::runtime_error(details) {
@@ -261,7 +262,7 @@ void Scene::playMusic() {
         } else {
             AudioManager::handle().stopMusic();
         }
-        for (auto ambient : ambientMusic) {
+        for (const auto& ambient : ambientMusic) {
             AudioManager::handle().loopAmbient(ambient);
         }
     }

@@ -1,20 +1,20 @@
 #pragma once
 
-#include <string>
-#include <list>
 #include <jngl.hpp>
 #include <jngl/Vec2.hpp>
-#include <sol/sol.hpp>
+#include <list>
 #include <schnacker.hpp>
+#include <sol/sol.hpp>
+#include <string>
 
-#include "speech_bubble.hpp"
 #include "../lua_callback.hpp"
+#include "speech_bubble.hpp"
 
 class Game;
 
 class DialogManager {
 public:
-    explicit DialogManager(std::shared_ptr<Game> game);
+    explicit DialogManager(const std::shared_ptr<Game>& game);
     void loadDialogsFromFile(const std::string& fileName, bool initializeVariables);
 
     void step();
@@ -33,12 +33,12 @@ public:
 
 #ifndef NDEBUG
     int getChoiceTextsSize() {
-        return int(choiceTexts.size());
+        return static_cast<int>(choiceTexts.size());
     };
 #endif
 private:
-    void showChoices(std::shared_ptr<schnacker::AnswersStepResult> answers);
-    void showCharacterText(std::shared_ptr<schnacker::TextStepResult> text);
+    void showChoices(const std::shared_ptr<schnacker::AnswersStepResult> &answers);
+    void showCharacterText(const std::shared_ptr<schnacker::TextStepResult> &text);
     void playCharacterVoice(const std::string& file);
     void stopCharacterVoiceAndAnimation();
     void playCharacterAnimation(const std::string& character, const std::string& id);

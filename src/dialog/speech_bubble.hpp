@@ -7,7 +7,7 @@ class Game;
 
 class SpeechBubble : public SpineObject {
 public:
-    SpeechBubble(std::shared_ptr<Game> game, const std::string& spine_file,
+    SpeechBubble(const std::shared_ptr<Game> &game, const std::string& spine_file,
                  jngl::Text text,
                  jngl::Text characterName,
                  const jngl::Rgba characterNameColor);

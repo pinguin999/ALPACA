@@ -211,7 +211,9 @@ inline jngl::Vec2 polylabel(const std::vector<std::vector<jngl::Vec2>>& polygon,
         // update the best cell if we found a better one
         if (cell.d > bestCell.d) {
             bestCell = cell;
-            if (debug) std::cout << "found best " << ::round(1e4 * cell.d) / 1e4 << " after " << numProbes << " probes" << std::endl;
+            if (debug) {
+                std::cout << "found best " << ::round(1e4 * cell.d) / 1e4 << " after " << numProbes << " probes" << '\n';
+            }
         }
 
         // do not drill down further if there's no chance of a better solution

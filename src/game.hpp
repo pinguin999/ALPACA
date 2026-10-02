@@ -1,15 +1,14 @@
 #pragma once
 
-#include <filesystem>
-#include <jngl.hpp>
-#include <vector>
-#include <sol/sol.hpp>
+#include "dialog/dialog_manager.hpp"
+#include "hotspot.hpp"
 #include "player.hpp"
 #include "pointer.hpp"
-#include "hotspot.hpp"
 #include "scene.hpp"
-#include "dialog/dialog_manager.hpp"
-#include "audio_manager.hpp"
+#include <filesystem>
+#include <jngl.hpp>
+#include <sol/sol.hpp>
+#include <vector>
 
 class Game : public jngl::Work, public std::enable_shared_from_this<Game> {
 public:

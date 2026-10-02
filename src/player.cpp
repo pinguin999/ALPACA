@@ -1,7 +1,7 @@
 #include "player.hpp"
 
-#include "skeleton_drawable.hpp"
 #include "game.hpp"
+#include "skeleton_drawable.hpp"
 
 #include <cmath>
 

@@ -1,15 +1,15 @@
 #include "pointer.hpp"
 
+#include "game.hpp"
 #include "input/gamepad.hpp"
 #include "input/keyboard.hpp"
 #include "jngl/matrix.hpp"
 #include "skeleton_drawable.hpp"
-#include "game.hpp"
 
 #include <cmath>
 #include <spine/spine.h>
 
-Pointer::Pointer(std::shared_ptr<Game> game, const std::string& spine_file)
+Pointer::Pointer(const std::shared_ptr<Game>& game, const std::string& spine_file)
 : SpineObject(game, spine_file, "Pointer", .5) {
     const auto controllers = jngl::getConnectedControllers();
     if (controllers.size() > pointerNr) {
@@ -72,12 +72,12 @@ bool Pointer::step(bool) {
         // Region and Object Collision Test nur, wenn kein Dialog läuft.
         else {
             auto world_pos = getWorldPosition();
-            for (auto obj : _game->gameObjects) {
+            for (const auto& obj : _game->gameObjects) {
                 if (obj->getVisible() &&
                     !(_game->getInactivLayerBorder() > obj->layer) &&
                     obj->bounds &&
-                    bool(spSkeletonBounds_containsPointNotMatchingName(obj->bounds.get(), "walkable_area", (float)world_pos.x - (float)obj->getPosition().x, (float)world_pos.y - (float)obj->getPosition().y)) &&
-                    bool(spSkeletonBounds_containsPointNotMatchingName(obj->bounds.get(), "non_walkable_area", (float)world_pos.x - (float)obj->getPosition().x, (float)world_pos.y - (float)obj->getPosition().y))) {
+                    static_cast<bool>(spSkeletonBounds_containsPointNotMatchingName(obj->bounds.get(), "walkable_area", static_cast<float>(world_pos.x) - static_cast<float>(obj->getPosition().x), static_cast<float>(world_pos.y) - static_cast<float>(obj->getPosition().y))) &&
+                    static_cast<bool>(spSkeletonBounds_containsPointNotMatchingName(obj->bounds.get(), "non_walkable_area", static_cast<float>(world_pos.x) - static_cast<float>(obj->getPosition().x), static_cast<float>(world_pos.y) - static_cast<float>(obj->getPosition().y)))) {
                     over = true;
                     vibrate();
                     break;

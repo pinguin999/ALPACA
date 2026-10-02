@@ -1,11 +1,11 @@
 #include "hotspot.hpp"
 
-#include "skeleton_drawable.hpp"
 #include "game.hpp"
+#include "skeleton_drawable.hpp"
 
 #include <spine/spine.h>
 
-Hotspot::Hotspot(std::shared_ptr<Game> game, const std::string& spine_file)
+Hotspot::Hotspot(const std::shared_ptr<Game>& game, const std::string& spine_file)
 : SpineObject(game, spine_file, "hotspot", .5) {
 }
 

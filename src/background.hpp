@@ -2,8 +2,8 @@
 
 #include "spine_object.hpp"
 
-#include <jngl.hpp>
 #include <deque>
+#include <jngl.hpp>
 
 struct Node {
     int G;

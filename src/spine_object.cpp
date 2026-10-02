@@ -152,8 +152,7 @@ void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimat
     spine::Animation* animation =
         skeleton->state->getData().getSkeletonData().findAnimation(currentAnimation.c_str());
     if (animation) {
-        skeleton->state->setAnimation(trackIndex, currentAnimation.c_str(),
-                                      static_cast<int>(loop))
+        skeleton->state->setAnimation(trackIndex, currentAnimation.c_str(),loop)
             .setListener([this](spine::AnimationState*, spine::EventType type,
                                 spine::TrackEntry* entry, spine::Event* event) {
             if (event) {
@@ -211,7 +210,7 @@ void SpineObject::playAnimation(int trackIndex, const std::string& currentAnimat
         jngl::error("The animation {} is missing for {}.spine", currentAnimation, spine_name);
     }
 
-    if (trackIndex > 0 && loop == false) {
+    if (trackIndex > 0 && !loop) {
         skeleton->state->addEmptyAnimation(trackIndex, 0, 0);
     }
     skeleton->state->apply(*skeleton->skeleton);
@@ -238,7 +237,7 @@ void SpineObject::addAnimation(int trackIndex, const std::string& currentAnimati
         spine::Animation* animation =
             skeleton->state->getData().getSkeletonData().findAnimation(currentAnimation.c_str());
         if (animation) {
-            skeleton->state->addAnimation(trackIndex, *animation, static_cast<int>(loop), delay);
+            skeleton->state->addAnimation(trackIndex, *animation, loop, delay);
         } else {
             jngl::error("The animation {} is missing for {}.spine", currentAnimation, spine_name);
         }
@@ -266,8 +265,7 @@ void SpineObject::onAnimationComplete(const int index, const std::string& animat
 void SpineObject::setSkin(const std::string& skin) {
     this->skins = { skin };
     if (skin.empty()) {
-        skeleton->skeleton->setSkin((spine::Skin*)nullptr);
-
+        skeleton->skeleton->setSkin(nullptr);
     } else {
         skeleton->skeleton->setSkin(skin.c_str());
         skeleton->skeleton->setupPoseSlots();

@@ -4,18 +4,18 @@
 #include "shader_cache.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <iostream>
 #include <optional>
 #include <sol/types.hpp>
 #include <string>
-#include <iostream>
-#include <chrono>
 #include <thread>
 #include <yaml-cpp/yaml.h>
 
-#include <spine/spine.h>
 #include "scene_fade.hpp"
 #include "spine_object.hpp"
+#include <spine/spine.h>
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
 #include "FileWatch.hpp"
@@ -257,7 +257,7 @@ void Game::loadScene_internal() {
     if (hotspot == nullptr) {
         auto atlas = std::make_unique<spine::Atlas>("hotspot/hotspot.atlas",
                                                     &SkeletonDrawable::textureLoader);
-        if (atlas->getPages().size()) {
+        if (atlas->getPages().size() != 0u) {
             hotspot = std::make_shared<Hotspot>(shared_from_this(), "hotspot");
             hotspot->setCrossScene(true);
             hotspot->setPosition(Vec2(0, 0));
@@ -337,8 +337,9 @@ void Game::step() {
 #ifndef NDEBUG
     debugStep();
 #endif
-    if (pointer)
+    if (pointer) {
         pointer->resetHandledFlags();
+    }
     removeObjects();
 }
 
@@ -604,8 +605,9 @@ void Game::draw() const {
     jngl::pushMatrix();
     dialogManager->draw();
     // Der Pointer wird doppelt gedrawed, damit der immer vorne ist.
-    if (pointer)
+    if (pointer) {
         pointer->draw();
+    }
 
 #ifndef NDEBUG
     if (show_debug_info) {

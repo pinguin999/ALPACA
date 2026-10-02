@@ -1,12 +1,13 @@
 #pragma once
 
-#include <memory>
-#include <map>
-#include <jngl/Vec2.hpp>
-#include <spine/spine.h>
-#include "skeleton_drawable.hpp"
-#include <sol/sol.hpp>
 #include "lua_callback.hpp"
+#include "skeleton_drawable.hpp"
+#include <jngl/Vec2.hpp>
+#include <map>
+#include <memory>
+#include <sol/sol.hpp>
+#include <utility>
+#include <spine/spine.h>
 
 struct spSkeletonData;
 class Game;
@@ -15,8 +16,7 @@ class Game;
 class SpineObject : public std::enable_shared_from_this<SpineObject> {
 public:
     SpineObject(const std::shared_ptr<Game>& game, const std::string& spine_file, std::string id, float scale = 1);
-    virtual ~SpineObject() {
-    }
+    virtual ~SpineObject() = default;
 
     std::shared_ptr<SpineObject> getptr() {
         return shared_from_this();
@@ -38,7 +38,7 @@ public:
         return parent;
     }
     void setParent(std::shared_ptr<SpineObject> parent) {
-        this->parent = parent;
+        this->parent = std::move(parent);
     }
 
     float getRotation() const {
@@ -78,7 +78,6 @@ public:
     std::vector<std::string> getPointNames() const;
     bool abs_position = false;
 
-    std::string collision_script = ""; // TODO protected
     std::string getName() {
         return spine_name;
     };
@@ -106,6 +105,7 @@ public:
     void setShader(std::string_view shader);
 
 protected:
+    std::string collision_script;
     std::string currentAnimation = "idle";
     std::map<std::string, LuaCallback> animation_callback;
     std::optional<LuaCallback> walk_callback;
