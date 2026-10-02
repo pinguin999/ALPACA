@@ -79,7 +79,6 @@ void Game::setupLuaFunctions() {
         obj->SetSetupPose();
     });
 
-
     /// Play an animation on the calling Spine object
     /// int trackIndex: Spine animation track.
     /// string newAnimation: Name of the animation to play.

@@ -137,8 +137,7 @@ std::vector<std::string> SpineObject::getPointNames() const {
     return result;
 }
 
-void SpineObject::SetSetupPose()
-{
+void SpineObject::SetSetupPose() {
     skeleton->skeleton->setupPose();
 }
 
