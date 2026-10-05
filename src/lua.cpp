@@ -468,9 +468,8 @@ void Game::setupLuaFunctions() {
         auto position = getPointPosition(shared_from_this(), point_name);
         if (position) {
             return std::tuple(position->x, position->y);
-        } else {
-            jngl::error("No point called " + point_name);
         }
+        jngl::error("No point called " + point_name);
 
         return std::tuple(0.0, 0.0);
     });
@@ -866,11 +865,14 @@ void Game::setupLuaFunctions() {
                             [](const LuaAudio& file, const std::string& channel) {
         if (channel == "music") {
             return Channels::handle().music.isPlaying("audio/" + file);
-        } else if (channel == "voice") {
+        }
+        if (channel == "voice") {
             return Channels::handle().voice.isPlaying("audio/" + file);
-        } else if (channel == "sounds") {
+        }
+        if (channel == "sounds") {
             return Channels::handle().sounds.isPlaying("audio/" + file);
-        } else if (channel == "ambient") {
+        }
+        if (channel == "ambient") {
             return Channels::handle().ambient.isPlaying("audio/" + file);
         }
         return jngl::isPlaying("audio/" + file);
@@ -901,11 +903,14 @@ void Game::setupLuaFunctions() {
                             [](const std::string& channel) {
         if (channel == "music") {
             return AudioManager::handle().getMusicVolume();
-        } else if (channel == "voice") {
+        }
+        if (channel == "voice") {
             return AudioManager::handle().getVoiceVolume();
-        } else if (channel == "sounds") {
+        }
+        if (channel == "sounds") {
             return AudioManager::handle().getSoundVolume();
-        } else if (channel == "ambient") {
+        }
+        if (channel == "ambient") {
             return AudioManager::handle().getAmbientVolume();
         }
 

@@ -774,10 +774,9 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
                 }
                 (*lua_state)[attached_object_ids_string]();
                 return;
-
-            } else {
-                jngl::error("No function with name " + attached_object_ids_string + " in " + file);
             }
+            jngl::error("No function with name " + attached_object_ids_string + " in " + file);
+
             // Call all_items if exist
             sol::optional<sol::function> funcOptAll = env["all_items"];
             if (funcOptAll && funcOptAll->valid()) {
@@ -788,9 +787,9 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
                 }
                 (*lua_state)["all_items"]();
                 return;
-            } else {
-                jngl::error("No function all_items in " + file);
             }
+            jngl::error("No function all_items in " + file);
+
         } else {
             jngl::error("Can not load items lua script " + file);
         }
@@ -806,7 +805,7 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
     }
     // if the name starts with "dlg:", play the dialog,
     // no need for a separate Lua file
-    else if (actionName.substr(0, 4) == "dlg:") {
+    if (actionName.substr(0, 4) == "dlg:") {
         const std::string dialogName = actionName.substr(4);
         sol::protected_function fn = (*lua_state)["PlayDialog"];
         auto result = fn(dialogName);
@@ -815,7 +814,8 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
             jngl::error("Failed to play dialog {}: {}", dialogName, err.what());
         }
         return;
-    } else if (actionName.substr(0, 5) == "anim:") {
+    }
+    if (actionName.substr(0, 5) == "anim:") {
         const std::string animName = actionName.substr(5);
         sol::protected_function fn = (*lua_state)["PlayAnimationOn"];
         auto result = fn(thisObject->getId(), 0, animName, false);
@@ -826,22 +826,19 @@ void Game::runAction(const std::string& actionName, std::shared_ptr<SpineObject>
         return;
     }
     // if there is no specific prefix, just load the according Lua file
-    else {
-        const std::string file = "scripts/" + actionName + ".lua";
-        const std::stringstream scriptstream = jngl::readAsset(file);
+    const std::string file = "scripts/" + actionName + ".lua";
+    const std::stringstream scriptstream = jngl::readAsset(file);
 
-        if (!scriptstream) {
-            jngl::error("Can not load lua script " + file);
-            return;
-        }
-        script = scriptstream.str();
-        jngl::log("lua", file);
-        auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
-        if (!result.valid()) {
-            const sol::error err = result;
-            jngl::error(err.what());
-        }
+    if (!scriptstream) {
+        jngl::error("Can not load lua script " + file);
         return;
+    }
+    script = scriptstream.str();
+    jngl::log("lua", file);
+    auto result = lua_state->safe_script(script, sol::script_pass_on_error, "@" + file);
+    if (!result.valid()) {
+        const sol::error err = result;
+        jngl::error(err.what());
     }
 }
 
