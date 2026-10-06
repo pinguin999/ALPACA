@@ -239,7 +239,8 @@ Scene::Scene(const std::string& fileName, const std::shared_ptr<Game>& game)
 
             interactable->playAnimation(0, animation, loop_animation);
             interactable->setPosition(jngl::Vec2(x, y));
-            interactable->setVisible(false);
+            interactable->setVisible((*game->lua_state)["inventory_items"][id]["visible"]);
+            interactable->layer = ((*game->lua_state)["inventory_items"][id]["layer"]);
             interactable->setCrossScene(true);
             interactable->setLuaIndex(id);
 
