@@ -1,9 +1,4 @@
-
-#ifdef STAND_ALONE
-#define BOOST_TEST_MODULE PacTests
-#endif
-
-#include "ut_config.hpp"
+#include <catch2/catch_test_macros.hpp>
 #include <ctime>
 #include <jngl/input.hpp>
 #include <jngl/job.hpp>
@@ -32,227 +27,223 @@ const int SEED = 0;
 const int MAX_STEPS = 10000;
 const int ACTION_TIME = 800;
 
-using namespace boost::ut;
-suite alpaca_test_suite = [] {
-    "game_play_test"_test = [] {
-        jngl::setVolume(0);
-        std::mt19937 gen = std::mt19937(SEED);
+TEST_CASE("game_play_test") {
+    jngl::setVolume(0);
+    std::mt19937 gen = std::mt19937(SEED);
 #ifdef __EMSCRIPTEN__
-        chdir("data");
+    chdir("data");
 #elif !defined(ANDROID)
-        auto dataFolder = fs::path("../data");
+    auto dataFolder = fs::path("../data");
+    if (!fs::exists(dataFolder)) {
+        dataFolder = fs::path("../../data");
         if (!fs::exists(dataFolder)) {
-            dataFolder = fs::path("../../data");
+            dataFolder = fs::path("../../../../data");
             if (!fs::exists(dataFolder)) {
-                dataFolder = fs::path("../../../../data");
-                if (!fs::exists(dataFolder)) {
-                    dataFolder = fs::path("data");
+                dataFolder = fs::path("data");
+            }
+        }
+    }
+    fs::current_path(dataFolder);
+    jngl::debug(fs::current_path());
+#endif
+    YAML::Node const config = YAML::Load(jngl::readAsset("config/game.json").str());
+    jngl::showWindow((config)["name"].as<std::string>(), 800, 600, 0, { 16, 9 }, { 16, 9 });
+    jngl::setAntiAliasing(true);
+
+    std::set<std::string> visited_scenes;
+
+    jngl::writeConfig("savegame", "");
+
+    auto game = std::make_shared<Game>(config);
+
+    game->init();
+    game->enable_fade = false;
+
+    std::vector<std::tuple<std::string, std::shared_ptr<SpineObject>>> actions;
+
+    game->step();
+    game->step();
+
+    (*game->lua_state)["game_finished"] = false;
+
+    int i = 0;
+
+    while (!(*game->lua_state)["game_finished"] && i < MAX_STEPS) {
+        jngl::updateInput();
+        i++;
+        actions.clear();
+
+        game->step();
+
+        if (visited_scenes.find(game->currentScene->getSceneName()) == visited_scenes.end()) {
+            visited_scenes.insert(game->currentScene->getSceneName());
+            game->saveLuaState(game->currentScene->getSceneName());
+        }
+
+        // TODO: Solange ein Callback gesetzt ist keine neue Aktion auswählen.
+        std::string options = "";
+        for (auto& obj : game->gameObjects) {
+            if (game->getInactivLayerBorder() > obj->layer || obj->getParent() != nullptr) {
+                continue;
+            }
+
+            if (obj->getVisible() && obj->bounds) {
+                auto& boundingBoxes = obj->bounds->getBoundingBoxes();
+                for (size_t j = 0; j < boundingBoxes.size(); j++) {
+                    spine::BoundingBoxAttachment* bbox = boundingBoxes[j];
+                    std::string bboxName(bbox->getName().buffer());
+
+                    if (bboxName != "walkable_area" &&
+                        bboxName != "non_walkable_area" &&
+                        bboxName != "setDE" &&
+                        bboxName != "setEN") {
+                        options += bboxName + ", ";
+                        actions.emplace_back(bboxName, obj);
+                    }
                 }
             }
         }
-        fs::current_path(dataFolder);
-        jngl::debug(fs::current_path());
+        jngl::debug("FRAME {} OPTIONS {}", i, options);
+
+        if (actions.empty()) {
+            continue;
+        }
+        size_t const randAction = std::abs(static_cast<int>(gen())) % actions.size();
+
+        jngl::debug("RUN: {}", std::get<0>(actions.at(randAction)));
+        game->runAction(std::get<0>(actions.at(randAction)),
+                        std::get<1>(actions.at(randAction)));
+
+        // Give Action time
+        for (int _i = 0; _i < ACTION_TIME; _i++) {
+            game->step();
+            if (game->getDialogManager()->isActive()) {
+                if (game->getDialogManager()->isSelectTextActive()) {
+                    auto choices = game->getDialogManager()->getChoiceTextsSize();
+                    if (choices > 0) {
+                        int const randGen = std::abs(static_cast<int>(gen()));
+                        int const choice = randGen % choices;
+                        game->getDialogManager()->selectCurrentAnswer(choice);
+                    }
+                } else {
+                    game->getDialogManager()->continueCurrent();
+                }
+            }
+        }
+    }
+    // CHECK(game->getInactivLayerBorder() == 2);
+    game->saveLuaState();
+    jngl::debug("Took: {} steps", i);
+
+    jngl::hideWindow();
+
+    CHECK(i != MAX_STEPS);
+}
+
+TEST_CASE("game_save_load_test", "[.]") { // hidden, i.e. disabled
+    jngl::setVolume(0);
+    std::mt19937 gen = std::mt19937(SEED);
+#ifdef __EMSCRIPTEN__
+    chdir("data");
+#elif !defined(ANDROID)
+    auto dataFolder = fs::path("../data");
+    if (!fs::exists(dataFolder)) {
+        dataFolder = fs::path("../../data");
+        if (!fs::exists(dataFolder)) {
+            dataFolder = fs::path("../../../../data");
+            if (!fs::exists(dataFolder)) {
+                dataFolder = fs::path("data");
+            }
+        }
+    }
+    fs::current_path(dataFolder);
 #endif
-        YAML::Node const config = YAML::Load(jngl::readAsset("config/game.json").str());
-        jngl::showWindow((config)["name"].as<std::string>(), 800, 600, 0, { 16, 9 }, { 16, 9 });
-        jngl::setAntiAliasing(true);
+    jngl::showWindow("Test", 800, 600, 0, { 16, 9 }, { 16, 9 });
+    jngl::setAntiAliasing(true);
 
-        std::set<std::string> visited_scenes;
+    jngl::writeConfig("savegame", "");
 
-        jngl::writeConfig("savegame", "");
+    YAML::Node const config = YAML::Load(jngl::readAsset("config/game.json").str());
 
-        auto game = std::make_shared<Game>(config);
+    int i = 0;
+    std::shared_ptr<Game> game;
+    do {
+        game.reset();
+        game = std::make_shared<Game>(config);
 
         game->init();
         game->enable_fade = false;
 
         std::vector<std::tuple<std::string, std::shared_ptr<SpineObject>>> actions;
-
         game->step();
         game->step();
 
         (*game->lua_state)["game_finished"] = false;
 
-        int i = 0;
+        i++;
+        actions.clear();
 
-        while (!(*game->lua_state)["game_finished"] && i < MAX_STEPS) {
-            jngl::updateInput();
-            i++;
-            actions.clear();
+        game->step();
 
-            game->step();
+        // TODO: Solange ein Callback gesetzt ist keine neue Aktion auswählen.
 
-            if (visited_scenes.find(game->currentScene->getSceneName()) == visited_scenes.end()) {
-                visited_scenes.insert(game->currentScene->getSceneName());
-                game->saveLuaState(game->currentScene->getSceneName());
-            }
-
-            // TODO: Solange ein Callback gesetzt ist keine neue Aktion auswählen.
-            std::string options = "";
-            for (auto& obj : game->gameObjects) {
-                if (game->getInactivLayerBorder() > obj->layer || obj->getParent() != nullptr) {
-                    continue;
-                }
-
-                if (obj->getVisible() && obj->bounds) {
-                    auto& boundingBoxes = obj->bounds->getBoundingBoxes();
-                    for (size_t j = 0; j < boundingBoxes.size(); j++) {
-                        spine::BoundingBoxAttachment* bbox = boundingBoxes[j];
-                        std::string bboxName(bbox->getName().buffer());
-
-                        if (bboxName != "walkable_area" &&
-                            bboxName != "non_walkable_area" &&
-                            bboxName != "setDE" &&
-                            bboxName != "setEN") {
-                            options += bboxName + ", ";
-                            actions.emplace_back(bboxName, obj);
-                        }
-                    }
-                }
-            }
-            jngl::debug("FRAME {} OPTIONS {}", i, options);
-
-            if (actions.empty()) {
+        std::string options;
+        for (auto& obj : game->gameObjects) {
+            if (game->getInactivLayerBorder() > obj->layer) {
                 continue;
             }
-            size_t const randAction = std::abs(static_cast<int>(gen())) % actions.size();
 
-            jngl::debug("RUN: {}", std::get<0>(actions.at(randAction)));
-            game->runAction(std::get<0>(actions.at(randAction)),
-                            std::get<1>(actions.at(randAction)));
+            if (obj->getVisible() && obj->bounds) {
+                auto& boundingBoxes = obj->bounds->getBoundingBoxes();
+                for (size_t j = 0; j < boundingBoxes.size(); j++) {
+                    spine::BoundingBoxAttachment* bbox = boundingBoxes[j];
+                    std::string bboxName(bbox->getName().buffer());
 
-            // Give Action time
-            for (int _i = 0; _i < ACTION_TIME; _i++) {
-                game->step();
-                if (game->getDialogManager()->isActive()) {
-                    if (game->getDialogManager()->isSelectTextActive()) {
-                        auto choices = game->getDialogManager()->getChoiceTextsSize();
-                        if (choices > 0) {
-                            int const randGen = std::abs(static_cast<int>(gen()));
-                            int const choice = randGen % choices;
-                            game->getDialogManager()->selectCurrentAnswer(choice);
-                        }
-                    } else {
-                        game->getDialogManager()->continueCurrent();
+                    if (bboxName != "walkable_area" &&
+                        bboxName != "non_walkable_area" &&
+                        bboxName != "setDE" &&
+                        bboxName != "setEN") {
+                        options += bboxName + ", ";
+                        actions.emplace_back(bboxName, obj);
                     }
                 }
             }
         }
-        // expect(eq(game->getInactivLayerBorder(), 2));
+        jngl::debug("OPTIONS: {}", options);
+
+        if (actions.empty()) {
+            continue;
+        }
+        size_t const randAction = std::abs(static_cast<int>(gen())) % actions.size();
+
+        jngl::debug("RUN: {}", std::get<0>(actions.at(randAction)));
+        game->runAction(std::get<0>(actions.at(randAction)),
+                        std::get<1>(actions.at(randAction)));
+
+        // Give Action time
+        for (int _i = 0; _i < ACTION_TIME; _i++) {
+            game->step();
+            if (game->getDialogManager()->isActive()) {
+                if (game->getDialogManager()->isSelectTextActive()) {
+                    auto choices = game->getDialogManager()->getChoiceTextsSize();
+                    if (choices > 0) {
+                        int const randGen = std::abs(static_cast<int>(gen()));
+                        int const choice = randGen % choices;
+                        game->getDialogManager()->selectCurrentAnswer(choice);
+                    }
+                } else {
+                    game->getDialogManager()->continueCurrent();
+                }
+            }
+        }
+
         game->saveLuaState();
-        jngl::debug("Took: {} steps", i);
+    } while (!(*game->lua_state)["game_finished"] && i < MAX_STEPS);
 
-        jngl::hideWindow();
+    // CHECK(game->getInactivLayerBorder() == 2);
+    jngl::debug("Took: {} steps", i);
 
-        expect(neq(i, MAX_STEPS));
-    };
+    jngl::hideWindow();
 
-    "game_save_load_test"_test = [] {
-        return; // DISABLED
-        jngl::setVolume(0);
-        std::mt19937 gen = std::mt19937(SEED);
-#ifdef __EMSCRIPTEN__
-        chdir("data");
-#elif !defined(ANDROID)
-        auto dataFolder = fs::path("../data");
-        if (!fs::exists(dataFolder)) {
-            dataFolder = fs::path("../../data");
-            if (!fs::exists(dataFolder)) {
-                dataFolder = fs::path("../../../../data");
-                if (!fs::exists(dataFolder)) {
-                    dataFolder = fs::path("data");
-                }
-            }
-        }
-        fs::current_path(dataFolder);
-#endif
-        jngl::showWindow("Test", 800, 600, 0, { 16, 9 }, { 16, 9 });
-        jngl::setAntiAliasing(true);
-
-        jngl::writeConfig("savegame", "");
-
-        YAML::Node const config = YAML::Load(jngl::readAsset("config/game.json").str());
-
-        int i = 0;
-        std::shared_ptr<Game> game;
-        do {
-            game.reset();
-            game = std::make_shared<Game>(config);
-
-            game->init();
-            game->enable_fade = false;
-
-            std::vector<std::tuple<std::string, std::shared_ptr<SpineObject>>> actions;
-            game->step();
-            game->step();
-
-            (*game->lua_state)["game_finished"] = false;
-
-            i++;
-            actions.clear();
-
-            game->step();
-
-            // TODO: Solange ein Callback gesetzt ist keine neue Aktion auswählen.
-
-            std::string options;
-            for (auto& obj : game->gameObjects) {
-                if (game->getInactivLayerBorder() > obj->layer) {
-                    continue;
-                }
-
-                if (obj->getVisible() && obj->bounds) {
-                    auto& boundingBoxes = obj->bounds->getBoundingBoxes();
-                    for (size_t j = 0; j < boundingBoxes.size(); j++) {
-                        spine::BoundingBoxAttachment* bbox = boundingBoxes[j];
-                        std::string bboxName(bbox->getName().buffer());
-
-                        if (bboxName != "walkable_area" &&
-                            bboxName != "non_walkable_area" &&
-                            bboxName != "setDE" &&
-                            bboxName != "setEN") {
-                            options += bboxName + ", ";
-                            actions.emplace_back(bboxName, obj);
-                        }
-                    }
-                }
-            }
-            jngl::debug("OPTIONS: {}", options);
-
-            if (actions.empty()) {
-                continue;
-            }
-            size_t const randAction = std::abs(static_cast<int>(gen())) % actions.size();
-
-            jngl::debug("RUN: {}", std::get<0>(actions.at(randAction)));
-            game->runAction(std::get<0>(actions.at(randAction)),
-                            std::get<1>(actions.at(randAction)));
-
-            // Give Action time
-            for (int _i = 0; _i < ACTION_TIME; _i++) {
-                game->step();
-                if (game->getDialogManager()->isActive()) {
-                    if (game->getDialogManager()->isSelectTextActive()) {
-                        auto choices = game->getDialogManager()->getChoiceTextsSize();
-                        if (choices > 0) {
-                            int const randGen = std::abs(static_cast<int>(gen()));
-                            int const choice = randGen % choices;
-                            game->getDialogManager()->selectCurrentAnswer(choice);
-                        }
-                    } else {
-                        game->getDialogManager()->continueCurrent();
-                    }
-                }
-            }
-
-            game->saveLuaState();
-        } while (!(*game->lua_state)["game_finished"] && i < MAX_STEPS);
-
-        // expect(eq(game->getInactivLayerBorder(), 2));
-        jngl::debug("Took: {} steps", i);
-
-        jngl::hideWindow();
-
-        expect(neq(i, MAX_STEPS));
-    };
-};
+    CHECK(i != MAX_STEPS);
+}

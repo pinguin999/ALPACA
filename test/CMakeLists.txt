@@ -24,15 +24,23 @@ get_filename_component(full_path_test_cpp ${PROJECT_SOURCE_DIR}/src/main.cpp ABS
 
 list(REMOVE_ITEM SOURCES "${full_path_test_cpp}")
 
+find_package(Catch2 3 CONFIG)
+if(NOT Catch2_FOUND)
+    CPMAddPackage(NAME Catch2
+        URL https://github.com/catchorg/Catch2/archive/refs/tags/v3.14.0.tar.gz
+        URL_HASH SHA256=ba2a939efead3c833c499cf487e185762f419a71d30158cd1b43c6079c586490
+    )
+endif()
+
 # Build unit tests
 #add_executable(${PROJECT_UNIT_TESTS_NAME} ${UNIT_TESTS_SRC_FILES} $<TARGET_OBJECTS:demo_objects> )
 add_executable(${PROJECT_UNIT_TESTS_NAME} ${UNIT_TESTS_SRC_FILES} ${SOURCES})
 
 if (APPLE)
     find_library(CoreServices CoreServices)
-    target_link_libraries(${PROJECT_UNIT_TESTS_NAME} PRIVATE jngl schnacker spine-cpp $<$<CONFIG:Debug>:${CoreServices}>)
+    target_link_libraries(${PROJECT_UNIT_TESTS_NAME} PRIVATE jngl schnacker spine-cpp Catch2::Catch2 $<$<CONFIG:Debug>:${CoreServices}>)
 else()
-    target_link_libraries(${PROJECT_UNIT_TESTS_NAME} jngl schnacker spine-cpp)
+    target_link_libraries(${PROJECT_UNIT_TESTS_NAME} jngl schnacker spine-cpp Catch2::Catch2)
 endif()
 
 enable_testing()
