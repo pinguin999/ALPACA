@@ -296,9 +296,10 @@ void DialogManager::cancelDialog() {
     currentAnswers = nullptr;
 
     if (dialog_callback) {
-        (*dialog_callback)();
+        auto callback = dialog_callback;
+        dialog_callback = std::nullopt; // reset the callback just in case a new callback is set inside the callback
+        (*callback)();
     }
-    dialog_callback = std::nullopt;
 }
 
 void DialogManager::selectCurrentAnswer(int index) {
