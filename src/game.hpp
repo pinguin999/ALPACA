@@ -34,7 +34,7 @@ public:
     bool editMode = false;
     bool enableDebugDraw = false;
     bool enablezMapDebugDraw = false;
-    bool show_debug_info = true;
+    bool show_debug_info = false;
     bool room_select_mode = false;
     std::optional<int> tens;
     static void writeTGA(const std::filesystem::path& filename, int width, int height,
@@ -43,6 +43,7 @@ public:
     jngl::Text debug_info;
     std::string debug_text = ("Press Tab to enter editmode. \n"
                               "Press F10 to show debug draw. \n"
+                              "Press F9 to run cheats. \n"
 #ifdef JNGL_RECORD
                               "Press b to start/end movie recording. \n"
 #endif

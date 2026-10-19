@@ -611,7 +611,7 @@ void Game::draw() const {
     }
 
 #ifndef NDEBUG
-    if (show_debug_info) {
+    if (show_debug_info || room_select_mode) {
         jngl::setFontColor(0, 0, 0, 255);
         debug_info.draw();
     }
