@@ -25,7 +25,7 @@ void DialogManager::loadDialogsFromFile(const std::string& fileName, bool initia
 }
 
 void DialogManager::play(const std::string& dialogName, std::optional<sol::function> callback) {
-    if(currentDialog){
+    if (currentDialog) {
         cancelDialog(); // if there is a current dialog, cancel the current one‚
     }
 

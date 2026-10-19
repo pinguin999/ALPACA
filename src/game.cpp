@@ -186,6 +186,7 @@ void Game::configToLua() {
     (*lua_state)["config"]["border"]["x"] = config["border"]["x"].as<int>();
     (*lua_state)["config"]["border"]["y"] = config["border"]["y"].as<int>();
     (*lua_state)["config"]["supportedLanguages"] = sol::as_table(config["supportedLanguages"].as<std::vector<std::string>>());
+    (*lua_state)["config"]["test_max_steps"] = config["test_max_steps"].as<int>();
 }
 
 void Game::loadSceneWithFade(const std::string& level) {

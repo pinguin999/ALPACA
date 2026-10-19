@@ -6,7 +6,6 @@
 #include <random>
 
 #include "../src/game.hpp"
-#include "../src/interactable_object.hpp"
 
 #ifndef __EMSCRIPTEN__
 #if (defined(__linux__) && !__has_include(<filesystem>))
@@ -24,8 +23,7 @@ void pac_unload_file(const char* path) {
 #endif
 
 const int SEED = 0;
-const int MAX_STEPS = 10000;
-const int ACTION_TIME = 800;
+const int ACTION_TIME = 1000;
 
 TEST_CASE("game_play_test") {
     jngl::setVolume(0);
@@ -67,10 +65,17 @@ TEST_CASE("game_play_test") {
     (*game->lua_state)["game_finished"] = false;
 
     int i = 0;
+    int max_steps = static_cast<int>((*game->lua_state)["config"]["test_max_steps"]);
 
-    while (!(*game->lua_state)["game_finished"] && i < MAX_STEPS) {
+    while (!(*game->lua_state)["game_finished"] && i < max_steps) {
         jngl::updateInput();
         i++;
+
+        // if(i % 500 == 0)
+        // {
+        //     game->saveLuaState(std::to_string(i));
+        // }
+
         actions.clear();
 
         game->step();
@@ -137,7 +142,7 @@ TEST_CASE("game_play_test") {
 
     jngl::hideWindow();
 
-    CHECK(i != MAX_STEPS);
+    CHECK(i != max_steps);
 }
 
 TEST_CASE("game_save_load_test", "[.]") { // hidden, i.e. disabled
@@ -165,8 +170,11 @@ TEST_CASE("game_save_load_test", "[.]") { // hidden, i.e. disabled
 
     YAML::Node const config = YAML::Load(jngl::readAsset("config/game.json").str());
 
-    int i = 0;
     std::shared_ptr<Game> game;
+
+    int i = 0;
+    int max_steps = static_cast<int>((*game->lua_state)["config"]["test_max_steps"]);
+
     do {
         game.reset();
         game = std::make_shared<Game>(config);
@@ -238,12 +246,12 @@ TEST_CASE("game_save_load_test", "[.]") { // hidden, i.e. disabled
         }
 
         game->saveLuaState();
-    } while (!(*game->lua_state)["game_finished"] && i < MAX_STEPS);
+    } while (!(*game->lua_state)["game_finished"] && i < max_steps);
 
     // CHECK(game->getInactivLayerBorder() == 2);
     jngl::debug("Took: {} steps", i);
 
     jngl::hideWindow();
 
-    CHECK(i != MAX_STEPS);
+    CHECK(i != max_steps);
 }

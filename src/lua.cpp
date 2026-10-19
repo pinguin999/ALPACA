@@ -250,6 +250,7 @@ void Game::setupLuaFunctions() {
         obj->setVisible(false);
         (*lua_state)["inventory_items"][obj->getId()] = item;
         (*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
+        (*lua_state)["inventory_items"][obj->getId()]["visible"] = false;
 
         const std::vector<LuaSpineSkin> skins = { (*lua_state)["config"]["inventory_default_skin"] };
         sol::table lua_object = getObjectTable(obj->getId());
@@ -278,6 +279,7 @@ void Game::setupLuaFunctions() {
         (*lua_state)["inventory_items"][obj->getId()] = item;
         (*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table(skins);
         (*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
+        (*lua_state)["inventory_items"][obj->getId()]["visible"] = false;
 
         (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
     });
@@ -301,6 +303,7 @@ void Game::setupLuaFunctions() {
             (*lua_state)["inventory_items"][obj->getId()] = item;
             (*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table(skins);
             (*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
+            (*lua_state)["inventory_items"][obj->getId()]["visible"] = false;
 
             (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
         }
@@ -327,6 +330,7 @@ void Game::setupLuaFunctions() {
             (*lua_state)["inventory_items"][obj->getId()] = item;
             (*lua_state)["inventory_items"][obj->getId()]["skin"] = sol::as_table(skins);
             (*lua_state)["inventory_items"][obj->getId()]["cross_scene"] = true;
+            (*lua_state)["inventory_items"][obj->getId()]["visible"] = false;
 
             (*lua_state)["scenes"][(*lua_state)["game"]["scene"]]["items"][obj->getId()] = sol::lua_nil;
         }
@@ -662,6 +666,11 @@ void Game::setupLuaFunctions() {
         for (auto& obj : pointer->attachedObjects) {
             obj->setParent(nullptr);
             obj->setVisible(false);
+            sol::table lua_object = getObjectTable(obj->getId());
+            if (lua_object.valid()) {
+                lua_object["visible"] = false;
+            }
+
         }
         pointer->attachedObjects.clear();
     });
@@ -671,6 +680,11 @@ void Game::setupLuaFunctions() {
                             [this]() {
         const std::shared_ptr<SpineObject> obj = (*lua_state)["this"];
         obj->setParent(nullptr);
+        obj->setVisible(false);
+        sol::table lua_object = getObjectTable(obj->getId());
+            if (lua_object.valid()) {
+                lua_object["visible"] = false;
+            }
 
         for (auto it = pointer->attachedObjects.begin(); it != pointer->attachedObjects.end();) {
             if ((*it) == nullptr || (*it) == obj) {
