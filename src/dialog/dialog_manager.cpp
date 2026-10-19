@@ -25,7 +25,9 @@ void DialogManager::loadDialogsFromFile(const std::string& fileName, bool initia
 }
 
 void DialogManager::play(const std::string& dialogName, std::optional<sol::function> callback) {
-    cancelDialog(); // if there is a current dialog, cancel the current one
+    if(currentDialog){
+        cancelDialog(); // if there is a current dialog, cancel the current one‚
+    }
 
     if (auto _game = game.lock()) {
         jngl::debug("DialogManager::play " + dialogName);
