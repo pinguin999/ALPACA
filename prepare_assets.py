@@ -281,10 +281,7 @@ def get_notes(character=None) -> list[tuple[str, str, dict[str, str]]]:
 
                         character_name = node["character"]
 
-                        if "character" not in node or node["character"] in ["Player"]:
-                            character_name = "joy"
-
-                        if dialogs["localization"].get(str(node["id"])):
+                        if dialogs["localization"]["nodeTexts"].get(str(node["id"])):
                             node_id = str(node["id"]).zfill(3)
 
                             for lang_code in dialogs["locales"]:
@@ -654,7 +651,9 @@ def on_data_src_modified(event) -> None:
         if spine_object.keys():
             apply_rhubarb(list(spine_object.keys())[0])
     if event.src_path.endswith(".ogg"):
-        errors, db = rhubarb_export(node_info=(event.src_path, "", db))
+        audio_path = Path(event.src_path)
+        copy_file(event.src_path, Path("./data/audio"))
+        errors, db = rhubarb_export(node_info=(audio_path.stem, "", db))
         if len(errors) > 0:
             printErrors(event.src_path, errors)
     if event.src_path.endswith(".lua"):
