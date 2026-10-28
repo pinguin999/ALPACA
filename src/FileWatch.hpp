@@ -34,12 +34,13 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+#include <windows.h>
+
 #include <pathcch.h>
 #include <shlwapi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <tchar.h>
-#include <windows.h>
 #endif // WIN32
 
 #if __unix__
