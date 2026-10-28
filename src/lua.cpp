@@ -670,7 +670,6 @@ void Game::setupLuaFunctions() {
             if (lua_object.valid()) {
                 lua_object["visible"] = false;
             }
-
         }
         pointer->attachedObjects.clear();
     });
@@ -682,9 +681,9 @@ void Game::setupLuaFunctions() {
         obj->setParent(nullptr);
         obj->setVisible(false);
         sol::table lua_object = getObjectTable(obj->getId());
-            if (lua_object.valid()) {
-                lua_object["visible"] = false;
-            }
+        if (lua_object.valid()) {
+            lua_object["visible"] = false;
+        }
 
         for (auto it = pointer->attachedObjects.begin(); it != pointer->attachedObjects.end();) {
             if ((*it) == nullptr || (*it) == obj) {

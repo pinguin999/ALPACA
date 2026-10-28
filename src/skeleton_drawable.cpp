@@ -142,10 +142,10 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
         }
 
         // Early out if the slot color is 0 or the bone is not active
-		if ((slot.getAppliedPose().getColor().a == 0 || !slot.getBone().isActive()) && !attachment->getRTTI().isExactly(spine::ClippingAttachment::rtti)) {
-			clipper.clipEnd(slot);
-			continue;
-		}
+        if ((slot.getAppliedPose().getColor().a == 0 || !slot.getBone().isActive()) && !attachment->getRTTI().isExactly(spine::ClippingAttachment::rtti)) {
+            clipper.clipEnd(slot);
+            continue;
+        }
 
         spine::Array<float>* vertices = &worldVertices;
         spine::Array<float>* uvs = nullptr;
@@ -157,10 +157,10 @@ void SkeletonDrawable::draw(const jngl::Mat3& modelview) const {
             auto* regionAttachment = reinterpret_cast<spine::RegionAttachment*>(attachment);
             attachmentColor = &regionAttachment->getColor();
 
-			if (attachmentColor->a == 0) {
-				clipper.clipEnd(slot);
-				continue;
-			}
+            if (attachmentColor->a == 0) {
+                clipper.clipEnd(slot);
+                continue;
+            }
 
             vertices->setSize(8, 0);
             spine::Sequence& sequence = regionAttachment->getSequence();
