@@ -13,7 +13,7 @@ jobs:
         submodules: recursive
     - name: Configure
       shell: cmd
-      run: cmake -A x64 -Bbuild
+      run: cmake -G "Visual Studio 18 2026" -A x64 -Bbuild
     - name: Build Debug
       shell: cmd
       run: cmake --build build --parallel --config Debug
