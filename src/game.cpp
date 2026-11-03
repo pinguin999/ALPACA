@@ -16,6 +16,7 @@
 #include "scene_fade.hpp"
 #include "spine_object.hpp"
 #include <spine/spine.h>
+#include "audio_manager.hpp"
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
 #include "FileWatch.hpp"
@@ -131,6 +132,10 @@ void Game::init(bool game_start) {
     configToLua();
     setupLuaFunctions();
     dialogManager = std::make_shared<DialogManager>(shared_from_this());
+    Channels::handle().music.stopAll();
+    Channels::handle().voice.stopAll();
+    Channels::handle().sounds.stopAll();
+    Channels::handle().ambient.stopAll();
     if (!game_start || config["auto_load_savegame"].as<bool>(true)) {
         loadLuaState();
     } else {
