@@ -13,10 +13,10 @@
 #include <thread>
 #include <yaml-cpp/yaml.h>
 
+#include "audio_manager.hpp"
 #include "scene_fade.hpp"
 #include "spine_object.hpp"
 #include <spine/spine.h>
-#include "audio_manager.hpp"
 
 #if (!defined(NDEBUG) && !defined(ANDROID) && (!defined(TARGET_OS_IOS) || TARGET_OS_IOS == 0) && !defined(__EMSCRIPTEN__))
 #include "FileWatch.hpp"
