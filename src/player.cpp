@@ -193,13 +193,15 @@ bool Player::step(bool /*force*/) {
                 return false;
             }
 
-            newPath = _game->currentScene->background->getPathToTarget(position, click_position);
-            walk_callback = std::nullopt;
+            if (_game->currentScene->background->is_walkable(click_position)) {
+                newPath = _game->currentScene->background->getPathToTarget(position, click_position);
+                walk_callback = std::nullopt;
 
-            path.clear();
-            path.insert(path.end(), newPath.begin(), newPath.end());
-            if (!path.empty()) {
-                setTargentPosition(path.front());
+                path.clear();
+                path.insert(path.end(), newPath.begin(), newPath.end());
+                if (!path.empty()) {
+                    setTargentPosition(path.front());
+                }
             }
 
             // Handle double click

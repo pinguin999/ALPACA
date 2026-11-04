@@ -267,8 +267,7 @@ void SpineObject::onAnimationComplete(const int index, const std::string& animat
 }
 
 void SpineObject::setSkin(const std::string& skin) {
-    if (this->skins == std::vector<std::string>({skin}) )
-    {
+    if (this->skins == std::vector<std::string>({ skin })) {
         return;
     }
     this->skins = { skin };
@@ -284,8 +283,7 @@ void SpineObject::setSkin(const std::string& skin) {
 }
 
 void SpineObject::setSkins(const std::vector<std::string>& skins) {
-    if (this->skins == skins)
-    {
+    if (this->skins == skins) {
         return;
     }
     this->skins = skins;
