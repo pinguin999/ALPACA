@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <ctime>
+#include <jngl/Job.hpp>
 #include <jngl/input.hpp>
-#include <jngl/job.hpp>
 #include <jngl/message.hpp>
 #include <random>
 
