@@ -89,11 +89,7 @@ if(ANDROID)
 		z
 	)
 else()
-	if(WIN32)
-		add_executable(pac ${SOURCES})
-	else()
-		add_executable(pac ${SOURCES})
-	endif()
+	add_executable(pac ${SOURCES})
 endif()
 
 if (APPLE)
