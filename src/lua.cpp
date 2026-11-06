@@ -768,7 +768,7 @@ void Game::setupLuaFunctions() {
         obj->setScale(scale);
         sol::table lua_object = getObjectTable(obj->getId());
         if (lua_object.valid()) {
-            lua_object["scale"] = std::to_string(scale);
+            lua_object["scale"] = scale;
         }
     });
 
@@ -782,7 +782,7 @@ void Game::setupLuaFunctions() {
             obj->setScale(scale);
             sol::table lua_object = getObjectTable(obj->getId());
             if (lua_object.valid()) {
-                lua_object["scale"] = std::to_string(scale);
+                lua_object["scale"] = scale;
             }
         }
     });
